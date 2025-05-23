@@ -1,0 +1,27 @@
+CREATE TABLE SystemUser (
+                            username TEXT PRIMARY KEY,
+                            password TEXT NOT NULL,
+                            email TEXT,
+                            phone TEXT,
+                            address TEXT
+);
+
+CREATE TABLE Volunteer (
+                           username TEXT PRIMARY KEY,
+                           fullName TEXT,
+                           FOREIGN KEY (username) REFERENCES SystemUser(username)
+);
+
+CREATE TABLE VolunteerOrganization (
+                                       username TEXT PRIMARY KEY,
+                                       organizationName TEXT,
+                                       FOREIGN KEY (username) REFERENCES SystemUser(username)
+);
+
+CREATE TABLE Admin (
+                       username TEXT PRIMARY KEY,
+                       password TEXT NOT NULL,
+                       email TEXT,
+                       phone TEXT,
+                       fullName TEXT
+);
