@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.text.Font?>
+
+<AnchorPane prefHeight="768" prefWidth="1024"
+            xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="views.screen.SignUpScreenHandler"
+            style="-fx-background-color: white;">
+    <children>
+        <VBox alignment="CENTER" layoutX="312.0" layoutY="50.0"
+              prefWidth="400" prefHeight="500" maxHeight="500"
+              AnchorPane.leftAnchor="312.0" AnchorPane.topAnchor="50.0">
+
+            <padding>
+                <Insets top="20" bottom="20" left="30" right="30" />
+            </padding>
+
+            <Label text="Sign Up" style="-fx-font-weight: bold;">
+                <font>
+                    <Font size="24.0" />
+                </font>
+            </Label>
+
+            <!-- Role Selection Section -->
+            <VBox spacing="15" alignment="CENTER">
+                <Label text="Select your role:" style="-fx-font-weight: bold;">
+                    <font>
+                        <Font size="16.0" />
+                    </font>
+                </Label>
+                <VBox spacing="15" alignment="CENTER_LEFT">
+                    <padding>
+                        <Insets left="50" right="50" top="10" bottom="10" />
+                    </padding>
+                    <RadioButton fx:id="volunteerRadio" text="Volunteer" toggleGroup="$roleGroup" selected="true">
+                        <font>
+                            <Font size="14.0" />
+                        </font>
+                    </RadioButton>
+                    <RadioButton fx:id="organizationRadio" text="Volunteer Organization" toggleGroup="$roleGroup">
+                        <font>
+                            <Font size="14.0" />
+                        </font>
+                    </RadioButton>
+                    <RadioButton fx:id="personInNeedRadio" text="Person In Need" toggleGroup="$roleGroup">
+                        <font>
+                            <Font size="14.0" />
+                        </font>
+                    </RadioButton>
+                </VBox>
+                <Button fx:id="continueButton" text="Continue" onAction="#handleContinue"
+                        prefWidth="200" prefHeight="30">
+                    <font>
+                        <Font size="14.0" />
+                    </font>
+                </Button>
+            </VBox>
+
+            <Label fx:id="messageLabel" style="-fx-text-fill: red;">
+                <font>
+                    <Font size="14.0" />
+                </font>
+            </Label>
+
+            <HBox alignment="CENTER">
+                <Label text="Already have an account? ">
+                    <font>
+                        <Font size="14.0" />
+                    </font>
+                </Label>
+                <Hyperlink fx:id="loginLink" text="Log In" onAction="#handleLoginLink">
+                    <font>
+                        <Font size="14.0" />
+                    </font>
+                </Hyperlink>
+            </HBox>
+        </VBox>
+    </children>
+
+    <fx:define>
+        <ToggleGroup fx:id="roleGroup" />
+    </fx:define>
+</AnchorPane>

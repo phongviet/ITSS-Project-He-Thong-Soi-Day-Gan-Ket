@@ -1,27 +1,39 @@
+DROP TABLE IF EXISTS Admin;
+DROP TABLE IF EXISTS HelpSeeker;
+DROP TABLE IF EXISTS VolunteerOrganization;
+DROP TABLE IF EXISTS Volunteer;
+DROP TABLE IF EXISTS SystemUser;
+
 CREATE TABLE SystemUser (
-                            username TEXT PRIMARY KEY,
-                            password TEXT NOT NULL,
-                            email TEXT,
-                            phone TEXT,
-                            address TEXT
+    username TEXT PRIMARY KEY,
+    password TEXT NOT NULL,
+    email TEXT,
+    phone TEXT,
+    address TEXT
 );
 
 CREATE TABLE Volunteer (
-                           username TEXT PRIMARY KEY,
-                           fullName TEXT,
-                           FOREIGN KEY (username) REFERENCES SystemUser(username)
+    username TEXT PRIMARY KEY,
+    fullName TEXT,
+    FOREIGN KEY (username) REFERENCES SystemUser(username)
 );
 
 CREATE TABLE VolunteerOrganization (
-                                       username TEXT PRIMARY KEY,
-                                       organizationName TEXT,
-                                       FOREIGN KEY (username) REFERENCES SystemUser(username)
+    username TEXT PRIMARY KEY,
+    organizationName TEXT,
+    FOREIGN KEY (username) REFERENCES SystemUser(username)
+);
+
+CREATE TABLE HelpSeeker (
+    username TEXT PRIMARY KEY,
+    fullName TEXT,
+    FOREIGN KEY (username) REFERENCES SystemUser(username)
 );
 
 CREATE TABLE Admin (
-                       username TEXT PRIMARY KEY,
-                       password TEXT NOT NULL,
-                       email TEXT,
-                       phone TEXT,
-                       fullName TEXT
+    username TEXT PRIMARY KEY,
+    password TEXT NOT NULL,
+    email TEXT,
+    phone TEXT,
+    fullName TEXT
 );
