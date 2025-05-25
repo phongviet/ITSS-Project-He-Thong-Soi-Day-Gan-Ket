@@ -21,10 +21,11 @@ CREATE TABLE Volunteer (
 CREATE TABLE VolunteerOrganization (
     username TEXT PRIMARY KEY,
     organizationName TEXT,
+    licenseNumber TEXT,
     FOREIGN KEY (username) REFERENCES SystemUser(username)
 );
 
-CREATE TABLE HelpSeeker (
+CREATE TABLE PersonInNeed (
     username TEXT PRIMARY KEY,
     fullName TEXT,
     FOREIGN KEY (username) REFERENCES SystemUser(username)

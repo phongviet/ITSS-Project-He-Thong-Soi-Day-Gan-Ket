@@ -4,13 +4,6 @@ import java.sql.*;
 
 public class VerificationController {
     private static final String DB_URL = "jdbc:sqlite:assets/db/SoiDayGanKet_sqlite.db";
-    public void verify(String username, String password) {
-        if (checkInfo(username, password)) {
-            System.out.println("Login successfully! " + username);
-        } else {
-            System.out.println("Login failed!" + username);
-        }
-    }
 
     public boolean checkInfo(String username, String password) {
         String url = "jdbc:sqlite:assets\\db\\SoiDayGanKet_sqlite.db";
@@ -155,10 +148,11 @@ public class VerificationController {
             pstmtUser.executeUpdate();
 
             // Then insert into VolunteerOrganization table
-            String insertOrgSQL = "INSERT INTO VolunteerOrganization (username, organizationName) VALUES (?, ?)";
+            String insertOrgSQL = "INSERT INTO VolunteerOrganization (username, organizationName, licenseNumber) VALUES (?, ?, ?)";
             pstmtOrg = conn.prepareStatement(insertOrgSQL);
             pstmtOrg.setString(1, username);
             pstmtOrg.setString(2, organizationName);
+            pstmtOrg.setString(3, licenseNumber);
             pstmtOrg.executeUpdate();
 
             conn.commit(); // Commit transaction
@@ -192,12 +186,10 @@ public class VerificationController {
      * @param phone User's phone number
      * @param address User's address
      * @param fullName Person's full name
-     * @param needs Description of person's needs
      * @return true if registration successful, false otherwise
      */
     public boolean registerPersonInNeed(String username, String password, String email,
-                                        String phone, String address, String fullName,
-                                        String needs) {
+                                        String phone, String address, String fullName) {
         // Check if username already exists
         if (usernameExists(username)) {
             System.out.println("Username already exists: " + username);
@@ -223,11 +215,10 @@ public class VerificationController {
             pstmtUser.executeUpdate();
 
             // Then insert into HelpSeeker table (mapped to PersonInNeed in the application)
-            String insertPersonSQL = "INSERT INTO HelpSeeker (username, fullName, needs) VALUES (?, ?, ?)";
+            String insertPersonSQL = "INSERT INTO PersonInNeed (username, fullName) VALUES (?, ?)";
             pstmtPerson = conn.prepareStatement(insertPersonSQL);
             pstmtPerson.setString(1, username);
             pstmtPerson.setString(2, fullName);
-            pstmtPerson.setString(3, needs);
             pstmtPerson.executeUpdate();
 
             conn.commit(); // Commit transaction

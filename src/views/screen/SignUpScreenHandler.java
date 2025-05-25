@@ -177,10 +177,9 @@ public class SignUpScreenHandler {
             }
             else if ("personInNeed".equals(currentUserType)) {
                 String fullName = fullNameField.getText().trim();
-                // We're excluding the needs field, so pass an empty string
-                String needs = "";
+
                 registrationSuccess = verificationController.registerPersonInNeed(
-                        username, password, email, phone, address, fullName, needs);
+                        username, password, email, phone, address, fullName);
             }
 
             if (registrationSuccess) {
