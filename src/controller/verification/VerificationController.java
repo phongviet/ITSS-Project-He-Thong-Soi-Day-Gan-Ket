@@ -1,5 +1,7 @@
 package controller.verification;
 
+import entity.users.VolunteerOrganization;
+
 import java.sql.*;
 
 public class VerificationController {
@@ -265,6 +267,97 @@ public class VerificationController {
             if (stmt != null) stmt.close();
         } catch (SQLException e) {
             e.printStackTrace();
+        }
+    }
+    
+    /**
+     * Get the type of user based on username
+     * @param username The username to check
+     * @return "Volunteer", "VolunteerOrganization", "PersonInNeed", or null if not found
+     */
+    public String getUserType(String username) {
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        
+        try {
+            conn = DriverManager.getConnection(DB_URL);
+            
+            // Check if user is a Volunteer
+            pstmt = conn.prepareStatement("SELECT * FROM Volunteer WHERE username = ?");
+            pstmt.setString(1, username);
+            rs = pstmt.executeQuery();
+            if (rs.next()) {
+                return "Volunteer";
+            }
+            
+            // Check if user is a VolunteerOrganization
+            closeResources(null, pstmt, rs);
+            pstmt = conn.prepareStatement("SELECT * FROM VolunteerOrganization WHERE username = ?");
+            pstmt.setString(1, username);
+            rs = pstmt.executeQuery();
+            if (rs.next()) {
+                return "VolunteerOrganization";
+            }
+            
+            // Check if user is a PersonInNeed
+            closeResources(null, pstmt, rs);
+            pstmt = conn.prepareStatement("SELECT * FROM PersonInNeed WHERE username = ?");
+            pstmt.setString(1, username);
+            rs = pstmt.executeQuery();
+            if (rs.next()) {
+                return "PersonInNeed";
+            }
+            
+            return null;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return null;
+        } finally {
+            closeResources(conn, pstmt, rs);
+        }
+    }
+    
+    /**
+     * Get VolunteerOrganization object by username
+     * @param username The username of the organization
+     * @return VolunteerOrganization object or null if not found
+     */
+    public VolunteerOrganization getVolunteerOrganization(String username) {
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        
+        try {
+            conn = DriverManager.getConnection(DB_URL);
+            
+            // Get organization data
+            pstmt = conn.prepareStatement(
+                "SELECT u.username, u.email, u.phone, u.address, o.organizationName, o.licenseNumber " +
+                "FROM SystemUser u " +
+                "JOIN VolunteerOrganization o ON u.username = o.username " +
+                "WHERE u.username = ?"
+            );
+            pstmt.setString(1, username);
+            rs = pstmt.executeQuery();
+            
+            if (rs.next()) {
+                VolunteerOrganization org = new VolunteerOrganization();
+                org.setUsername(rs.getString("username"));
+                org.setEmail(rs.getString("email"));
+                org.setPhone(rs.getString("phone"));
+                org.setAddress(rs.getString("address"));
+                org.setOrganizationName(rs.getString("organizationName"));
+                org.setLicenseNumber(rs.getString("licenseNumber"));
+                return org;
+            }
+            
+            return null;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return null;
+        } finally {
+            closeResources(conn, pstmt, rs);
         }
     }
 }

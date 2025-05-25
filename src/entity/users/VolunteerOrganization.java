@@ -8,6 +8,10 @@ public class VolunteerOrganization extends SystemUser {
         super(username, password, email, phone, address);
     }
 
+    public VolunteerOrganization() {
+        super();
+    }
+
     public String getLicenseNumber() {
         return licenseNumber;
     }

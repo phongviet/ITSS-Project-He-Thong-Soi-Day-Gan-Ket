@@ -3,6 +3,9 @@ DROP TABLE IF EXISTS HelpSeeker;
 DROP TABLE IF EXISTS VolunteerOrganization;
 DROP TABLE IF EXISTS Volunteer;
 DROP TABLE IF EXISTS SystemUser;
+DROP TABLE IF EXISTS PersonInNeed;
+DROP TABLE IF EXISTS Events;
+DROP TABLE IF EXISTS EventParticipants;
 
 CREATE TABLE SystemUser (
     username TEXT PRIMARY KEY,
@@ -37,4 +40,31 @@ CREATE TABLE Admin (
     email TEXT,
     phone TEXT,
     fullName TEXT
+);
+
+CREATE TABLE Events (
+    eventId INTEGER PRIMARY KEY,
+    title TEXT,
+    maxParticipantNumber INTEGER,
+    supportType VARCHAR(50),
+    startDay INTEGER,
+    startMonth INTEGER,
+    startYear INTEGER,
+    endDay INTEGER,
+    endMonth INTEGER,
+    endYear INTEGER,
+    emergencyLevel VARCHAR(20),
+    description TEXT,
+    organizer TEXT,
+    needer TEXT,
+    FOREIGN KEY (organizer) REFERENCES VolunteerOrganization(username),
+    FOREIGN KEY (needer) REFERENCES PersonInNeed(username)
+);
+
+CREATE TABLE EventParticipants (
+    eventId INTEGER,
+    username TEXT,
+    PRIMARY KEY (eventId, username),
+    FOREIGN KEY (eventId) REFERENCES Events(eventId),
+    FOREIGN KEY (username) REFERENCES Volunteer(username)
 );

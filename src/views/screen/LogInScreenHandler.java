@@ -1,6 +1,7 @@
 package views.screen;
 
 import controller.verification.VerificationController;
+import entity.users.VolunteerOrganization;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -32,13 +33,45 @@ public class LogInScreenHandler {
     private void handleLogin(ActionEvent event) {
         String username = usernameField.getText();
         String password = passwordField.getText();
+
         if (verificationController.checkInfo(username, password)) {
             messageLabel.setText("Login successful!");
+
+            // Determine user type and navigate to the appropriate screen
+            try {
+                // Get user type from database
+                String userType = verificationController.getUserType(username);
+                Stage stage = (Stage) loginButton.getScene().getWindow();
+
+                if ("VolunteerOrganization".equals(userType)) {
+                    // Load the FXML file with its declared controller
+                    FXMLLoader loader = new FXMLLoader(getClass().getResource("/views/fxml/OrganizationScreen/VolunteerOrgMainScreen.fxml"));
+                    Parent root = loader.load();
+                    
+                    // Get the controller that was created by the FXML loader
+                    VolunteerOrgMainScreenHandler controller = loader.getController();
+                    
+                    // Set the organization data in the controller
+                    VolunteerOrganization organization = verificationController.getVolunteerOrganization(username);
+                    controller.setOrganization(organization);
+                    controller.setStage(stage);
+                    
+                    // Set the scene
+                    stage.setScene(new Scene(root));
+                    stage.setTitle("Volunteer Organization Dashboard");
+                    stage.show();
+                } else {
+                    // Handle other user types (Volunteer, PersonInNeed, etc.)
+                    messageLabel.setText("Login successful, but no specific UI for " + userType + " yet.");
+                }
+            } catch (Exception e) {
+                messageLabel.setText("Error loading dashboard: " + e.getMessage());
+                e.printStackTrace();
+            }
         } else {
             messageLabel.setText("Login failed!");
         }
     }
-
     @FXML
     private Button signUpButton;
 

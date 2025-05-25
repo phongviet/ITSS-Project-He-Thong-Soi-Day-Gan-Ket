@@ -15,6 +15,10 @@ public abstract class SystemUser {
         this.address = address;
     }
 
+    public SystemUser() {
+
+    }
+
     public String getUsername() {
         return username;
     }
