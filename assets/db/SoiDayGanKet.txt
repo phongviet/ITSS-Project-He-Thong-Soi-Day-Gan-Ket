@@ -68,3 +68,21 @@ CREATE TABLE EventParticipants (
     FOREIGN KEY (eventId) REFERENCES Events(eventId),
     FOREIGN KEY (username) REFERENCES Volunteer(username)
 );
+
+INSERT INTO SystemUser (username, password, email, phone, address)
+VALUES ('tnv', '123', 'volunteer@example.com', '0123456789', 'Hanoi, Vietnam');
+
+INSERT INTO Volunteer (username, fullName)
+VALUES ('tnv', 'Nguyen Van Tinh Nguyen');
+
+INSERT INTO SystemUser (username, password, email, phone, address)
+VALUES ('tochuc', '123', 'organization@example.com', '0987654321', 'Ho Chi Minh City, Vietnam');
+
+INSERT INTO VolunteerOrganization (username, organizationName, licenseNumber)
+VALUES ('tochuc', 'Tổ chức áo đen', 'LIC-123456');
+
+INSERT INTO SystemUser (username, password, email, phone, address)
+VALUES ('nguoicangiup', '123', 'needperson@example.com', '0369852147', 'Da Nang, Vietnam');
+
+INSERT INTO PersonInNeed (username, fullName)
+VALUES ('nguoicangiup', 'Tran Thi Can Giup');
