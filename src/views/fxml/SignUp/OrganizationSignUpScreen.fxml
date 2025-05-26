@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.text.Font?>
+
+<AnchorPane prefHeight="768" prefWidth="1024"
+            xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="views.screen.SignUpScreenHandler"
+            style="-fx-background-color: white;">
+    <children>
+        <VBox alignment="CENTER" layoutX="312.0" layoutY="50.0"
+              prefWidth="400" prefHeight="600" maxHeight="600"
+              AnchorPane.leftAnchor="312.0" AnchorPane.topAnchor="50.0">
+
+            <padding>
+                <Insets top="20" bottom="20" left="30" right="30" />
+            </padding>
+
+            <Label text="Organization Sign Up" style="-fx-font-weight: bold;">
+                <font>
+                    <Font size="24.0" />
+                </font>
+            </Label>
+
+            <!-- Registration Form Section -->
+            <ScrollPane fitToWidth="true" hbarPolicy="NEVER" vbarPolicy="AS_NEEDED"
+                        prefHeight="500" maxHeight="500"
+                        style="-fx-background-color: transparent; -fx-background: transparent; -fx-border-color: transparent;">
+                <content>
+                    <VBox spacing="10">
+                        <padding>
+                            <Insets top="10" bottom="10" left="5" right="5" />
+                        </padding>
+
+                        <Label text="Registration Information:" style="-fx-font-weight: bold;">
+                            <font>
+                                <Font size="16.0" />
+                            </font>
+                        </Label>
+
+                        <Label text="Username:">
+                            <font>
+                                <Font size="14.0" />
+                            </font>
+                        </Label>
+                        <TextField fx:id="usernameField" promptText="Enter username" prefHeight="30" />
+
+                        <Label text="Password:">
+                            <font>
+                                <Font size="14.0" />
+                            </font>
+                        </Label>
+                        <PasswordField fx:id="passwordField" promptText="Enter password" prefHeight="30" />
+
+                        <Label text="Confirm Password:">
+                            <font>
+                                <Font size="14.0" />
+                            </font>
+                        </Label>
+                        <PasswordField fx:id="confirmPasswordField" promptText="Confirm password" prefHeight="30" />
+
+                        <Label text="Email:">
+                            <font>
+                                <Font size="14.0" />
+                            </font>
+                        </Label>
+                        <TextField fx:id="emailField" promptText="Enter email" prefHeight="30" />
+
+                        <Label text="Phone:">
+                            <font>
+                                <Font size="14.0" />
+                            </font>
+                        </Label>
+                        <TextField fx:id="phoneField" promptText="Enter phone number" prefHeight="30" />
+
+                        <Label text="Address:">
+                            <font>
+                                <Font size="14.0" />
+                            </font>
+                        </Label>
+                        <TextField fx:id="addressField" promptText="Enter address" prefHeight="30" />
+
+                        <!-- Organization specific fields -->
+                        <Label text="Organization Name:">
+                            <font>
+                                <Font size="14.0" />
+                            </font>
+                        </Label>
+                        <TextField fx:id="organizationNameField" promptText="Enter organization name" prefHeight="30" />
+
+                        <Label text="License Number:">
+                            <font>
+                                <Font size="14.0" />
+                            </font>
+                        </Label>
+                        <TextField fx:id="licenseNumberField" promptText="Enter license number" prefHeight="30" />
+
+                        <HBox spacing="20" alignment="CENTER">
+                            <padding>
+                                <Insets top="15" bottom="5" />
+                            </padding>
+                            <Button fx:id="backButton" text="Back" onAction="#handleBack"
+                                    prefWidth="150" prefHeight="30">
+                                <font>
+                                    <Font size="14.0" />
+                                </font>
+                            </Button>
+                            <Button fx:id="signUpButton" text="Sign Up" onAction="#handleSignUp"
+                                    prefWidth="150" prefHeight="30">
+                                <font>
+                                    <Font size="14.0" />
+                                </font>
+                            </Button>
+                        </HBox>
+                    </VBox>
+                </content>
+            </ScrollPane>
+
+            <Label fx:id="messageLabel" style="-fx-text-fill: red;">
+                <font>
+                    <Font size="14.0" />
+                </font>
+            </Label>
+
+            <HBox alignment="CENTER">
+                <Label text="Already have an account? ">
+                    <font>
+                        <Font size="14.0" />
+                    </font>
+                </Label>
+                <Hyperlink fx:id="loginLink" text="Log In" onAction="#handleLoginLink">
+                    <font>
+                        <Font size="14.0" />
+                    </font>
+                </Hyperlink>
+            </HBox>
+        </VBox>
+    </children>
+</AnchorPane>
