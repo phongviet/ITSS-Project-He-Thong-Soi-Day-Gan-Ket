@@ -5,7 +5,7 @@ public class TestDB {
     public static void main(String[] args) {
         Connection conn = null;
         try{
-            conn = DriverManager.getConnection("jdbc:sqlite:assets\\db\\SoiDayGanKet_sqlite.db");
+            conn = DriverManager.getConnection("jdbc:sqlite:ITSS-Project-He-Thong-Soi-Day-Gan-Ket\\assets\\db\\SoiDayGanKet_sqlite.db");
             System.out.println("Opened database connection!");
 
             try{
@@ -18,6 +18,7 @@ public class TestDB {
             createTable(conn);
             insertData(conn, "Phong", "123456");
             insertData(conn, "Peter", "1234567");
+            insertData(conn, "Tan", "12345678");
             displayTable(conn, "Test");
         }
         catch (SQLException e){
