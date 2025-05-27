@@ -12,8 +12,8 @@
             style="-fx-background-color: white;">
     <children>
         <VBox alignment="CENTER" layoutX="312.0" layoutY="50.0"
-              prefWidth="400" prefHeight="600" maxHeight="600"
-              AnchorPane.leftAnchor="312.0" AnchorPane.topAnchor="50.0">
+              prefWidth="400" prefHeight="650" maxHeight="650"
+              AnchorPane.leftAnchor="312.0" AnchorPane.topAnchor="30.0">
 
             <padding>
                 <Insets top="20" bottom="20" left="30" right="30" />
@@ -27,7 +27,7 @@
 
             <!-- Registration Form Section -->
             <ScrollPane fitToWidth="true" hbarPolicy="NEVER" vbarPolicy="AS_NEEDED"
-                        prefHeight="500" maxHeight="500"
+                        prefHeight="550" maxHeight="550"
                         style="-fx-background-color: transparent; -fx-background: transparent; -fx-border-color: transparent;">
                 <content>
                     <VBox spacing="10">
@@ -35,48 +35,48 @@
                             <Insets top="10" bottom="10" left="5" right="5" />
                         </padding>
 
-                        <Label text="Registration Information:" style="-fx-font-weight: bold;">
+                        <Label text="Registration Information:" style="-fx-font-weight: bold; -fx-text-fill: #000000;">
                             <font>
                                 <Font size="16.0" />
                             </font>
                         </Label>
 
-                        <Label text="Username:">
+                        <Label text="Username:" style="-fx-text-fill: #000000;">
                             <font>
                                 <Font size="14.0" />
                             </font>
                         </Label>
                         <TextField fx:id="usernameField" promptText="Enter username" prefHeight="30" />
 
-                        <Label text="Password:">
+                        <Label text="Password:" style="-fx-text-fill: #000000;">
                             <font>
                                 <Font size="14.0" />
                             </font>
                         </Label>
                         <PasswordField fx:id="passwordField" promptText="Enter password" prefHeight="30" />
 
-                        <Label text="Confirm Password:">
+                        <Label text="Confirm Password:" style="-fx-text-fill: #000000;">
                             <font>
                                 <Font size="14.0" />
                             </font>
                         </Label>
                         <PasswordField fx:id="confirmPasswordField" promptText="Confirm password" prefHeight="30" />
 
-                        <Label text="Email:">
+                        <Label text="Email:" style="-fx-text-fill: #000000;">
                             <font>
                                 <Font size="14.0" />
                             </font>
                         </Label>
                         <TextField fx:id="emailField" promptText="Enter email" prefHeight="30" />
 
-                        <Label text="Phone:">
+                        <Label text="Phone:" style="-fx-text-fill: #000000;">
                             <font>
                                 <Font size="14.0" />
                             </font>
                         </Label>
                         <TextField fx:id="phoneField" promptText="Enter phone number" prefHeight="30" />
 
-                        <Label text="Address:">
+                        <Label text="Address:" style="-fx-text-fill: #000000;">
                             <font>
                                 <Font size="14.0" />
                             </font>
@@ -84,16 +84,157 @@
                         <TextField fx:id="addressField" promptText="Enter address" prefHeight="30" />
 
                         <!-- Volunteer specific fields -->
-                        <Label text="Full Name:">
+                        <Label text="Full Name:" style="-fx-text-fill: #000000;">
                             <font>
                                 <Font size="14.0" />
                             </font>
                         </Label>
                         <TextField fx:id="fullNameField" promptText="Enter your full name" prefHeight="30" />
 
-                        <HBox spacing="20" alignment="CENTER">
+                        <!-- Skills section -->
+                        <Label text="Skills:" style="-fx-font-weight: bold; -fx-text-fill: #000000;">
+                            <font>
+                                <Font size="16.0" />
+                            </font>
                             <padding>
                                 <Insets top="15" bottom="5" />
+                            </padding>
+                        </Label>
+                        <Label text="Select skills you can contribute:" style="-fx-text-fill: #000000;">
+                            <font>
+                                <Font size="14.0" />
+                            </font>
+                        </Label>
+                        <VBox spacing="8">
+                            <padding>
+                                <Insets top="5" bottom="5" />
+                            </padding>
+                            <CheckBox fx:id="foodSkillCheckbox" text="Food Support" style="-fx-text-fill: #000000;">
+                                <font>
+                                    <Font size="14.0" />
+                                </font>
+                            </CheckBox>
+                            <CheckBox fx:id="shelterSkillCheckbox" text="Shelter Support" style="-fx-text-fill: #000000;">
+                                <font>
+                                    <Font size="14.0" />
+                                </font>
+                            </CheckBox>
+                            <CheckBox fx:id="medicalSkillCheckbox" text="Medical Support" style="-fx-text-fill: #000000;">
+                                <font>
+                                    <Font size="14.0" />
+                                </font>
+                            </CheckBox>
+                            <CheckBox fx:id="educationSkillCheckbox" text="Education Support" style="-fx-text-fill: #000000;">
+                                <font>
+                                    <Font size="14.0" />
+                                </font>
+                            </CheckBox>
+                            <CheckBox fx:id="financialSkillCheckbox" text="Financial Support" style="-fx-text-fill: #000000;">
+                                <font>
+                                    <Font size="14.0" />
+                                </font>
+                            </CheckBox>
+                        </VBox>
+                        <Label text="Other skills (comma separated):" style="-fx-text-fill: #000000;">
+                            <font>
+                                <Font size="14.0" />
+                            </font>
+                        </Label>
+                        <TextField fx:id="otherSkillsField" promptText="Example: Cooking, Counseling, etc." prefHeight="30" />
+
+                        <!-- Availability section -->
+                        <Label text="Availability:" style="-fx-font-weight: bold; -fx-text-fill: #000000;">
+                            <font>
+                                <Font size="16.0" />
+                            </font>
+                            <padding>
+                                <Insets top="15" bottom="5" />
+                            </padding>
+                        </Label>
+                        <Label text="Enter hours available for each day:" style="-fx-text-fill: #000000;">
+                            <font>
+                                <Font size="14.0" />
+                            </font>
+                        </Label>
+                        <GridPane hgap="10" vgap="10">
+                            <padding>
+                                <Insets top="5" bottom="5" />
+                            </padding>
+                            <columnConstraints>
+                                <ColumnConstraints hgrow="SOMETIMES" minWidth="100" prefWidth="150" />
+                                <ColumnConstraints hgrow="SOMETIMES" minWidth="60" prefWidth="100" />
+                            </columnConstraints>
+                            <rowConstraints>
+                                <RowConstraints vgrow="SOMETIMES" minHeight="30" />
+                                <RowConstraints vgrow="SOMETIMES" minHeight="30" />
+                                <RowConstraints vgrow="SOMETIMES" minHeight="30" />
+                                <RowConstraints vgrow="SOMETIMES" minHeight="30" />
+                                <RowConstraints vgrow="SOMETIMES" minHeight="30" />
+                                <RowConstraints vgrow="SOMETIMES" minHeight="30" />
+                                <RowConstraints vgrow="SOMETIMES" minHeight="30" />
+                            </rowConstraints>
+                            <children>
+                                <Label text="Monday:" style="-fx-text-fill: #000000;" GridPane.rowIndex="0" GridPane.columnIndex="0">
+                                    <font>
+                                        <Font size="14.0" />
+                                    </font>
+                                </Label>
+                                <Spinner fx:id="mondaySpinner" initialValue="0" min="0" max="24" amountToStepBy="1"
+                                         editable="true" GridPane.rowIndex="0" GridPane.columnIndex="1" />
+
+                                <Label text="Tuesday:" style="-fx-text-fill: #000000;" GridPane.rowIndex="1" GridPane.columnIndex="0">
+                                    <font>
+                                        <Font size="14.0" />
+                                    </font>
+                                </Label>
+                                <Spinner fx:id="tuesdaySpinner" initialValue="0" min="0" max="24" amountToStepBy="1"
+                                         editable="true" GridPane.rowIndex="1" GridPane.columnIndex="1" />
+
+                                <Label text="Wednesday:" style="-fx-text-fill: #000000;" GridPane.rowIndex="2" GridPane.columnIndex="0">
+                                    <font>
+                                        <Font size="14.0" />
+                                    </font>
+                                </Label>
+                                <Spinner fx:id="wednesdaySpinner" initialValue="0" min="0" max="24" amountToStepBy="1"
+                                         editable="true" GridPane.rowIndex="2" GridPane.columnIndex="1" />
+
+                                <Label text="Thursday:" style="-fx-text-fill: #000000;" GridPane.rowIndex="3" GridPane.columnIndex="0">
+                                    <font>
+                                        <Font size="14.0" />
+                                    </font>
+                                </Label>
+                                <Spinner fx:id="thursdaySpinner" initialValue="0" min="0" max="24" amountToStepBy="1"
+                                         editable="true" GridPane.rowIndex="3" GridPane.columnIndex="1" />
+
+                                <Label text="Friday:" style="-fx-text-fill: #000000;" GridPane.rowIndex="4" GridPane.columnIndex="0">
+                                    <font>
+                                        <Font size="14.0" />
+                                    </font>
+                                </Label>
+                                <Spinner fx:id="fridaySpinner" initialValue="0" min="0" max="24" amountToStepBy="1"
+                                         editable="true" GridPane.rowIndex="4" GridPane.columnIndex="1" />
+
+                                <Label text="Saturday:" style="-fx-text-fill: #000000;" GridPane.rowIndex="5" GridPane.columnIndex="0">
+                                    <font>
+                                        <Font size="14.0" />
+                                    </font>
+                                </Label>
+                                <Spinner fx:id="saturdaySpinner" initialValue="0" min="0" max="24" amountToStepBy="1"
+                                         editable="true" GridPane.rowIndex="5" GridPane.columnIndex="1" />
+
+                                <Label text="Sunday:" style="-fx-text-fill: #000000;" GridPane.rowIndex="6" GridPane.columnIndex="0">
+                                    <font>
+                                        <Font size="14.0" />
+                                    </font>
+                                </Label>
+                                <Spinner fx:id="sundaySpinner" initialValue="0" min="0" max="24" amountToStepBy="1"
+                                         editable="true" GridPane.rowIndex="6" GridPane.columnIndex="1" />
+                            </children>
+                        </GridPane>
+
+                        <HBox spacing="20" alignment="CENTER">
+                            <padding>
+                                <Insets top="20" bottom="10" />
                             </padding>
                             <Button fx:id="backButton" text="Back" onAction="#handleBack"
                                     prefWidth="150" prefHeight="30">
@@ -119,7 +260,7 @@
             </Label>
 
             <HBox alignment="CENTER">
-                <Label text="Already have an account? ">
+                <Label text="Already have an account? " style="-fx-text-fill: #000000;">
                     <font>
                         <Font size="14.0" />
                     </font>
@@ -133,3 +274,4 @@
         </VBox>
     </children>
 </AnchorPane>
+

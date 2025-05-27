@@ -10,6 +10,13 @@ import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 public class SignUpScreenHandler {
 
     // Common fields across all sign up screens
@@ -53,6 +60,47 @@ public class SignUpScreenHandler {
     @FXML
     private TextField licenseNumberField;
 
+    // Volunteer skills checkboxes
+    @FXML
+    private CheckBox foodSkillCheckbox;
+
+    @FXML
+    private CheckBox shelterSkillCheckbox;
+
+    @FXML
+    private CheckBox medicalSkillCheckbox;
+
+    @FXML
+    private CheckBox educationSkillCheckbox;
+
+    @FXML
+    private CheckBox financialSkillCheckbox;
+
+    @FXML
+    private TextField otherSkillsField;
+
+    // Volunteer availability spinners
+    @FXML
+    private Spinner<Integer> mondaySpinner;
+
+    @FXML
+    private Spinner<Integer> tuesdaySpinner;
+
+    @FXML
+    private Spinner<Integer> wednesdaySpinner;
+
+    @FXML
+    private Spinner<Integer> thursdaySpinner;
+
+    @FXML
+    private Spinner<Integer> fridaySpinner;
+
+    @FXML
+    private Spinner<Integer> saturdaySpinner;
+
+    @FXML
+    private Spinner<Integer> sundaySpinner;
+
     // Fields for role selection screen - may be null depending on which FXML is loaded
     @FXML
     private RadioButton volunteerRadio;
@@ -79,20 +127,47 @@ public class SignUpScreenHandler {
             // We're on the role selection screen
             currentUserType = "roleSelection";
         } else if (fullNameField != null && organizationNameField == null) {
-            // We're on the PersonInNeed screen
-            currentUserType = "personInNeed";
+            if (foodSkillCheckbox != null) {
+                // We're on the Volunteer screen
+                currentUserType = "volunteer";
+                initializeSpinners();
+            } else {
+                // We're on the PersonInNeed screen
+                currentUserType = "personInNeed";
+            }
         } else if (organizationNameField != null && licenseNumberField != null) {
             // We're on the Organization screen
             currentUserType = "organization";
-        } else if (fullNameField != null) {
-            // We're on the Volunteer screen
-            currentUserType = "volunteer";
         }
 
         // Setup message label if it exists
         if (messageLabel != null) {
             messageLabel.setText("");
         }
+    }
+
+    /**
+     * Initialize all spinners with proper value factories
+     */
+    private void initializeSpinners() {
+        if (mondaySpinner != null) {
+            setupSpinner(mondaySpinner);
+            setupSpinner(tuesdaySpinner);
+            setupSpinner(wednesdaySpinner);
+            setupSpinner(thursdaySpinner);
+            setupSpinner(fridaySpinner);
+            setupSpinner(saturdaySpinner);
+            setupSpinner(sundaySpinner);
+        }
+    }
+
+    /**
+     * Setup spinner with proper value factory
+     */
+    private void setupSpinner(Spinner<Integer> spinner) {
+        SpinnerValueFactory<Integer> valueFactory =
+                new SpinnerValueFactory.IntegerSpinnerValueFactory(0, 24, 0);
+        spinner.setValueFactory(valueFactory);
     }
 
     /**
@@ -166,8 +241,15 @@ public class SignUpScreenHandler {
             // Register user based on current screen
             if ("volunteer".equals(currentUserType)) {
                 String fullName = fullNameField.getText().trim();
+
+                // Get skills list
+                List<String> skills = getSelectedSkills();
+
+                // Get availability map
+                Map<String, Integer> availability = getAvailability();
+
                 registrationSuccess = verificationController.registerVolunteer(
-                        username, password, email, phone, address, fullName);
+                        username, password, email, phone, address, fullName, skills, availability);
             }
             else if ("organization".equals(currentUserType)) {
                 String orgName = organizationNameField.getText().trim();
@@ -200,6 +282,50 @@ public class SignUpScreenHandler {
             messageLabel.setText("Error during sign up: " + e.getMessage());
             e.printStackTrace();
         }
+    }
+
+    /**
+     * Get selected skills from checkboxes and text field
+     */
+    private List<String> getSelectedSkills() {
+        List<String> skills = new ArrayList<>();
+
+        if (foodSkillCheckbox.isSelected()) skills.add("Food");
+        if (shelterSkillCheckbox.isSelected()) skills.add("Shelter");
+        if (medicalSkillCheckbox.isSelected()) skills.add("Medical");
+        if (educationSkillCheckbox.isSelected()) skills.add("Education");
+        if (financialSkillCheckbox.isSelected()) skills.add("Financial");
+
+        // Add other skills if specified
+        String otherSkills = otherSkillsField.getText().trim();
+        if (!otherSkills.isEmpty()) {
+            String[] otherSkillsList = otherSkills.split(",");
+            for (String skill : otherSkillsList) {
+                String trimmedSkill = skill.trim();
+                if (!trimmedSkill.isEmpty()) {
+                    skills.add(trimmedSkill);
+                }
+            }
+        }
+
+        return skills;
+    }
+
+    /**
+     * Get availability from spinners
+     */
+    private Map<String, Integer> getAvailability() {
+        Map<String, Integer> availability = new HashMap<>();
+
+        if (mondaySpinner.getValue() > 0) availability.put("Monday", mondaySpinner.getValue());
+        if (tuesdaySpinner.getValue() > 0) availability.put("Tuesday", tuesdaySpinner.getValue());
+        if (wednesdaySpinner.getValue() > 0) availability.put("Wednesday", wednesdaySpinner.getValue());
+        if (thursdaySpinner.getValue() > 0) availability.put("Thursday", thursdaySpinner.getValue());
+        if (fridaySpinner.getValue() > 0) availability.put("Friday", fridaySpinner.getValue());
+        if (saturdaySpinner.getValue() > 0) availability.put("Saturday", saturdaySpinner.getValue());
+        if (sundaySpinner.getValue() > 0) availability.put("Sunday", sundaySpinner.getValue());
+
+        return availability;
     }
 
     /**
@@ -252,7 +378,37 @@ public class SignUpScreenHandler {
         }
 
         // Role-specific validations
-        if ("volunteer".equals(currentUserType) || "personInNeed".equals(currentUserType)) {
+        if ("volunteer".equals(currentUserType)) {
+            if (fullNameField.getText().trim().isEmpty()) {
+                messageLabel.setText("Full name is required");
+                return false;
+            }
+
+            // Validate at least one skill is selected
+            if (!foodSkillCheckbox.isSelected() &&
+                !shelterSkillCheckbox.isSelected() &&
+                !medicalSkillCheckbox.isSelected() &&
+                !educationSkillCheckbox.isSelected() &&
+                !financialSkillCheckbox.isSelected() &&
+                otherSkillsField.getText().trim().isEmpty()) {
+
+                messageLabel.setText("Please select at least one skill");
+                return false;
+            }
+
+            // Validate at least one day has availability
+            if (mondaySpinner.getValue() == 0 &&
+                tuesdaySpinner.getValue() == 0 &&
+                wednesdaySpinner.getValue() == 0 &&
+                thursdaySpinner.getValue() == 0 &&
+                fridaySpinner.getValue() == 0 &&
+                saturdaySpinner.getValue() == 0 &&
+                sundaySpinner.getValue() == 0) {
+
+                messageLabel.setText("Please specify availability for at least one day");
+                return false;
+            }
+        } else if ("personInNeed".equals(currentUserType)) {
             if (fullNameField.getText().trim().isEmpty()) {
                 messageLabel.setText("Full name is required");
                 return false;
@@ -288,6 +444,27 @@ public class SignUpScreenHandler {
         if (fullNameField != null) fullNameField.clear();
         if (organizationNameField != null) organizationNameField.clear();
         if (licenseNumberField != null) licenseNumberField.clear();
+
+        // Clear Volunteer specific fields
+        if ("volunteer".equals(currentUserType)) {
+            foodSkillCheckbox.setSelected(false);
+            shelterSkillCheckbox.setSelected(false);
+            medicalSkillCheckbox.setSelected(false);
+            educationSkillCheckbox.setSelected(false);
+            financialSkillCheckbox.setSelected(false);
+            otherSkillsField.clear();
+
+            // Reset spinners
+            if (mondaySpinner != null) {
+                mondaySpinner.getValueFactory().setValue(0);
+                tuesdaySpinner.getValueFactory().setValue(0);
+                wednesdaySpinner.getValueFactory().setValue(0);
+                thursdaySpinner.getValueFactory().setValue(0);
+                fridaySpinner.getValueFactory().setValue(0);
+                saturdaySpinner.getValueFactory().setValue(0);
+                sundaySpinner.getValueFactory().setValue(0);
+            }
+        }
     }
 
     /**
@@ -306,3 +483,4 @@ public class SignUpScreenHandler {
         }
     }
 }
+

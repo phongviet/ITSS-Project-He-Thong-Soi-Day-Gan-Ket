@@ -1,5 +1,7 @@
 DROP TABLE IF EXISTS Admin;
 DROP TABLE IF EXISTS HelpSeeker;
+DROP TABLE IF EXISTS VolunteerSkills;
+DROP TABLE IF EXISTS VolunteerAvailability;
 DROP TABLE IF EXISTS VolunteerOrganization;
 DROP TABLE IF EXISTS Volunteer;
 DROP TABLE IF EXISTS SystemUser;
@@ -18,7 +20,24 @@ CREATE TABLE SystemUser (
 CREATE TABLE Volunteer (
     username TEXT PRIMARY KEY,
     fullName TEXT,
+    averageRating REAL DEFAULT 0,
+    ratingCount INT DEFAULT 0,
     FOREIGN KEY (username) REFERENCES SystemUser(username)
+);
+
+CREATE TABLE VolunteerSkills (
+    skillId INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT,
+    skill TEXT NOT NULL,
+    FOREIGN KEY (username) REFERENCES Volunteer(username)
+);
+
+CREATE TABLE VolunteerAvailability (
+    availabilityId INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT,
+    dayOfWeek TEXT NOT NULL,
+    hours INTEGER NOT NULL,
+    FOREIGN KEY (username) REFERENCES Volunteer(username)
 );
 
 CREATE TABLE VolunteerOrganization (
@@ -57,6 +76,7 @@ CREATE TABLE Events (
     description TEXT,
     organizer TEXT,
     needer TEXT,
+    status VARCHAR(20) DEFAULT 'pending',
     FOREIGN KEY (organizer) REFERENCES VolunteerOrganization(username),
     FOREIGN KEY (needer) REFERENCES PersonInNeed(username)
 );

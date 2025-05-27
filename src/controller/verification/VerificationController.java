@@ -3,6 +3,8 @@ package controller.verification;
 import entity.users.VolunteerOrganization;
 
 import java.sql.*;
+import java.util.List;
+import java.util.Map;
 
 public class VerificationController {
     private static final String DB_URL = "jdbc:sqlite:assets/db/SoiDayGanKet_sqlite.db";
@@ -53,10 +55,13 @@ public class VerificationController {
      * @param phone User's phone number
      * @param address User's address
      * @param fullName Volunteer's full name
+     * @param skills List of skills volunteer possesses
+     * @param availability Map of days and available hours
      * @return true if registration successful, false otherwise
      */
     public boolean registerVolunteer(String username, String password, String email,
-                                     String phone, String address, String fullName) {
+                                     String phone, String address, String fullName,
+                                     List<String> skills, Map<String, Integer> availability) {
         // Check if username already exists
         if (usernameExists(username)) {
             System.out.println("Username already exists: " + username);
@@ -66,6 +71,8 @@ public class VerificationController {
         Connection conn = null;
         PreparedStatement pstmtUser = null;
         PreparedStatement pstmtVolunteer = null;
+        PreparedStatement pstmtSkill = null;
+        PreparedStatement pstmtAvailability = null;
 
         try {
             conn = DriverManager.getConnection(DB_URL);
@@ -82,11 +89,38 @@ public class VerificationController {
             pstmtUser.executeUpdate();
 
             // Then insert into Volunteer table
-            String insertVolunteerSQL = "INSERT INTO Volunteer (username, fullName) VALUES (?, ?)";
+            String insertVolunteerSQL = "INSERT INTO Volunteer (username, fullName, averageRating, ratingCount) VALUES (?, ?, ?, ?)";
             pstmtVolunteer = conn.prepareStatement(insertVolunteerSQL);
             pstmtVolunteer.setString(1, username);
             pstmtVolunteer.setString(2, fullName);
+            pstmtVolunteer.setDouble(3, 0.0); // Default rating
+            pstmtVolunteer.setInt(4, 0);     // Default rating count
             pstmtVolunteer.executeUpdate();
+
+            // Insert skills if provided
+            if (skills != null && !skills.isEmpty()) {
+                String insertSkillSQL = "INSERT INTO VolunteerSkills (username, skill) VALUES (?, ?)";
+                pstmtSkill = conn.prepareStatement(insertSkillSQL);
+
+                for (String skill : skills) {
+                    pstmtSkill.setString(1, username);
+                    pstmtSkill.setString(2, skill);
+                    pstmtSkill.executeUpdate();
+                }
+            }
+
+            // Insert availability if provided
+            if (availability != null && !availability.isEmpty()) {
+                String insertAvailabilitySQL = "INSERT INTO VolunteerAvailability (username, dayOfWeek, hours) VALUES (?, ?, ?)";
+                pstmtAvailability = conn.prepareStatement(insertAvailabilitySQL);
+
+                for (Map.Entry<String, Integer> entry : availability.entrySet()) {
+                    pstmtAvailability.setString(1, username);
+                    pstmtAvailability.setString(2, entry.getKey());
+                    pstmtAvailability.setInt(3, entry.getValue());
+                    pstmtAvailability.executeUpdate();
+                }
+            }
 
             conn.commit(); // Commit transaction
             System.out.println("Volunteer registered successfully: " + username);
@@ -108,7 +142,17 @@ public class VerificationController {
         } finally {
             closeResources(conn, pstmtUser, null);
             closeStatement(pstmtVolunteer);
+            closeStatement(pstmtSkill);
+            closeStatement(pstmtAvailability);
         }
+    }
+
+    /**
+     * Register a new Volunteer in the system (overloaded method for backward compatibility)
+     */
+    public boolean registerVolunteer(String username, String password, String email,
+                                     String phone, String address, String fullName) {
+        return registerVolunteer(username, password, email, phone, address, fullName, null, null);
     }
 
     /**

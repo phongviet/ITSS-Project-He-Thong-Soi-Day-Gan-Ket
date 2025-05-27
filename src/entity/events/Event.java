@@ -14,6 +14,7 @@ public class Event {
     private ArrayList<String> participantList;
     private String organizer;
     private String needer;
+    private String status; // "pending", "ongoing", "completed", "cancelled"
 
     public int getEventId() {
         return eventId;
