@@ -84,9 +84,25 @@ public class VolunteerOrgMainScreenHandler implements Initializable {
 
     @FXML
     public void handleViewEvents() {
-        // This would navigate to another screen showing this organization's events
-        // Implementation will depend on your navigation system
-        statusMessage.setText("View Events feature will be implemented soon.");
+        try {
+            // Load the event list screen
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/views/fxml/OrganizationScreen/VolunteerOrgViewEventListScreen.fxml"));
+            Parent root = loader.load();
+
+            // Get the controller and pass the organization data
+            VolunteerOrgViewEventListScreenHandler controller = loader.getController();
+            controller.setStage(stage);
+            controller.setOrganization(organization);
+
+            // Set the scene
+            Scene scene = new Scene(root);
+            stage.setScene(scene);
+            stage.setTitle("My Events List");
+            stage.show();
+        } catch (IOException e) {
+            statusMessage.setText("Error loading events list screen: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     @FXML
@@ -99,17 +115,11 @@ public class VolunteerOrgMainScreenHandler implements Initializable {
             // Set the scene
             Scene scene = new Scene(root);
             stage.setScene(scene);
-            stage.setTitle("Login Screen");
+            stage.setTitle("Login");
             stage.show();
-        } catch (Exception e) {
-            statusMessage.setText("Error during logout: " + e.getMessage());
+        } catch (IOException e) {
+            statusMessage.setText("Error logging out: " + e.getMessage());
             e.printStackTrace();
         }
     }
-
-    public void show() {
-        stage.setTitle("Volunteer Organization Dashboard");
-        stage.show();
-    }
 }
-

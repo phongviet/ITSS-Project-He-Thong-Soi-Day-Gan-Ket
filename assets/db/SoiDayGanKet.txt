@@ -56,9 +56,6 @@ CREATE TABLE PersonInNeed (
 CREATE TABLE Admin (
     username TEXT PRIMARY KEY,
     password TEXT NOT NULL,
-    email TEXT,
-    phone TEXT,
-    fullName TEXT
 );
 
 CREATE TABLE Events (
@@ -92,8 +89,23 @@ CREATE TABLE EventParticipants (
 INSERT INTO SystemUser (username, password, email, phone, address)
 VALUES ('tnv', '123', 'volunteer@example.com', '0123456789', 'Hanoi, Vietnam');
 
-INSERT INTO Volunteer (username, fullName)
-VALUES ('tnv', 'Nguyen Van Tinh Nguyen');
+DELETE FROM Volunteer WHERE username = 'tnv';
+INSERT INTO Volunteer (username, fullName, averageRating, ratingCount)
+VALUES ('tnv', 'Nguyen Van Tinh Nguyen', 4.5, 10);
+
+INSERT INTO VolunteerSkills (username, skill)
+VALUES ('tnv', 'Food');
+INSERT INTO VolunteerSkills (username, skill)
+VALUES ('tnv', 'Medical');
+INSERT INTO VolunteerSkills (username, skill)
+VALUES ('tnv', 'Education');
+
+INSERT INTO VolunteerAvailability (username, dayOfWeek, hours)
+VALUES ('tnv', 'Monday', 4);
+INSERT INTO VolunteerAvailability (username, dayOfWeek, hours)
+VALUES ('tnv', 'Wednesday', 6);
+INSERT INTO VolunteerAvailability (username, dayOfWeek, hours)
+VALUES ('tnv', 'Saturday', 8);
 
 INSERT INTO SystemUser (username, password, email, phone, address)
 VALUES ('tochuc', '123', 'organization@example.com', '0987654321', 'Ho Chi Minh City, Vietnam');
@@ -106,3 +118,35 @@ VALUES ('nguoicangiup', '123', 'needperson@example.com', '0369852147', 'Da Nang,
 
 INSERT INTO PersonInNeed (username, fullName)
 VALUES ('nguoicangiup', 'Tran Thi Can Giup');
+
+INSERT INTO Events (
+    title,
+    maxParticipantNumber,
+    supportType,
+    startDay,
+    startMonth,
+    startYear,
+    endDay,
+    endMonth,
+    endYear,
+    emergencyLevel,
+    description,
+    organizer,
+    status
+)
+VALUES (
+    'Cứu trợ lũ lụt tại Miền Trung',
+    50,
+    'Hỗ trợ thiên tai',
+    1,
+    6,
+    2025,
+    10,
+    6,
+    2025,
+    'Cao',
+    'Chương trình cứu trợ người dân vùng lũ tại các tỉnh miền Trung. Cần tình nguyện viên hỗ trợ phân phát lương thực, nhu yếu phẩm và sơ cấp cứu.',
+    'tochuc',
+    'pending'
+);
+
