@@ -10,6 +10,11 @@
             xmlns:fx="http://javafx.com/fxml"
             fx:controller="views.screen.SignUpScreenHandler"
             style="-fx-background-color: white;">
+
+    <fx:define>
+        <ToggleGroup fx:id="roleGroup" />
+    </fx:define>
+
     <children>
         <VBox alignment="CENTER" layoutX="312.0" layoutY="50.0"
               prefWidth="400" prefHeight="500" maxHeight="500"
@@ -27,7 +32,7 @@
 
             <!-- Role Selection Section -->
             <VBox spacing="15" alignment="CENTER">
-                <Label text="Select your role:" style="-fx-font-weight: bold;">
+                <Label text="Select your role:" style="-fx-font-weight: bold; -fx-text-fill: #000000;">
                     <font>
                         <Font size="16.0" />
                     </font>
@@ -36,17 +41,17 @@
                     <padding>
                         <Insets left="50" right="50" top="10" bottom="10" />
                     </padding>
-                    <RadioButton fx:id="volunteerRadio" text="Volunteer" toggleGroup="$roleGroup" selected="true">
+                    <RadioButton fx:id="volunteerRadio" text="Volunteer" toggleGroup="$roleGroup" selected="true" style="-fx-text-fill: #000000;">
                         <font>
                             <Font size="14.0" />
                         </font>
                     </RadioButton>
-                    <RadioButton fx:id="organizationRadio" text="Volunteer Organization" toggleGroup="$roleGroup">
+                    <RadioButton fx:id="organizationRadio" text="Volunteer Organization" toggleGroup="$roleGroup" style="-fx-text-fill: #000000;">
                         <font>
                             <Font size="14.0" />
                         </font>
                     </RadioButton>
-                    <RadioButton fx:id="personInNeedRadio" text="Person In Need" toggleGroup="$roleGroup">
+                    <RadioButton fx:id="personInNeedRadio" text="Person In Need" toggleGroup="$roleGroup" style="-fx-text-fill: #000000;">
                         <font>
                             <Font size="14.0" />
                         </font>
@@ -67,7 +72,7 @@
             </Label>
 
             <HBox alignment="CENTER">
-                <Label text="Already have an account? ">
+                <Label text="Already have an account? " style="-fx-text-fill: #000000;">
                     <font>
                         <Font size="14.0" />
                     </font>
@@ -80,8 +85,5 @@
             </HBox>
         </VBox>
     </children>
-
-    <fx:define>
-        <ToggleGroup fx:id="roleGroup" />
-    </fx:define>
 </AnchorPane>
+

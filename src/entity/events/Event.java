@@ -14,6 +14,7 @@ public class Event {
     private ArrayList<String> participantList;
     private String organizer;
     private String needer;
+    private String status; // "pending", "upcoming", "ongoing", "completed", "cancelled"
 
     public int getEventId() {
         return eventId;
@@ -133,5 +134,13 @@ public class Event {
 
     public void setTitle(String title) {
         this.title = title;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
     }
 }

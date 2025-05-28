@@ -3,6 +3,8 @@ package controller.event;
 import entity.events.Event;
 import entity.users.VolunteerOrganization;
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class EventController {
 
@@ -18,11 +20,14 @@ public class EventController {
             // Start a transaction
             conn.setAutoCommit(false);
 
+            // Set the initial status to "pending"
+            event.setStatus("pending");
+
             // Insert into Events table
             String insertEventSQL = "INSERT INTO Events (title, maxParticipantNumber, supportType, " +
                     "startDay, startMonth, startYear, endDay, endMonth, endYear, " +
-                    "emergencyLevel, description, organizer) " +
-                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                    "emergencyLevel, description, organizer, status) " +
+                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
             pstmt = conn.prepareStatement(insertEventSQL, Statement.RETURN_GENERATED_KEYS);
             pstmt.setString(1, event.getTitle());
@@ -37,6 +42,7 @@ public class EventController {
             pstmt.setString(10, event.getEmergencyLevel());
             pstmt.setString(11, event.getDescription());
             pstmt.setString(12, organization.getUsername());
+            pstmt.setString(13, event.getStatus()); // Adding the status field
 
             int affectedRows = pstmt.executeUpdate();
 
@@ -86,6 +92,64 @@ public class EventController {
                 }
             }
         }
+    }
+
+    /**
+     * Retrieves all events created by a specific organization
+     *
+     * @param organizerId The ID (username) of the organization
+     * @return List of events organized by the specified organization
+     */
+    public List<Event> getEventsByOrganizerId(String organizerId) {
+        List<Event> events = new ArrayList<>();
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+
+        try {
+            conn = DriverManager.getConnection(DB_URL);
+            String sql = "SELECT * FROM Events WHERE organizer = ?";
+            pstmt = conn.prepareStatement(sql);
+            pstmt.setString(1, organizerId);
+            rs = pstmt.executeQuery();
+
+            while (rs.next()) {
+                Event event = new Event();
+                event.setEventId(rs.getInt("eventId"));
+                event.setTitle(rs.getString("title"));
+                event.setMaxParticipantNumber(rs.getInt("maxParticipantNumber"));
+                event.setSupportType(rs.getString("supportType"));
+
+                // Set dates
+                event.setStartDay(rs.getInt("startDay"));
+                event.setStartMonth(rs.getInt("startMonth"));
+                event.setStartYear(rs.getInt("startYear"));
+                event.setEndDay(rs.getInt("endDay"));
+                event.setEndMonth(rs.getInt("endMonth"));
+                event.setEndYear(rs.getInt("endYear"));
+
+                event.setEmergencyLevel(rs.getString("emergencyLevel"));
+                event.setDescription(rs.getString("description"));
+
+                // Get status from database, default to "pending" if null
+                String status = rs.getString("status");
+                event.setStatus(status != null ? status : "pending");
+
+                events.add(event);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (rs != null) rs.close();
+                if (pstmt != null) pstmt.close();
+                if (conn != null) conn.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+
+        return events;
     }
 
     // Additional methods for updating events, retrieving events, etc. can be added here
