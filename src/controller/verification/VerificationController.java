@@ -1,6 +1,9 @@
 package controller.verification;
 
+import entity.users.Admin;
+import entity.users.Volunteer;
 import entity.users.VolunteerOrganization;
+import entity.users.PersonInNeed;
 
 import java.sql.*;
 import java.util.List;
@@ -317,7 +320,7 @@ public class VerificationController {
     /**
      * Get the type of user based on username
      * @param username The username to check
-     * @return "Volunteer", "VolunteerOrganization", "PersonInNeed", or null if not found
+     * @return "Admin", "Volunteer", "VolunteerOrganization", "PersonInNeed", or null if not found
      */
     public String getUserType(String username) {
         Connection conn = null;
@@ -327,7 +330,16 @@ public class VerificationController {
         try {
             conn = DriverManager.getConnection(DB_URL);
             
+            // Check if user is an Admin
+            pstmt = conn.prepareStatement("SELECT * FROM Admin WHERE username = ?");
+            pstmt.setString(1, username);
+            rs = pstmt.executeQuery();
+            if (rs.next()) {
+                return "Admin";
+            }
+
             // Check if user is a Volunteer
+            closeResources(null, pstmt, rs);
             pstmt = conn.prepareStatement("SELECT * FROM Volunteer WHERE username = ?");
             pstmt.setString(1, username);
             rs = pstmt.executeQuery();
@@ -396,6 +408,127 @@ public class VerificationController {
                 return org;
             }
             
+            return null;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return null;
+        } finally {
+            closeResources(conn, pstmt, rs);
+        }
+    }
+
+    /**
+     * Get Admin object by username
+     * @param username The username of the admin
+     * @return Admin object or null if not found
+     */
+    public Admin getAdmin(String username) {
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+
+        try {
+            conn = DriverManager.getConnection(DB_URL);
+
+            // Check if user is an Admin
+            pstmt = conn.prepareStatement("SELECT * FROM Admin WHERE username = ?");
+            pstmt.setString(1, username);
+            rs = pstmt.executeQuery();
+
+            if (rs.next()) {
+                Admin admin = new Admin();
+                admin.setUsername(username);
+                // Password is not set for security reasons
+                return admin;
+            }
+
+            return null;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return null;
+        } finally {
+            closeResources(conn, pstmt, rs);
+        }
+    }
+
+    /**
+     * Get Volunteer object by username
+     * @param username The username of the volunteer
+     * @return Volunteer object or null if not found
+     */
+    public Volunteer getVolunteer(String username) {
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+
+        try {
+            conn = DriverManager.getConnection(DB_URL);
+
+            // Get volunteer data
+            String sql = "SELECT u.username, u.email, u.phone, u.address, v.fullName, v.averageRating, v.ratingCount " +
+                         "FROM SystemUser u " +
+                         "JOIN Volunteer v ON u.username = v.username " +
+                         "WHERE u.username = ?";
+
+            pstmt = conn.prepareStatement(sql);
+            pstmt.setString(1, username);
+            rs = pstmt.executeQuery();
+
+            if (rs.next()) {
+                Volunteer volunteer = new Volunteer();
+                volunteer.setUsername(rs.getString("username"));
+                volunteer.setEmail(rs.getString("email"));
+                volunteer.setPhone(rs.getString("phone"));
+                volunteer.setAddress(rs.getString("address"));
+                volunteer.setFullName(rs.getString("fullName"));
+                // Set additional volunteer-specific properties
+
+                return volunteer;
+            }
+
+            return null;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return null;
+        } finally {
+            closeResources(conn, pstmt, rs);
+        }
+    }
+
+    /**
+     * Get PersonInNeed object by username
+     * @param username The username of the person in need
+     * @return PersonInNeed object or null if not found
+     */
+    public PersonInNeed getPersonInNeed(String username) {
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+
+        try {
+            conn = DriverManager.getConnection(DB_URL);
+
+            // Get person in need data
+            String sql = "SELECT u.username, u.email, u.phone, u.address, p.fullName " +
+                         "FROM SystemUser u " +
+                         "JOIN PersonInNeed p ON u.username = p.username " +
+                         "WHERE u.username = ?";
+
+            pstmt = conn.prepareStatement(sql);
+            pstmt.setString(1, username);
+            rs = pstmt.executeQuery();
+
+            if (rs.next()) {
+                PersonInNeed personInNeed = new PersonInNeed();
+                personInNeed.setUsername(rs.getString("username"));
+                personInNeed.setEmail(rs.getString("email"));
+                personInNeed.setPhone(rs.getString("phone"));
+                personInNeed.setAddress(rs.getString("address"));
+                personInNeed.setFullName(rs.getString("fullName"));
+
+                return personInNeed;
+            }
+
             return null;
         } catch (SQLException e) {
             e.printStackTrace();
