@@ -100,6 +100,22 @@
                         </Label>
                         <TextField fx:id="fullNameField" promptText="Enter your full name" prefHeight="30" />
 
+                        <!-- CCCD field -->
+                        <Label text="CCCD (Citizen ID):" style="-fx-text-fill: #000000;">
+                            <font>
+                                <Font size="14.0" />
+                            </font>
+                        </Label>
+                        <TextField fx:id="cccdField" promptText="Enter your citizen ID number" prefHeight="30" />
+
+                        <!-- Date of Birth field -->
+                        <Label text="Date of Birth (YYYY-MM-DD):" style="-fx-text-fill: #000000;">
+                            <font>
+                                <Font size="14.0" />
+                            </font>
+                        </Label>
+                        <TextField fx:id="dateOfBirthField" promptText="e.g. 1990-01-15" prefHeight="30" />
+
                         <HBox spacing="20" alignment="CENTER">
                             <padding>
                                 <Insets top="20" bottom="10" />

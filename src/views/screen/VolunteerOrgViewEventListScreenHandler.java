@@ -19,7 +19,10 @@ import javafx.util.Callback;
 import java.io.IOException;
 import java.net.URL;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 import java.util.ResourceBundle;
 import java.util.function.Predicate;
@@ -106,21 +109,33 @@ public class VolunteerOrgViewEventListScreenHandler implements Initializable {
         // Setup start date column
         startDateColumn.setCellValueFactory(cellData -> {
             Event event = cellData.getValue();
-            String startDate = String.format("%02d/%02d/%d",
-                event.getStartDay(),
-                event.getStartMonth(),
-                event.getStartYear());
-            return new SimpleStringProperty(startDate);
+            if (event.getStartDate() != null) {
+                Calendar cal = Calendar.getInstance();
+                cal.setTime(event.getStartDate());
+                String startDate = String.format("%02d/%02d/%d",
+                    cal.get(Calendar.DAY_OF_MONTH),
+                    cal.get(Calendar.MONTH) + 1,
+                    cal.get(Calendar.YEAR));
+                return new SimpleStringProperty(startDate);
+            } else {
+                return new SimpleStringProperty("N/A");
+            }
         });
 
         // Setup end date column
         endDateColumn.setCellValueFactory(cellData -> {
             Event event = cellData.getValue();
-            String endDate = String.format("%02d/%02d/%d",
-                event.getEndDay(),
-                event.getEndMonth(),
-                event.getEndYear());
-            return new SimpleStringProperty(endDate);
+            if (event.getEndDate() != null) {
+                Calendar cal = Calendar.getInstance();
+                cal.setTime(event.getEndDate());
+                String endDate = String.format("%02d/%02d/%d",
+                    cal.get(Calendar.DAY_OF_MONTH),
+                    cal.get(Calendar.MONTH) + 1,
+                    cal.get(Calendar.YEAR));
+                return new SimpleStringProperty(endDate);
+            } else {
+                return new SimpleStringProperty("N/A");
+            }
         });
 
         // Setup status column
@@ -132,16 +147,20 @@ public class VolunteerOrgViewEventListScreenHandler implements Initializable {
 
             // If status is null or empty, fall back to date-based calculation
             if (status == null || status.isEmpty()) {
-                LocalDate startDate = LocalDate.of(event.getStartYear(), event.getStartMonth(), event.getStartDay());
-                LocalDate endDate = LocalDate.of(event.getEndYear(), event.getEndMonth(), event.getEndDay());
-                LocalDate today = LocalDate.now();
+                if (event.getStartDate() != null && event.getEndDate() != null) {
+                    LocalDate startDate = event.getStartDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+                    LocalDate endDate = event.getEndDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+                    LocalDate today = LocalDate.now();
 
-                if (startDate.isAfter(today)) {
-                    status = "Upcoming";
-                } else if (endDate.isBefore(today)) {
-                    status = "Completed";
+                    if (startDate.isAfter(today)) {
+                        status = "Upcoming";
+                    } else if (endDate.isBefore(today)) {
+                        status = "Completed";
+                    } else {
+                        status = "Active";
+                    }
                 } else {
-                    status = "Active";
+                    status = "Pending";
                 }
             } else {
                 // Capitalize first letter for display purposes
@@ -216,16 +235,20 @@ public class VolunteerOrgViewEventListScreenHandler implements Initializable {
             String eventStatus = event.getStatus();
             if (eventStatus == null || eventStatus.isEmpty()) {
                 // For events with no status, determine based on dates
-                LocalDate startDate = LocalDate.of(event.getStartYear(), event.getStartMonth(), event.getStartDay());
-                LocalDate endDate = LocalDate.of(event.getEndYear(), event.getEndMonth(), event.getEndDay());
-                LocalDate today = LocalDate.now();
+                if (event.getStartDate() != null && event.getEndDate() != null) {
+                    LocalDate startDate = event.getStartDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+                    LocalDate endDate = event.getEndDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+                    LocalDate today = LocalDate.now();
 
-                if (startDate.isAfter(today)) {
-                    eventStatus = "Upcoming";
-                } else if (endDate.isBefore(today)) {
-                    eventStatus = "Completed";
+                    if (startDate.isAfter(today)) {
+                        eventStatus = "Upcoming";
+                    } else if (endDate.isBefore(today)) {
+                        eventStatus = "Completed";
+                    } else {
+                        eventStatus = "Active";
+                    }
                 } else {
-                    eventStatus = "Active";
+                    eventStatus = "Pending";
                 }
             }
 
@@ -321,3 +344,4 @@ public class VolunteerOrgViewEventListScreenHandler implements Initializable {
         }
     }
 }
+
