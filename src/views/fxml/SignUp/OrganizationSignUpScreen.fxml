@@ -5,6 +5,8 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.text.Font?>
 
+<?import javafx.collections.FXCollections?>
+<?import java.lang.String?>
 <AnchorPane prefHeight="768" prefWidth="1024"
             xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
@@ -106,6 +108,50 @@
                             </font>
                         </Label>
                         <TextField fx:id="licenseNumberField" promptText="Enter license number" prefHeight="30" />
+
+                        <!-- New field: Field of Operation -->
+                        <Label text="Field of Operation:" style="-fx-text-fill: #000000;">
+                            <font>
+                                <Font size="14.0" />
+                            </font>
+                        </Label>
+                        <ComboBox fx:id="fieldComboBox" prefWidth="300" promptText="Select field of operation">
+                            <items>
+                                <FXCollections fx:factory="observableArrayList">
+                                    <String fx:value="Giáo dục" />
+                                    <String fx:value="Y tế" />
+                                    <String fx:value="Môi trường" />
+                                    <String fx:value="Xã hội" />
+                                    <String fx:value="Văn hóa" />
+                                    <String fx:value="Thể thao" />
+                                    <String fx:value="Khác" />
+                                </FXCollections>
+                            </items>
+                        </ComboBox>
+
+                        <!-- New field: Representative -->
+                        <Label text="Representative:" style="-fx-text-fill: #000000;">
+                            <font>
+                                <Font size="14.0" />
+                            </font>
+                        </Label>
+                        <TextField fx:id="representativeField" promptText="Enter representative name" prefHeight="30" />
+
+                        <!-- New field: Sponsor -->
+                        <Label text="Sponsor:" style="-fx-text-fill: #000000;">
+                            <font>
+                                <Font size="14.0" />
+                            </font>
+                        </Label>
+                        <TextField fx:id="sponsorField" promptText="Enter sponsor name" prefHeight="30" />
+
+                        <!-- New field: Additional Information -->
+                        <Label text="Additional Information:" style="-fx-text-fill: #000000;">
+                            <font>
+                                <Font size="14.0" />
+                            </font>
+                        </Label>
+                        <TextArea fx:id="infoField" promptText="Enter additional information about your organization" prefHeight="100" wrapText="true" />
 
                         <HBox spacing="20" alignment="CENTER">
                             <padding>

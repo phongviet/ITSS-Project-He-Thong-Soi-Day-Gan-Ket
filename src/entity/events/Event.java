@@ -1,20 +1,38 @@
 package entity.events;
 
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 
 public class Event {
-    private String title;
     private int eventId;
+    private String title;
     private int maxParticipantNumber;
-    private String supportType;
-    private int startDay, startMonth, startYear;
-    private int endDay, endMonth, endYear;
+    private Date startDate;
+    private Date endDate;
     private String emergencyLevel;
     private String description;
-    private ArrayList<String> participantList;
+    private ArrayList<String> requiredSkills; // Skills as ArrayList
     private String organizer;
-    private String needer;
-    private String status; // "pending", "upcoming", "ongoing", "completed", "cancelled"
+    private String status;   // "pending", "approved", etc.
+
+    public Event() {
+        this.requiredSkills = new ArrayList<>();
+    }
+
+    public Event(int eventId, String title, int maxParticipantNumber, Date startDate, Date endDate,
+                String emergencyLevel, String description, String organizer, String status) {
+        this.eventId = eventId;
+        this.title = title;
+        this.maxParticipantNumber = maxParticipantNumber;
+        this.startDate = startDate;
+        this.endDate = endDate;
+        this.emergencyLevel = emergencyLevel;
+        this.description = description;
+        this.organizer = organizer;
+        this.status = status;
+        this.requiredSkills = new ArrayList<>();
+    }
 
     public int getEventId() {
         return eventId;
@@ -22,6 +40,14 @@ public class Event {
 
     public void setEventId(int eventId) {
         this.eventId = eventId;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
     }
 
     public int getMaxParticipantNumber() {
@@ -32,60 +58,20 @@ public class Event {
         this.maxParticipantNumber = maxParticipantNumber;
     }
 
-    public String getSupportType() {
-        return supportType;
+    public Date getStartDate() {
+        return startDate;
     }
 
-    public void setSupportType(String supportType) {
-        this.supportType = supportType;
+    public void setStartDate(Date startDate) {
+        this.startDate = startDate;
     }
 
-    public int getStartDay() {
-        return startDay;
+    public Date getEndDate() {
+        return endDate;
     }
 
-    public void setStartDay(int startDay) {
-        this.startDay = startDay;
-    }
-
-    public int getStartMonth() {
-        return startMonth;
-    }
-
-    public void setStartMonth(int startMonth) {
-        this.startMonth = startMonth;
-    }
-
-    public int getStartYear() {
-        return startYear;
-    }
-
-    public void setStartYear(int startYear) {
-        this.startYear = startYear;
-    }
-
-    public int getEndDay() {
-        return endDay;
-    }
-
-    public void setEndDay(int endDay) {
-        this.endDay = endDay;
-    }
-
-    public int getEndMonth() {
-        return endMonth;
-    }
-
-    public void setEndMonth(int endMonth) {
-        this.endMonth = endMonth;
-    }
-
-    public int getEndYear() {
-        return endYear;
-    }
-
-    public void setEndYear(int endYear) {
-        this.endYear = endYear;
+    public void setEndDate(Date endDate) {
+        this.endDate = endDate;
     }
 
     public String getEmergencyLevel() {
@@ -104,12 +90,19 @@ public class Event {
         this.description = description;
     }
 
-    public ArrayList<String> getParticipantList() {
-        return participantList;
+    public ArrayList<String> getRequiredSkills() {
+        return requiredSkills;
     }
 
-    public void setParticipantList(ArrayList<String> participantList) {
-        this.participantList = participantList;
+    public void setRequiredSkills(ArrayList<String> requiredSkills) {
+        this.requiredSkills = requiredSkills;
+    }
+
+    public void addRequiredSkill(String skill) {
+        if (this.requiredSkills == null) {
+            this.requiredSkills = new ArrayList<>();
+        }
+        this.requiredSkills.add(skill);
     }
 
     public String getOrganizer() {
@@ -120,27 +113,19 @@ public class Event {
         this.organizer = organizer;
     }
 
-    public String getNeeder() {
-        return needer;
-    }
-
-    public void setNeeder(String needer) {
-        this.needer = needer;
-    }
-
-    public String getTitle() {
-        return title;
-    }
-
-    public void setTitle(String title) {
-        this.title = title;
-    }
-
     public String getStatus() {
         return status;
     }
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public String getNeeder() {
+        return null; // No longer used
+    }
+
+    public void setNeeder(String needer) {
+        // No longer used
     }
 }

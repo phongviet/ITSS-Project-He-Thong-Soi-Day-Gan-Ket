@@ -48,35 +48,33 @@
                     <TextArea fx:id="eventDescription" wrapText="true" prefHeight="80"
                               GridPane.rowIndex="1" GridPane.columnIndex="1"/>
 
-                    <!-- Support Type -->
-                    <Label text="Support Type:" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
-                    <ComboBox fx:id="supportType" prefWidth="300"
-                              GridPane.rowIndex="2" GridPane.columnIndex="1"/>
-
                     <!-- Max Participants -->
-                    <Label text="Max Participants:" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
-                    <TextField fx:id="maxParticipants" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
+                    <Label text="Max Participants:" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+                    <TextField fx:id="maxParticipants" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
 
                     <!-- Emergency Level -->
-                    <Label text="Emergency Level:" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
+                    <Label text="Emergency Level:" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
                     <ComboBox fx:id="emergencyLevel" prefWidth="300"
-                              GridPane.rowIndex="4" GridPane.columnIndex="1"/>
+                              GridPane.rowIndex="3" GridPane.columnIndex="1"/>
+
+                    <!-- Required Skills -->
+                    <Label text="Required Skills:" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
+                    <VBox spacing="5" GridPane.rowIndex="4" GridPane.columnIndex="1">
+                        <CheckBox fx:id="communicationSkillCheckbox" text="Communication" />
+                        <CheckBox fx:id="firstAidSkillCheckbox" text="First Aid" />
+                        <CheckBox fx:id="educationSkillCheckbox" text="Education" />
+                        <CheckBox fx:id="cookingSkillCheckbox" text="Cooking" />
+                        <CheckBox fx:id="drivingSkillCheckbox" text="Driving" />
+                        <CheckBox fx:id="fundraisingSkillCheckbox" text="Fundraising" />
+                    </VBox>
 
                     <!-- Start Date -->
                     <Label text="Start Date:" GridPane.rowIndex="5" GridPane.columnIndex="0"/>
-                    <HBox spacing="5" GridPane.rowIndex="5" GridPane.columnIndex="1">
-                        <TextField fx:id="startDay" prefWidth="60" promptText="Day"/>
-                        <TextField fx:id="startMonth" prefWidth="60" promptText="Month"/>
-                        <TextField fx:id="startYear" prefWidth="100" promptText="Year"/>
-                    </HBox>
+                    <DatePicker fx:id="startDatePicker" GridPane.rowIndex="5" GridPane.columnIndex="1"/>
 
                     <!-- End Date -->
                     <Label text="End Date:" GridPane.rowIndex="6" GridPane.columnIndex="0"/>
-                    <HBox spacing="5" GridPane.rowIndex="6" GridPane.columnIndex="1">
-                        <TextField fx:id="endDay" prefWidth="60" promptText="Day"/>
-                        <TextField fx:id="endMonth" prefWidth="60" promptText="Month"/>
-                        <TextField fx:id="endYear" prefWidth="100" promptText="Year"/>
-                    </HBox>
+                    <DatePicker fx:id="endDatePicker" GridPane.rowIndex="6" GridPane.columnIndex="1"/>
                 </GridPane>
 
                 <!-- Buttons -->

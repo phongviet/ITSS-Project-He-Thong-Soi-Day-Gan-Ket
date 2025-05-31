@@ -91,147 +91,98 @@
                         </Label>
                         <TextField fx:id="fullNameField" promptText="Enter your full name" prefHeight="30" />
 
-                        <!-- Skills section -->
-                        <Label text="Skills:" style="-fx-font-weight: bold; -fx-text-fill: #000000;">
-                            <font>
-                                <Font size="16.0" />
-                            </font>
-                            <padding>
-                                <Insets top="15" bottom="5" />
-                            </padding>
-                        </Label>
-                        <Label text="Select skills you can contribute:" style="-fx-text-fill: #000000;">
+                        <!-- CCCD field -->
+                        <Label text="CCCD (Citizen ID):" style="-fx-text-fill: #000000;">
                             <font>
                                 <Font size="14.0" />
                             </font>
                         </Label>
-                        <VBox spacing="8">
-                            <padding>
-                                <Insets top="5" bottom="5" />
-                            </padding>
-                            <CheckBox fx:id="foodSkillCheckbox" text="Food Support" style="-fx-text-fill: #000000;">
+                        <TextField fx:id="cccdField" promptText="Enter your citizen ID number" prefHeight="30" />
+
+                        <!-- Date of Birth field -->
+                        <Label text="Date of Birth (YYYY-MM-DD):" style="-fx-text-fill: #000000;">
+                            <font>
+                                <Font size="14.0" />
+                            </font>
+                        </Label>
+                        <TextField fx:id="dateOfBirthField" promptText="e.g. 1990-01-15" prefHeight="30" />
+
+                        <!-- Skills section -->
+                        <Label text="Skills:" style="-fx-font-weight: bold; -fx-text-fill: #000000;" wrapText="true">
+                            <font>
+                                <Font size="16.0" />
+                            </font>
+                            <VBox.margin>
+                                <Insets top="10"/>
+                            </VBox.margin>
+                        </Label>
+
+                        <Label text="Select all skills that apply:" style="-fx-text-fill: #000000;" wrapText="true">
+                            <font>
+                                <Font size="14.0" />
+                            </font>
+                        </Label>
+
+                        <!-- Updated skills checkboxes with visible text -->
+                        <VBox spacing="5">
+                            <CheckBox fx:id="communicationSkillCheckbox" text="Communication" style="-fx-text-fill: #000000;">
                                 <font>
                                     <Font size="14.0" />
                                 </font>
                             </CheckBox>
-                            <CheckBox fx:id="shelterSkillCheckbox" text="Shelter Support" style="-fx-text-fill: #000000;">
+                            <CheckBox fx:id="firstAidSkillCheckbox" text="First Aid" style="-fx-text-fill: #000000;">
                                 <font>
                                     <Font size="14.0" />
                                 </font>
                             </CheckBox>
-                            <CheckBox fx:id="medicalSkillCheckbox" text="Medical Support" style="-fx-text-fill: #000000;">
+                            <CheckBox fx:id="educationSkillCheckbox" text="Education" style="-fx-text-fill: #000000;">
                                 <font>
                                     <Font size="14.0" />
                                 </font>
                             </CheckBox>
-                            <CheckBox fx:id="educationSkillCheckbox" text="Education Support" style="-fx-text-fill: #000000;">
+                            <CheckBox fx:id="cookingSkillCheckbox" text="Cooking" style="-fx-text-fill: #000000;">
                                 <font>
                                     <Font size="14.0" />
                                 </font>
                             </CheckBox>
-                            <CheckBox fx:id="financialSkillCheckbox" text="Financial Support" style="-fx-text-fill: #000000;">
+                            <CheckBox fx:id="drivingSkillCheckbox" text="Driving" style="-fx-text-fill: #000000;">
+                                <font>
+                                    <Font size="14.0" />
+                                </font>
+                            </CheckBox>
+                            <CheckBox fx:id="fundraisingSkillCheckbox" text="Fundraising" style="-fx-text-fill: #000000;">
                                 <font>
                                     <Font size="14.0" />
                                 </font>
                             </CheckBox>
                         </VBox>
-                        <Label text="Other skills (comma separated):" style="-fx-text-fill: #000000;">
+
+                        <Label text="Other Skills:" style="-fx-text-fill: #000000;">
                             <font>
                                 <Font size="14.0" />
                             </font>
                         </Label>
-                        <TextField fx:id="otherSkillsField" promptText="Example: Cooking, Counseling, etc." prefHeight="30" />
+                        <TextField fx:id="otherSkillsField" promptText="Enter other skills, separated by commas" prefHeight="30" />
 
-                        <!-- Availability section -->
-                        <Label text="Availability:" style="-fx-font-weight: bold; -fx-text-fill: #000000;">
+                        <!-- Weekly availability section -->
+                        <Label text="Weekly Availability:" style="-fx-font-weight: bold; -fx-text-fill: #000000;">
                             <font>
                                 <Font size="16.0" />
                             </font>
-                            <padding>
-                                <Insets top="15" bottom="5" />
-                            </padding>
+                            <VBox.margin>
+                                <Insets top="10"/>
+                            </VBox.margin>
                         </Label>
-                        <Label text="Enter hours available for each day:" style="-fx-text-fill: #000000;">
+
+                        <!-- Free hours per week combined field -->
+                        <Label text="Free Hours Per Week:" style="-fx-text-fill: #000000;">
                             <font>
                                 <Font size="14.0" />
                             </font>
                         </Label>
-                        <GridPane hgap="10" vgap="10">
-                            <padding>
-                                <Insets top="5" bottom="5" />
-                            </padding>
-                            <columnConstraints>
-                                <ColumnConstraints hgrow="SOMETIMES" minWidth="100" prefWidth="150" />
-                                <ColumnConstraints hgrow="SOMETIMES" minWidth="60" prefWidth="100" />
-                            </columnConstraints>
-                            <rowConstraints>
-                                <RowConstraints vgrow="SOMETIMES" minHeight="30" />
-                                <RowConstraints vgrow="SOMETIMES" minHeight="30" />
-                                <RowConstraints vgrow="SOMETIMES" minHeight="30" />
-                                <RowConstraints vgrow="SOMETIMES" minHeight="30" />
-                                <RowConstraints vgrow="SOMETIMES" minHeight="30" />
-                                <RowConstraints vgrow="SOMETIMES" minHeight="30" />
-                                <RowConstraints vgrow="SOMETIMES" minHeight="30" />
-                            </rowConstraints>
-                            <children>
-                                <Label text="Monday:" style="-fx-text-fill: #000000;" GridPane.rowIndex="0" GridPane.columnIndex="0">
-                                    <font>
-                                        <Font size="14.0" />
-                                    </font>
-                                </Label>
-                                <Spinner fx:id="mondaySpinner" initialValue="0" min="0" max="24" amountToStepBy="1"
-                                         editable="true" GridPane.rowIndex="0" GridPane.columnIndex="1" />
+                        <Spinner fx:id="freeHoursSpinner" prefHeight="30" editable="true" />
 
-                                <Label text="Tuesday:" style="-fx-text-fill: #000000;" GridPane.rowIndex="1" GridPane.columnIndex="0">
-                                    <font>
-                                        <Font size="14.0" />
-                                    </font>
-                                </Label>
-                                <Spinner fx:id="tuesdaySpinner" initialValue="0" min="0" max="24" amountToStepBy="1"
-                                         editable="true" GridPane.rowIndex="1" GridPane.columnIndex="1" />
-
-                                <Label text="Wednesday:" style="-fx-text-fill: #000000;" GridPane.rowIndex="2" GridPane.columnIndex="0">
-                                    <font>
-                                        <Font size="14.0" />
-                                    </font>
-                                </Label>
-                                <Spinner fx:id="wednesdaySpinner" initialValue="0" min="0" max="24" amountToStepBy="1"
-                                         editable="true" GridPane.rowIndex="2" GridPane.columnIndex="1" />
-
-                                <Label text="Thursday:" style="-fx-text-fill: #000000;" GridPane.rowIndex="3" GridPane.columnIndex="0">
-                                    <font>
-                                        <Font size="14.0" />
-                                    </font>
-                                </Label>
-                                <Spinner fx:id="thursdaySpinner" initialValue="0" min="0" max="24" amountToStepBy="1"
-                                         editable="true" GridPane.rowIndex="3" GridPane.columnIndex="1" />
-
-                                <Label text="Friday:" style="-fx-text-fill: #000000;" GridPane.rowIndex="4" GridPane.columnIndex="0">
-                                    <font>
-                                        <Font size="14.0" />
-                                    </font>
-                                </Label>
-                                <Spinner fx:id="fridaySpinner" initialValue="0" min="0" max="24" amountToStepBy="1"
-                                         editable="true" GridPane.rowIndex="4" GridPane.columnIndex="1" />
-
-                                <Label text="Saturday:" style="-fx-text-fill: #000000;" GridPane.rowIndex="5" GridPane.columnIndex="0">
-                                    <font>
-                                        <Font size="14.0" />
-                                    </font>
-                                </Label>
-                                <Spinner fx:id="saturdaySpinner" initialValue="0" min="0" max="24" amountToStepBy="1"
-                                         editable="true" GridPane.rowIndex="5" GridPane.columnIndex="1" />
-
-                                <Label text="Sunday:" style="-fx-text-fill: #000000;" GridPane.rowIndex="6" GridPane.columnIndex="0">
-                                    <font>
-                                        <Font size="14.0" />
-                                    </font>
-                                </Label>
-                                <Spinner fx:id="sundaySpinner" initialValue="0" min="0" max="24" amountToStepBy="1"
-                                         editable="true" GridPane.rowIndex="6" GridPane.columnIndex="1" />
-                            </children>
-                        </GridPane>
-
+                        <!-- Registration action buttons -->
                         <HBox spacing="20" alignment="CENTER">
                             <padding>
                                 <Insets top="20" bottom="10" />
