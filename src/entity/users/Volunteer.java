@@ -2,14 +2,18 @@ package entity.users;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Date;
 
 public class Volunteer extends SystemUser {
     private String fullName;
-    private List<String> skills; // VD: "Food", "Shelter", "Medical", "Education", "Financial".
+    private String cccd;         // Citizen ID
+    private Date dateOfBirth;    // Date of Birth
+    private List<String> skills; // Skill list
     private Map<String, Integer> availability; // VD: {"Monday": 2 giờ, "Saturday": 4 giờ}
+    private int freeHourPerWeek; // Total free hours per week
 
     private double averageRating; // 1 - 5
-    private int ratingCount; // Số lượng đánh giá
+    private int ratingCount;     // Number of ratings
 
     public String getFullName() {
         return fullName;
@@ -17,6 +21,30 @@ public class Volunteer extends SystemUser {
 
     public void setFullName(String fullName) {
         this.fullName = fullName;
+    }
+
+    public String getCccd() {
+        return cccd;
+    }
+
+    public void setCccd(String cccd) {
+        this.cccd = cccd;
+    }
+
+    public Date getDateOfBirth() {
+        return dateOfBirth;
+    }
+
+    public void setDateOfBirth(Date dateOfBirth) {
+        this.dateOfBirth = dateOfBirth;
+    }
+
+    public int getFreeHourPerWeek() {
+        return freeHourPerWeek;
+    }
+
+    public void setFreeHourPerWeek(int freeHourPerWeek) {
+        this.freeHourPerWeek = freeHourPerWeek;
     }
 
     public List<String> getSkills() {
@@ -43,7 +71,7 @@ public class Volunteer extends SystemUser {
         this.averageRating = averageRating;
     }
 
-    public double getRatingCount() {
+    public int getRatingCount() {
         return ratingCount;
     }
 

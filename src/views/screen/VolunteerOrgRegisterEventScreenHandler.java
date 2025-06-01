@@ -14,6 +14,10 @@ import javafx.stage.Stage;
 
 import java.io.IOException;
 import java.net.URL;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.ResourceBundle;
 
 public class VolunteerOrgRegisterEventScreenHandler implements Initializable {
@@ -25,19 +29,34 @@ public class VolunteerOrgRegisterEventScreenHandler implements Initializable {
     private TextArea eventDescription;
 
     @FXML
-    private ComboBox<String> supportType;
-
-    @FXML
     private TextField maxParticipants;
 
     @FXML
     private ComboBox<String> emergencyLevel;
 
     @FXML
-    private TextField startDay, startMonth, startYear;
+    private DatePicker startDatePicker;
 
     @FXML
-    private TextField endDay, endMonth, endYear;
+    private DatePicker endDatePicker;
+
+    @FXML
+    private CheckBox communicationSkillCheckbox;
+
+    @FXML
+    private CheckBox firstAidSkillCheckbox;
+
+    @FXML
+    private CheckBox educationSkillCheckbox;
+
+    @FXML
+    private CheckBox cookingSkillCheckbox;
+
+    @FXML
+    private CheckBox drivingSkillCheckbox;
+
+    @FXML
+    private CheckBox fundraisingSkillCheckbox;
 
     @FXML
     private Label statusMessage;
@@ -70,8 +89,11 @@ public class VolunteerOrgRegisterEventScreenHandler implements Initializable {
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
         // Initialize ComboBox values
-        supportType.getItems().addAll("Food", "Shelter", "Medical", "Education", "Financial", "Other");
         emergencyLevel.getItems().addAll("Low", "Medium", "High", "Critical");
+
+        // Setup default date values
+        startDatePicker.setValue(LocalDate.now());
+        endDatePicker.setValue(LocalDate.now().plusDays(1));
 
         // Clear any previous status message
         statusMessage.setText("");
@@ -88,11 +110,6 @@ public class VolunteerOrgRegisterEventScreenHandler implements Initializable {
 
             if (eventDescription.getText().isEmpty()) {
                 statusMessage.setText("Event description is required.");
-                return;
-            }
-
-            if (supportType.getValue() == null) {
-                statusMessage.setText("Support type must be selected.");
                 return;
             }
 
@@ -114,42 +131,50 @@ public class VolunteerOrgRegisterEventScreenHandler implements Initializable {
                 return;
             }
 
-            // Validate and parse dates
-            int startDayVal, startMonthVal, startYearVal, endDayVal, endMonthVal, endYearVal;
-            try {
-                startDayVal = Integer.parseInt(startDay.getText());
-                startMonthVal = Integer.parseInt(startMonth.getText());
-                startYearVal = Integer.parseInt(startYear.getText());
-                endDayVal = Integer.parseInt(endDay.getText());
-                endMonthVal = Integer.parseInt(endMonth.getText());
-                endYearVal = Integer.parseInt(endYear.getText());
+            // Validate dates
+            LocalDate startLocalDate = startDatePicker.getValue();
+            LocalDate endLocalDate = endDatePicker.getValue();
 
-                // Basic validation - could be more sophisticated
-                if (startDayVal < 1 || startDayVal > 31 || startMonthVal < 1 || startMonthVal > 12 ||
-                        endDayVal < 1 || endDayVal > 31 || endMonthVal < 1 || endMonthVal > 12) {
-                    statusMessage.setText("Please enter valid dates.");
-                    return;
-                }
-            } catch (NumberFormatException e) {
-                statusMessage.setText("All date fields must be valid numbers.");
+            if (startLocalDate == null) {
+                statusMessage.setText("Start date is required.");
                 return;
             }
+
+            if (endLocalDate == null) {
+                statusMessage.setText("End date is required.");
+                return;
+            }
+
+            if (startLocalDate.isAfter(endLocalDate)) {
+                statusMessage.setText("Start date cannot be after end date.");
+                return;
+            }
+
+            // Convert LocalDate to java.util.Date
+            Date startDate = Date.from(startLocalDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
+            Date endDate = Date.from(endLocalDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
 
             // Create a new Event object
             Event event = new Event();
             event.setTitle(eventTitle.getText());
             event.setDescription(eventDescription.getText());
-            event.setSupportType(supportType.getValue());
             event.setMaxParticipantNumber(maxParticipantsNum);
             event.setEmergencyLevel(emergencyLevel.getValue());
 
             // Set dates
-            event.setStartDay(startDayVal);
-            event.setStartMonth(startMonthVal);
-            event.setStartYear(startYearVal);
-            event.setEndDay(endDayVal);
-            event.setEndMonth(endMonthVal);
-            event.setEndYear(endYearVal);
+            event.setStartDate(startDate);
+            event.setEndDate(endDate);
+
+            // Process required skills from checkboxes
+            ArrayList<String> skills = new ArrayList<>();
+            if (communicationSkillCheckbox.isSelected()) skills.add("Communication");
+            if (firstAidSkillCheckbox.isSelected()) skills.add("First Aid");
+            if (educationSkillCheckbox.isSelected()) skills.add("Education");
+            if (cookingSkillCheckbox.isSelected()) skills.add("Cooking");
+            if (drivingSkillCheckbox.isSelected()) skills.add("Driving");
+            if (fundraisingSkillCheckbox.isSelected()) skills.add("Fundraising");
+
+            event.setRequiredSkills(skills);
 
             // Set the organization as the organizer
             if (organization != null) {
@@ -191,38 +216,13 @@ public class VolunteerOrgRegisterEventScreenHandler implements Initializable {
             controller.setStage(stage);
             controller.setOrganization(organization);
 
-            // Set the scene
             Scene scene = new Scene(root);
             stage.setScene(scene);
             stage.setTitle("Volunteer Organization Dashboard");
-
-            // Show success message on the main screen if needed
-            controller.setStatusMessage("Event registration " +
-                (statusMessage.getText().contains("successfully") ? "successful!" : "canceled."));
-
             stage.show();
         } catch (IOException e) {
-            statusMessage.setText("Error navigating back: " + e.getMessage());
+            statusMessage.setText("Error returning to dashboard: " + e.getMessage());
             e.printStackTrace();
         }
-    }
-
-    public void clearForm() {
-        eventTitle.setText("");
-        eventDescription.setText("");
-        supportType.setValue(null);
-        maxParticipants.setText("");
-        emergencyLevel.setValue(null);
-        startDay.setText("");
-        startMonth.setText("");
-        startYear.setText("");
-        endDay.setText("");
-        endMonth.setText("");
-        endYear.setText("");
-        statusMessage.setText("");
-    }
-
-    public void setStatusMessage(String message) {
-        statusMessage.setText(message);
     }
 }

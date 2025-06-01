@@ -6,6 +6,8 @@ import entity.users.VolunteerOrganization;
 import entity.users.PersonInNeed;
 
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -58,13 +60,16 @@ public class VerificationController {
      * @param phone User's phone number
      * @param address User's address
      * @param fullName Volunteer's full name
+     * @param cccd Citizen ID card number
+     * @param dateOfBirth Date of birth
+     * @param freeHourPerWeek Free hours per week available for volunteering
      * @param skills List of skills volunteer possesses
-     * @param availability Map of days and available hours
      * @return true if registration successful, false otherwise
      */
     public boolean registerVolunteer(String username, String password, String email,
                                      String phone, String address, String fullName,
-                                     List<String> skills, Map<String, Integer> availability) {
+                                     String cccd, String dateOfBirth, int freeHourPerWeek,
+                                     List<String> skills) {
         // Check if username already exists
         if (usernameExists(username)) {
             System.out.println("Username already exists: " + username);
@@ -75,7 +80,6 @@ public class VerificationController {
         PreparedStatement pstmtUser = null;
         PreparedStatement pstmtVolunteer = null;
         PreparedStatement pstmtSkill = null;
-        PreparedStatement pstmtAvailability = null;
 
         try {
             conn = DriverManager.getConnection(DB_URL);
@@ -91,37 +95,56 @@ public class VerificationController {
             pstmtUser.setString(5, address);
             pstmtUser.executeUpdate();
 
-            // Then insert into Volunteer table
-            String insertVolunteerSQL = "INSERT INTO Volunteer (username, fullName, averageRating, ratingCount) VALUES (?, ?, ?, ?)";
+            // Then insert into Volunteer table with the updated schema
+            String insertVolunteerSQL = "INSERT INTO Volunteer (username, fullName, cccd, dateOfBirth, averageRating, ratingCount, freeHourPerWeek) VALUES (?, ?, ?, ?, ?, ?, ?)";
             pstmtVolunteer = conn.prepareStatement(insertVolunteerSQL);
             pstmtVolunteer.setString(1, username);
             pstmtVolunteer.setString(2, fullName);
-            pstmtVolunteer.setDouble(3, 0.0); // Default rating
-            pstmtVolunteer.setInt(4, 0);     // Default rating count
+            pstmtVolunteer.setString(3, cccd);
+            pstmtVolunteer.setString(4, dateOfBirth); // Assuming dateOfBirth is in YYYY-MM-DD format
+            pstmtVolunteer.setDouble(5, 0.0); // Default rating
+            pstmtVolunteer.setInt(6, 0);      // Default rating count
+            pstmtVolunteer.setInt(7, freeHourPerWeek);
             pstmtVolunteer.executeUpdate();
 
             // Insert skills if provided
             if (skills != null && !skills.isEmpty()) {
-                String insertSkillSQL = "INSERT INTO VolunteerSkills (username, skill) VALUES (?, ?)";
-                pstmtSkill = conn.prepareStatement(insertSkillSQL);
-
+                // Create skills in the Skills table first
                 for (String skill : skills) {
-                    pstmtSkill.setString(1, username);
-                    pstmtSkill.setString(2, skill);
-                    pstmtSkill.executeUpdate();
-                }
-            }
+                    // Check if skill already exists
+                    String checkSkillSQL = "SELECT skillId FROM Skills WHERE skill = ?";
+                    PreparedStatement checkSkillStmt = conn.prepareStatement(checkSkillSQL);
+                    checkSkillStmt.setString(1, skill);
+                    ResultSet skillRs = checkSkillStmt.executeQuery();
 
-            // Insert availability if provided
-            if (availability != null && !availability.isEmpty()) {
-                String insertAvailabilitySQL = "INSERT INTO VolunteerAvailability (username, dayOfWeek, hours) VALUES (?, ?, ?)";
-                pstmtAvailability = conn.prepareStatement(insertAvailabilitySQL);
+                    int skillId;
+                    if (skillRs.next()) {
+                        skillId = skillRs.getInt("skillId");
+                    } else {
+                        // Insert new skill
+                        String insertSkillSQL = "INSERT INTO Skills (skill) VALUES (?)";
+                        PreparedStatement insertSkillStmt = conn.prepareStatement(insertSkillSQL, Statement.RETURN_GENERATED_KEYS);
+                        insertSkillStmt.setString(1, skill);
+                        insertSkillStmt.executeUpdate();
 
-                for (Map.Entry<String, Integer> entry : availability.entrySet()) {
-                    pstmtAvailability.setString(1, username);
-                    pstmtAvailability.setString(2, entry.getKey());
-                    pstmtAvailability.setInt(3, entry.getValue());
-                    pstmtAvailability.executeUpdate();
+                        ResultSet generatedKeys = insertSkillStmt.getGeneratedKeys();
+                        if (generatedKeys.next()) {
+                            skillId = generatedKeys.getInt(1);
+                        } else {
+                            throw new SQLException("Creating skill failed, no ID obtained.");
+                        }
+                        insertSkillStmt.close();
+                    }
+
+                    // Link volunteer to skill
+                    String linkSkillSQL = "INSERT INTO VolunteerSkills (username, skillId) VALUES (?, ?)";
+                    PreparedStatement linkSkillStmt = conn.prepareStatement(linkSkillSQL);
+                    linkSkillStmt.setString(1, username);
+                    linkSkillStmt.setInt(2, skillId);
+                    linkSkillStmt.executeUpdate();
+                    linkSkillStmt.close();
+
+                    checkSkillStmt.close();
                 }
             }
 
@@ -146,7 +169,6 @@ public class VerificationController {
             closeResources(conn, pstmtUser, null);
             closeStatement(pstmtVolunteer);
             closeStatement(pstmtSkill);
-            closeStatement(pstmtAvailability);
         }
     }
 
@@ -155,7 +177,26 @@ public class VerificationController {
      */
     public boolean registerVolunteer(String username, String password, String email,
                                      String phone, String address, String fullName) {
-        return registerVolunteer(username, password, email, phone, address, fullName, null, null);
+        return registerVolunteer(username, password, email, phone, address, fullName,
+                               null, null, 0, null);
+    }
+
+    /**
+     * Register a new Volunteer in the system (compatibility with previous skills/availability API)
+     */
+    public boolean registerVolunteer(String username, String password, String email,
+                                     String phone, String address, String fullName,
+                                     List<String> skills, Map<String, Integer> availability) {
+        // Calculate total free hours per week from availability map
+        int freeHourPerWeek = 0;
+        if (availability != null && !availability.isEmpty()) {
+            for (Integer hours : availability.values()) {
+                freeHourPerWeek += hours;
+            }
+        }
+
+        return registerVolunteer(username, password, email, phone, address, fullName,
+                               null, null, freeHourPerWeek, skills);
     }
 
     /**
@@ -166,12 +207,17 @@ public class VerificationController {
      * @param phone User's phone number
      * @param address User's address
      * @param organizationName Name of the organization
-     * @param licenseNumber Organization's license number (optional)
+     * @param licenseNumber Organization's license number
+     * @param field Field of operation
+     * @param representative Organization representative
+     * @param sponsor Organization sponsor
+     * @param info Additional information
      * @return true if registration successful, false otherwise
      */
     public boolean registerVolunteerOrganization(String username, String password, String email,
                                                  String phone, String address, String organizationName,
-                                                 String licenseNumber) {
+                                                 String licenseNumber, String field, String representative,
+                                                 String sponsor, String info) {
         // Check if username already exists
         if (usernameExists(username)) {
             System.out.println("Username already exists: " + username);
@@ -196,12 +242,16 @@ public class VerificationController {
             pstmtUser.setString(5, address);
             pstmtUser.executeUpdate();
 
-            // Then insert into VolunteerOrganization table
-            String insertOrgSQL = "INSERT INTO VolunteerOrganization (username, organizationName, licenseNumber) VALUES (?, ?, ?)";
+            // Then insert into VolunteerOrganization table with new fields
+            String insertOrgSQL = "INSERT INTO VolunteerOrganization (username, organizationName, licenseNumber, field, representative, sponsor, info) VALUES (?, ?, ?, ?, ?, ?, ?)";
             pstmtOrg = conn.prepareStatement(insertOrgSQL);
             pstmtOrg.setString(1, username);
             pstmtOrg.setString(2, organizationName);
             pstmtOrg.setString(3, licenseNumber);
+            pstmtOrg.setString(4, field);
+            pstmtOrg.setString(5, representative);
+            pstmtOrg.setString(6, sponsor);
+            pstmtOrg.setString(7, info);
             pstmtOrg.executeUpdate();
 
             conn.commit(); // Commit transaction
@@ -228,6 +278,18 @@ public class VerificationController {
     }
 
     /**
+     * Register a new Volunteer Organization in the system (overloaded method for backward compatibility)
+     */
+    public boolean registerVolunteerOrganization(String username, String password, String email,
+                                                 String phone, String address, String organizationName,
+                                                 String licenseNumber) {
+        // Use default values for new fields
+        return registerVolunteerOrganization(username, password, email, phone, address,
+                                          organizationName, licenseNumber, "", "",
+                                          "None", "No additional information");
+    }
+
+    /**
      * Register a new Person In Need in the system
      * @param username Unique username
      * @param password User's password
@@ -235,10 +297,13 @@ public class VerificationController {
      * @param phone User's phone number
      * @param address User's address
      * @param fullName Person's full name
+     * @param cccd Citizen ID card number
+     * @param dateOfBirth Date of birth
      * @return true if registration successful, false otherwise
      */
     public boolean registerPersonInNeed(String username, String password, String email,
-                                        String phone, String address, String fullName) {
+                                        String phone, String address, String fullName,
+                                        String cccd, String dateOfBirth) {
         // Check if username already exists
         if (usernameExists(username)) {
             System.out.println("Username already exists: " + username);
@@ -263,11 +328,13 @@ public class VerificationController {
             pstmtUser.setString(5, address);
             pstmtUser.executeUpdate();
 
-            // Then insert into HelpSeeker table (mapped to PersonInNeed in the application)
-            String insertPersonSQL = "INSERT INTO PersonInNeed (username, fullName) VALUES (?, ?)";
+            // Then insert into PersonInNeed table with additional fields
+            String insertPersonSQL = "INSERT INTO PersonInNeed (username, fullName, cccd, dateOfBirth) VALUES (?, ?, ?, ?)";
             pstmtPerson = conn.prepareStatement(insertPersonSQL);
             pstmtPerson.setString(1, username);
             pstmtPerson.setString(2, fullName);
+            pstmtPerson.setString(3, cccd);
+            pstmtPerson.setString(4, dateOfBirth); // Assuming dateOfBirth is in YYYY-MM-DD format
             pstmtPerson.executeUpdate();
 
             conn.commit(); // Commit transaction
@@ -291,6 +358,14 @@ public class VerificationController {
             closeResources(conn, pstmtUser, null);
             closeStatement(pstmtPerson);
         }
+    }
+
+    /**
+     * Register a new Person In Need in the system (overloaded method for backward compatibility)
+     */
+    public boolean registerPersonInNeed(String username, String password, String email,
+                                        String phone, String address, String fullName) {
+        return registerPersonInNeed(username, password, email, phone, address, fullName, null, null);
     }
 
     /**
@@ -387,9 +462,10 @@ public class VerificationController {
         try {
             conn = DriverManager.getConnection(DB_URL);
             
-            // Get organization data
+            // Get organization data with all fields from the updated schema
             pstmt = conn.prepareStatement(
-                "SELECT u.username, u.email, u.phone, u.address, o.organizationName, o.licenseNumber " +
+                "SELECT u.username, u.email, u.phone, u.address, " +
+                "o.organizationName, o.licenseNumber, o.field, o.representative, o.sponsor, o.info " +
                 "FROM SystemUser u " +
                 "JOIN VolunteerOrganization o ON u.username = o.username " +
                 "WHERE u.username = ?"
@@ -405,6 +481,10 @@ public class VerificationController {
                 org.setAddress(rs.getString("address"));
                 org.setOrganizationName(rs.getString("organizationName"));
                 org.setLicenseNumber(rs.getString("licenseNumber"));
+                org.setField(rs.getString("field"));
+                org.setRepresentative(rs.getString("representative"));
+                org.setSponsor(rs.getString("sponsor"));
+                org.setInfo(rs.getString("info"));
                 return org;
             }
             
@@ -464,8 +544,9 @@ public class VerificationController {
         try {
             conn = DriverManager.getConnection(DB_URL);
 
-            // Get volunteer data
-            String sql = "SELECT u.username, u.email, u.phone, u.address, v.fullName, v.averageRating, v.ratingCount " +
+            // Get volunteer data with all fields from the updated schema
+            String sql = "SELECT u.username, u.email, u.phone, u.address, " +
+                         "v.fullName, v.cccd, v.dateOfBirth, v.averageRating, v.ratingCount, v.freeHourPerWeek " +
                          "FROM SystemUser u " +
                          "JOIN Volunteer v ON u.username = v.username " +
                          "WHERE u.username = ?";
@@ -481,7 +562,27 @@ public class VerificationController {
                 volunteer.setPhone(rs.getString("phone"));
                 volunteer.setAddress(rs.getString("address"));
                 volunteer.setFullName(rs.getString("fullName"));
-                // Set additional volunteer-specific properties
+                volunteer.setCccd(rs.getString("cccd"));
+
+                // Convert string date to Date object if not null
+                String dateStr = rs.getString("dateOfBirth");
+                if (dateStr != null && !dateStr.isEmpty()) {
+                    try {
+                        java.sql.Date sqlDate = rs.getDate("dateOfBirth");
+                        if (sqlDate != null) {
+                            volunteer.setDateOfBirth(new Date(sqlDate.getTime()));
+                        }
+                    } catch (SQLException e) {
+                        System.err.println("Error parsing date: " + e.getMessage());
+                    }
+                }
+
+                volunteer.setAverageRating(rs.getDouble("averageRating"));
+                volunteer.setRatingCount(rs.getInt("ratingCount"));
+                volunteer.setFreeHourPerWeek(rs.getInt("freeHourPerWeek"));
+
+                // Get volunteer's skills (optional)
+                volunteer.setSkills(getVolunteerSkills(username, conn));
 
                 return volunteer;
             }
@@ -492,6 +593,48 @@ public class VerificationController {
             return null;
         } finally {
             closeResources(conn, pstmt, rs);
+        }
+    }
+
+    /**
+     * Helper method to get a volunteer's skills
+     */
+    private List<String> getVolunteerSkills(String username, Connection existingConn) {
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        List<String> skills = new ArrayList<>();
+
+        try {
+            conn = existingConn != null ? existingConn : DriverManager.getConnection(DB_URL);
+
+            String sql = "SELECT s.skill FROM Skills s " +
+                         "JOIN VolunteerSkills vs ON s.skillId = vs.skillId " +
+                         "WHERE vs.username = ?";
+
+            pstmt = conn.prepareStatement(sql);
+            pstmt.setString(1, username);
+            rs = pstmt.executeQuery();
+
+            while (rs.next()) {
+                skills.add(rs.getString("skill"));
+            }
+
+            return skills;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return skills;
+        } finally {
+            if (existingConn == null) {
+                closeResources(conn, pstmt, rs);
+            } else {
+                closeStatement(pstmt);
+                try {
+                    if (rs != null) rs.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
         }
     }
 
@@ -508,8 +651,8 @@ public class VerificationController {
         try {
             conn = DriverManager.getConnection(DB_URL);
 
-            // Get person in need data
-            String sql = "SELECT u.username, u.email, u.phone, u.address, p.fullName " +
+            // Get person in need data with all fields from the updated schema
+            String sql = "SELECT u.username, u.email, u.phone, u.address, p.fullName, p.cccd, p.dateOfBirth " +
                          "FROM SystemUser u " +
                          "JOIN PersonInNeed p ON u.username = p.username " +
                          "WHERE u.username = ?";
@@ -525,6 +668,20 @@ public class VerificationController {
                 personInNeed.setPhone(rs.getString("phone"));
                 personInNeed.setAddress(rs.getString("address"));
                 personInNeed.setFullName(rs.getString("fullName"));
+                personInNeed.setCccd(rs.getString("cccd"));
+
+                // Convert string date to Date object if not null
+                String dateStr = rs.getString("dateOfBirth");
+                if (dateStr != null && !dateStr.isEmpty()) {
+                    try {
+                        java.sql.Date sqlDate = rs.getDate("dateOfBirth");
+                        if (sqlDate != null) {
+                            personInNeed.setDateOfBirth(new Date(sqlDate.getTime()));
+                        }
+                    } catch (SQLException e) {
+                        System.err.println("Error parsing date: " + e.getMessage());
+                    }
+                }
 
                 return personInNeed;
             }

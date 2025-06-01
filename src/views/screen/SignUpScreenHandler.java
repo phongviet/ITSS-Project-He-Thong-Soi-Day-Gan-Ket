@@ -14,8 +14,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class SignUpScreenHandler {
 
@@ -55,26 +53,50 @@ public class SignUpScreenHandler {
     private TextField fullNameField;
 
     @FXML
+    private TextField cccdField;
+
+    @FXML
+    private TextField dateOfBirthField;
+
+    @FXML
     private TextField organizationNameField;
 
     @FXML
     private TextField licenseNumberField;
 
-    // Volunteer skills checkboxes
     @FXML
-    private CheckBox foodSkillCheckbox;
+    private ComboBox<String> fieldComboBox;
 
     @FXML
-    private CheckBox shelterSkillCheckbox;
+    private TextField representativeField;
 
     @FXML
-    private CheckBox medicalSkillCheckbox;
+    private TextField sponsorField;
+
+    @FXML
+    private TextArea infoField;
+
+    @FXML
+    private Spinner<Integer> freeHoursSpinner;
+
+    // Volunteer skills checkboxes - updated to match new skill set
+    @FXML
+    private CheckBox communicationSkillCheckbox;
+
+    @FXML
+    private CheckBox firstAidSkillCheckbox;
 
     @FXML
     private CheckBox educationSkillCheckbox;
 
     @FXML
-    private CheckBox financialSkillCheckbox;
+    private CheckBox cookingSkillCheckbox;
+
+    @FXML
+    private CheckBox drivingSkillCheckbox;
+
+    @FXML
+    private CheckBox fundraisingSkillCheckbox;
 
     @FXML
     private TextField otherSkillsField;
@@ -127,7 +149,7 @@ public class SignUpScreenHandler {
             // We're on the role selection screen
             currentUserType = "roleSelection";
         } else if (fullNameField != null && organizationNameField == null) {
-            if (foodSkillCheckbox != null) {
+            if (communicationSkillCheckbox != null) {
                 // We're on the Volunteer screen
                 currentUserType = "volunteer";
                 initializeSpinners();
@@ -158,6 +180,12 @@ public class SignUpScreenHandler {
             setupSpinner(fridaySpinner);
             setupSpinner(saturdaySpinner);
             setupSpinner(sundaySpinner);
+        }
+
+        if (freeHoursSpinner != null) {
+            SpinnerValueFactory<Integer> valueFactory =
+                    new SpinnerValueFactory.IntegerSpinnerValueFactory(0, 168, 0);
+            freeHoursSpinner.setValueFactory(valueFactory);
         }
     }
 
@@ -241,6 +269,8 @@ public class SignUpScreenHandler {
             // Register user based on current screen
             if ("volunteer".equals(currentUserType)) {
                 String fullName = fullNameField.getText().trim();
+                String cccd = cccdField != null ? cccdField.getText().trim() : null;
+                String dateOfBirth = dateOfBirthField != null ? dateOfBirthField.getText().trim() : null;
 
                 // Get skills list
                 List<String> skills = getSelectedSkills();
@@ -248,20 +278,37 @@ public class SignUpScreenHandler {
                 // Get availability map
                 Map<String, Integer> availability = getAvailability();
 
+                // Calculate total free hours per week
+                int freeHourPerWeek = 0;
+                if (freeHoursSpinner != null) {
+                    freeHourPerWeek = freeHoursSpinner.getValue();
+                } else {
+                    for (Integer hours : availability.values()) {
+                        freeHourPerWeek += hours;
+                    }
+                }
+
                 registrationSuccess = verificationController.registerVolunteer(
-                        username, password, email, phone, address, fullName, skills, availability);
-            }
-            else if ("organization".equals(currentUserType)) {
+                        username, password, email, phone, address, fullName,
+                        cccd, dateOfBirth, freeHourPerWeek, skills);
+            } else if ("organization".equals(currentUserType)) {
                 String orgName = organizationNameField.getText().trim();
                 String licenseNumber = licenseNumberField.getText().trim();
+                String field = fieldComboBox != null ? fieldComboBox.getValue() : "";
+                String representative = representativeField != null ? representativeField.getText().trim() : "";
+                String sponsor = sponsorField != null ? sponsorField.getText().trim() : "";
+                String info = infoField != null ? infoField.getText().trim() : "";
+
                 registrationSuccess = verificationController.registerVolunteerOrganization(
-                        username, password, email, phone, address, orgName, licenseNumber);
-            }
-            else if ("personInNeed".equals(currentUserType)) {
+                        username, password, email, phone, address,
+                        orgName, licenseNumber, field, representative, sponsor, info);
+            } else if ("personInNeed".equals(currentUserType)) {
                 String fullName = fullNameField.getText().trim();
+                String cccd = cccdField != null ? cccdField.getText().trim() : null;
+                String dateOfBirth = dateOfBirthField != null ? dateOfBirthField.getText().trim() : null;
 
                 registrationSuccess = verificationController.registerPersonInNeed(
-                        username, password, email, phone, address, fullName);
+                        username, password, email, phone, address, fullName, cccd, dateOfBirth);
             }
 
             if (registrationSuccess) {
@@ -290,14 +337,16 @@ public class SignUpScreenHandler {
     private List<String> getSelectedSkills() {
         List<String> skills = new ArrayList<>();
 
-        if (foodSkillCheckbox.isSelected()) skills.add("Food");
-        if (shelterSkillCheckbox.isSelected()) skills.add("Shelter");
-        if (medicalSkillCheckbox.isSelected()) skills.add("Medical");
-        if (educationSkillCheckbox.isSelected()) skills.add("Education");
-        if (financialSkillCheckbox.isSelected()) skills.add("Financial");
+        // Check for the new skill checkboxes
+        if (communicationSkillCheckbox != null && communicationSkillCheckbox.isSelected()) skills.add("Communication");
+        if (firstAidSkillCheckbox != null && firstAidSkillCheckbox.isSelected()) skills.add("First Aid");
+        if (educationSkillCheckbox != null && educationSkillCheckbox.isSelected()) skills.add("Education");
+        if (cookingSkillCheckbox != null && cookingSkillCheckbox.isSelected()) skills.add("Cooking");
+        if (drivingSkillCheckbox != null && drivingSkillCheckbox.isSelected()) skills.add("Driving");
+        if (fundraisingSkillCheckbox != null && fundraisingSkillCheckbox.isSelected()) skills.add("Fundraising");
 
         // Add other skills if specified
-        String otherSkills = otherSkillsField.getText().trim();
+        String otherSkills = otherSkillsField != null ? otherSkillsField.getText().trim() : "";
         if (!otherSkills.isEmpty()) {
             String[] otherSkillsList = otherSkills.split(",");
             for (String skill : otherSkillsList) {
@@ -317,13 +366,13 @@ public class SignUpScreenHandler {
     private Map<String, Integer> getAvailability() {
         Map<String, Integer> availability = new HashMap<>();
 
-        if (mondaySpinner.getValue() > 0) availability.put("Monday", mondaySpinner.getValue());
-        if (tuesdaySpinner.getValue() > 0) availability.put("Tuesday", tuesdaySpinner.getValue());
-        if (wednesdaySpinner.getValue() > 0) availability.put("Wednesday", wednesdaySpinner.getValue());
-        if (thursdaySpinner.getValue() > 0) availability.put("Thursday", thursdaySpinner.getValue());
-        if (fridaySpinner.getValue() > 0) availability.put("Friday", fridaySpinner.getValue());
-        if (saturdaySpinner.getValue() > 0) availability.put("Saturday", saturdaySpinner.getValue());
-        if (sundaySpinner.getValue() > 0) availability.put("Sunday", sundaySpinner.getValue());
+        if (mondaySpinner != null && mondaySpinner.getValue() > 0) availability.put("Monday", mondaySpinner.getValue());
+        if (tuesdaySpinner != null && tuesdaySpinner.getValue() > 0) availability.put("Tuesday", tuesdaySpinner.getValue());
+        if (wednesdaySpinner != null && wednesdaySpinner.getValue() > 0) availability.put("Wednesday", wednesdaySpinner.getValue());
+        if (thursdaySpinner != null && thursdaySpinner.getValue() > 0) availability.put("Thursday", thursdaySpinner.getValue());
+        if (fridaySpinner != null && fridaySpinner.getValue() > 0) availability.put("Friday", fridaySpinner.getValue());
+        if (saturdaySpinner != null && saturdaySpinner.getValue() > 0) availability.put("Saturday", saturdaySpinner.getValue());
+        if (sundaySpinner != null && sundaySpinner.getValue() > 0) availability.put("Sunday", sundaySpinner.getValue());
 
         return availability;
     }
@@ -384,28 +433,47 @@ public class SignUpScreenHandler {
                 return false;
             }
 
+            // CCCD validation if field exists
+            if (cccdField != null && !cccdField.getText().trim().isEmpty()) {
+                String cccd = cccdField.getText().trim();
+                if (cccd.length() != 12 || !cccd.matches("\\d+")) {
+                    messageLabel.setText("CCCD must be 12 digits");
+                    return false;
+                }
+            }
+
+            // Date validation if field exists
+            if (dateOfBirthField != null && !dateOfBirthField.getText().trim().isEmpty()) {
+                if (!dateOfBirthField.getText().trim().matches("\\d{4}-\\d{2}-\\d{2}")) {
+                    messageLabel.setText("Date of birth must be in format YYYY-MM-DD");
+                    return false;
+                }
+            }
+
             // Validate at least one skill is selected
-            if (!foodSkillCheckbox.isSelected() &&
-                !shelterSkillCheckbox.isSelected() &&
-                !medicalSkillCheckbox.isSelected() &&
-                !educationSkillCheckbox.isSelected() &&
-                !financialSkillCheckbox.isSelected() &&
-                otherSkillsField.getText().trim().isEmpty()) {
+            if ((communicationSkillCheckbox == null || !communicationSkillCheckbox.isSelected()) &&
+                (firstAidSkillCheckbox == null || !firstAidSkillCheckbox.isSelected()) &&
+                (educationSkillCheckbox == null || !educationSkillCheckbox.isSelected()) &&
+                (cookingSkillCheckbox == null || !cookingSkillCheckbox.isSelected()) &&
+                (drivingSkillCheckbox == null || !drivingSkillCheckbox.isSelected()) &&
+                (fundraisingSkillCheckbox == null || !fundraisingSkillCheckbox.isSelected()) &&
+                (otherSkillsField == null || otherSkillsField.getText().trim().isEmpty())) {
 
                 messageLabel.setText("Please select at least one skill");
                 return false;
             }
 
-            // Validate at least one day has availability
-            if (mondaySpinner.getValue() == 0 &&
-                tuesdaySpinner.getValue() == 0 &&
-                wednesdaySpinner.getValue() == 0 &&
-                thursdaySpinner.getValue() == 0 &&
-                fridaySpinner.getValue() == 0 &&
-                saturdaySpinner.getValue() == 0 &&
-                sundaySpinner.getValue() == 0) {
+            // Validate availability - either free hours or daily availability
+            if (freeHoursSpinner != null && freeHoursSpinner.getValue() <= 0 &&
+                (mondaySpinner == null || mondaySpinner.getValue() == 0) &&
+                (tuesdaySpinner == null || tuesdaySpinner.getValue() == 0) &&
+                (wednesdaySpinner == null || wednesdaySpinner.getValue() == 0) &&
+                (thursdaySpinner == null || thursdaySpinner.getValue() == 0) &&
+                (fridaySpinner == null || fridaySpinner.getValue() == 0) &&
+                (saturdaySpinner == null || saturdaySpinner.getValue() == 0) &&
+                (sundaySpinner == null || sundaySpinner.getValue() == 0)) {
 
-                messageLabel.setText("Please specify availability for at least one day");
+                messageLabel.setText("Please specify your weekly availability");
                 return false;
             }
         } else if ("personInNeed".equals(currentUserType)) {
@@ -413,9 +481,31 @@ public class SignUpScreenHandler {
                 messageLabel.setText("Full name is required");
                 return false;
             }
+
+            // CCCD validation if field exists
+            if (cccdField != null && !cccdField.getText().trim().isEmpty()) {
+                String cccd = cccdField.getText().trim();
+                if (cccd.length() != 12 || !cccd.matches("\\d+")) {
+                    messageLabel.setText("CCCD must be 12 digits");
+                    return false;
+                }
+            }
+
+            // Date validation if field exists
+            if (dateOfBirthField != null && !dateOfBirthField.getText().trim().isEmpty()) {
+                if (!dateOfBirthField.getText().trim().matches("\\d{4}-\\d{2}-\\d{2}")) {
+                    messageLabel.setText("Date of birth must be in format YYYY-MM-DD");
+                    return false;
+                }
+            }
         } else if ("organization".equals(currentUserType)) {
             if (organizationNameField.getText().trim().isEmpty()) {
                 messageLabel.setText("Organization name is required");
+                return false;
+            }
+
+            if (licenseNumberField.getText().trim().isEmpty()) {
+                messageLabel.setText("License number is required");
                 return false;
             }
         }
@@ -442,19 +532,30 @@ public class SignUpScreenHandler {
         addressField.clear();
 
         if (fullNameField != null) fullNameField.clear();
+        if (cccdField != null) cccdField.clear();
+        if (dateOfBirthField != null) dateOfBirthField.clear();
         if (organizationNameField != null) organizationNameField.clear();
         if (licenseNumberField != null) licenseNumberField.clear();
+        if (fieldComboBox != null) fieldComboBox.getSelectionModel().clearSelection();
+        if (representativeField != null) representativeField.clear();
+        if (sponsorField != null) sponsorField.clear();
+        if (infoField != null) infoField.clear();
 
         // Clear Volunteer specific fields
         if ("volunteer".equals(currentUserType)) {
-            foodSkillCheckbox.setSelected(false);
-            shelterSkillCheckbox.setSelected(false);
-            medicalSkillCheckbox.setSelected(false);
-            educationSkillCheckbox.setSelected(false);
-            financialSkillCheckbox.setSelected(false);
-            otherSkillsField.clear();
+            if (communicationSkillCheckbox != null) communicationSkillCheckbox.setSelected(false);
+            if (firstAidSkillCheckbox != null) firstAidSkillCheckbox.setSelected(false);
+            if (educationSkillCheckbox != null) educationSkillCheckbox.setSelected(false);
+            if (cookingSkillCheckbox != null) cookingSkillCheckbox.setSelected(false);
+            if (drivingSkillCheckbox != null) drivingSkillCheckbox.setSelected(false);
+            if (fundraisingSkillCheckbox != null) fundraisingSkillCheckbox.setSelected(false);
+            if (otherSkillsField != null) otherSkillsField.clear();
 
             // Reset spinners
+            if (freeHoursSpinner != null) {
+                freeHoursSpinner.getValueFactory().setValue(0);
+            }
+
             if (mondaySpinner != null) {
                 mondaySpinner.getValueFactory().setValue(0);
                 tuesdaySpinner.getValueFactory().setValue(0);
