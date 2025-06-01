@@ -63,7 +63,7 @@ CREATE TABLE Skills (
 
 CREATE TABLE VolunteerSkills (
     "username" TEXT NOT NULL,
-    "skillId" INTEGER NOT NULL PRIMARY KEY,
+    "skillId" INTEGER NOT NULL,
     PRIMARY KEY (username, skillId),
     FOREIGN KEY (skillId) REFERENCES Skills(skillId),
     FOREIGN KEY (username) REFERENCES Volunteer(username)
