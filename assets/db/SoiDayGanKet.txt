@@ -29,9 +29,7 @@ CREATE TABLE Volunteer (
     "averageRating" DOUBLE PRECISION NULL,
     "ratingCount" INTEGER NULL,
     "freeHourPerWeek" INTEGER NOT NULL,
-    FOREIGN KEY (username) REFERENCES SystemUser(username),
-    FOREIGN KEY (username) REFERENCES EventParticipants(username),
-    FOREIGN KEY (username) REFERENCES VolunteerSkills(username)
+    FOREIGN KEY (username) REFERENCES SystemUser(username)
 );
 
 CREATE TABLE PersonInNeed (
@@ -60,13 +58,15 @@ CREATE TABLE VolunteerOrganization (
 
 CREATE TABLE Skills (
     "skillId" INTEGER NOT NULL PRIMARY KEY,
-    "skill" TEXT NOT NULL,
-    FOREIGN KEY (skillId) REFERENCES VolunteerSkills(skillId)
+    "skill" TEXT NOT NULL
 );
 
 CREATE TABLE VolunteerSkills (
     "username" TEXT NOT NULL,
-    "skillId" INTEGER NOT NULL PRIMARY KEY
+    "skillId" INTEGER NOT NULL,
+    PRIMARY KEY (username, skillId),
+    FOREIGN KEY (skillId) REFERENCES Skills(skillId),
+    FOREIGN KEY (username) REFERENCES Volunteer(username)
 );
 
 CREATE TABLE Events (
@@ -80,8 +80,6 @@ CREATE TABLE Events (
     "organizer" TEXT NOT NULL,
     "needer" TEXT NULL,
     "status" TEXT NULL DEFAULT 'Pending',
-    FOREIGN KEY (eventId) REFERENCES EventSkills(eventID),
-    FOREIGN KEY (eventId) REFERENCES EventParticipants(eventId),
     FOREIGN KEY (needer) REFERENCES PersonInNeed(username),
     FOREIGN KEY (organizer) REFERENCES VolunteerOrganization(username)
 );
@@ -122,12 +120,12 @@ CREATE TABLE Report (
     "reportDate" DATE NULL,
     "progress" INTEGER NULL,
     "note" TEXT NULL,
-    FOREIGN KEY (reportId) REFERENCES FinalReport(reportId),
     FOREIGN KEY (eventId) REFERENCES Events(eventId)
 );
 
 CREATE TABLE FinalReport (
-    "reportId" INTEGER NOT NULL PRIMARY KEY
+    "reportId" INTEGER NOT NULL PRIMARY KEY,
+    FOREIGN KEY (reportId) REFERENCES Report(reportId)
 );
 
 CREATE TABLE EventSkills (
