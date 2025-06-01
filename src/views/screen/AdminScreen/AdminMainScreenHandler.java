@@ -1,4 +1,4 @@
-package views.screen;
+package views.screen.AdminScreen;
 
 import entity.users.Admin;
 import javafx.fxml.FXML;
@@ -23,6 +23,9 @@ public class AdminMainScreenHandler implements Initializable {
 
     @FXML
     private Button statisticsButton;
+
+    @FXML
+    private Button helpRequestManagementButton;
 
     @FXML
     private Label statusMessage;
@@ -66,8 +69,31 @@ public class AdminMainScreenHandler implements Initializable {
 
     @FXML
     public void handleEventManagement() {
-        // This will be implemented later
-        statusMessage.setText("Event Management feature will be implemented soon.");
+        try {
+            // Load the event management screen FXML
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/views/fxml/AdminScreen/EventManagementScreen.fxml"));
+            Parent root = loader.load();
+
+            // Get the controller and set the stage and admin
+            EventManagementScreenHandler controller = loader.getController();
+            controller.setStage(stage);
+            controller.setAdmin(admin);
+
+            // Set the scene
+            Scene scene = new Scene(root);
+            stage.setScene(scene);
+            stage.setTitle("Event Management");
+            stage.show();
+        } catch (IOException e) {
+            statusMessage.setText("Error loading Event Management screen: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    @FXML
+    public void handleHelpRequestManagement() {
+        // Will be implemented later
+        statusMessage.setText("Help Request Management feature will be implemented later.");
     }
 
     @FXML
@@ -94,3 +120,4 @@ public class AdminMainScreenHandler implements Initializable {
         }
     }
 }
+
