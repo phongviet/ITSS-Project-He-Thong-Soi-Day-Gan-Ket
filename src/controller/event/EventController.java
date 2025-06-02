@@ -486,10 +486,11 @@ public class EventController {
                         hoursParticipated,
                         ratingByOrg,
                         volunteerParticipationStatus
+                        
                 );
                 
                 // Lấy tên Tổ chức nếu cần (có thể làm ở đây hoặc trong constructor của EventParticipantDetails)
-                // details.setOrganizerName(getOrganizerNameById(conn, event.getOrganizer()));
+                 details.setOrganizerName(getOrganizerNameById(conn, event.getOrganizer()));
 
 
                 participationDetailsList.add(details);
