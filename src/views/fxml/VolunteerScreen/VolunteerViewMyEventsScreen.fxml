@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.text.Font?>
+<?import javafx.collections.FXCollections?>
+<?import java.lang.String?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="views.screen.VolunteerViewMyEventsScreenHandler" 
+            prefHeight="768" prefWidth="1024">
+    <top>
+        <HBox alignment="CENTER" style="-fx-background-color: #9b59b6;"> <!-- Màu tím giống Volunteer Dashboard -->
+            <padding>
+                <Insets top="15" right="15" bottom="15" left="15"/>
+            </padding>
+            <Label text="My Events List" textFill="WHITE"> <!-- Giữ nguyên tiêu đề -->
+                <font>
+                    <Font name="System Bold" size="24.0"/>
+                </font>
+            </Label>
+        </HBox>
+    </top>
+
+    <center>
+        <VBox alignment="TOP_CENTER" spacing="20">
+            <padding>
+                <Insets top="20" right="20" bottom="20" left="20"/>
+            </padding>
+
+            <!-- Search and Filter Controls (Giữ nguyên nếu muốn, hoặc có thể bỏ bớt nếu không cần cho TNV) -->
+            <HBox spacing="15" alignment="CENTER_LEFT">
+                <HBox spacing="5" alignment="CENTER_LEFT" HBox.hgrow="ALWAYS">
+                    <Label text="Search by title:" />
+                    <TextField fx:id="searchField" promptText="Enter event title" HBox.hgrow="ALWAYS" onKeyReleased="#handleSearch"/>
+                    <Button text="Clear" onAction="#handleClearSearch" style="-fx-background-color: #95a5a6; -fx-text-fill: white;"/>
+                </HBox>
+
+                <HBox spacing="5" alignment="CENTER_RIGHT">
+                    <Label text="Filter by status:" />
+                    <ComboBox fx:id="statusFilterComboBox" onAction="#handleStatusFilter" prefWidth="150">
+                        <items>
+                            <FXCollections fx:factory="observableArrayList">
+                                <String fx:value="All" />
+                                <String fx:value="Pending" /> <!-- TNV có thể xem sự kiện họ đăng ký nhưng chưa được duyệt bởi Org -->
+                                <String fx:value="Registered" /> <!-- Trạng thái mới cho TNV, sự kiện đã được Org chấp nhận -->
+                                <String fx:value="Upcoming" />
+                                <String fx:value="Ongoing" /> <!-- Trạng thái mới, sự kiện đang diễn ra -->
+                                <String fx:value="Completed" />
+                                <String fx:value="Canceled" />
+                            </FXCollections>
+                        </items>
+                    </ComboBox>
+                </HBox>
+            </HBox>
+
+            <!-- Event list table -->
+            <TableView fx:id="eventTableView" VBox.vgrow="ALWAYS">
+                <columns>
+                    <TableColumn fx:id="titleColumn" text="Event Title" prefWidth="220" />
+                    <TableColumn fx:id="startDateColumn" text="Start Date" prefWidth="100" />
+                    <TableColumn fx:id="endDateColumn" text="End Date" prefWidth="100" />
+                    <TableColumn fx:id="statusColumn" text="My Status" prefWidth="100" /> <!-- Trạng thái tham gia của TNV -->
+                    <TableColumn fx:id="hoursParticipatedColumn" text="Hours Participated" prefWidth="130" /> <!-- CỘT MỚI -->
+                    <TableColumn fx:id="ratingByOrgColumn" text="Org Rating" prefWidth="100" /> <!-- CỘT MỚI -->
+                    <TableColumn fx:id="actionsColumn" text="Actions" prefWidth="120" /> <!-- Giữ lại cột Actions -->
+                </columns>
+            </TableView>
+
+            <!-- Status message area -->
+            <Label fx:id="statusMessage" textFill="#e74c3c" wrapText="true"/>
+        </VBox>
+    </center>
+
+    <bottom>
+        <HBox alignment="CENTER" spacing="10" style="-fx-background-color: #ecf0f1; -fx-padding: 10;">
+            <Button fx:id="backButton" text="Back to Dashboard" onAction="#handleBackToDashboard"
+                    style="-fx-background-color: #9b59b6; -fx-text-fill: white;" prefWidth="150" prefHeight="30"/>
+        </HBox>
+    </bottom>
+</BorderPane>

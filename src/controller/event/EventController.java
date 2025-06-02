@@ -1,6 +1,6 @@
 package controller.event;
 
-import entity.events.Event;
+import entity.events.*;
 import entity.users.VolunteerOrganization;
 import entity.users.Volunteer;
 import java.sql.*;
@@ -422,4 +422,203 @@ public class EventController {
         }
         return events;
     }
+    
+    /**
+     * Lấy chi tiết tham gia sự kiện cho một Volunteer.
+     * Bao gồm thông tin Event và thông tin tham gia từ EventParticipants.
+     * @param volunteerUsername Username của tình nguyện viên
+     * @return List các EventParticipantDetails
+     */
+    public List<EventParticipantDetails> getEventParticipationDetailsForVolunteer(String volunteerUsername) {
+        List<EventParticipantDetails> participationDetailsList = new ArrayList<>();
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+
+        // Lấy thông tin từ Events và EventParticipants
+        String sql = "SELECT e.*, ep.hoursParticipated, ep.ratingByOrg " +
+                     "FROM Events e " +
+                     "JOIN EventParticipants ep ON e.eventId = ep.eventId " +
+                     "WHERE ep.username = ?";
+
+        try {
+            conn = DriverManager.getConnection(DB_URL);
+            pstmt = conn.prepareStatement(sql);
+            pstmt.setString(1, volunteerUsername);
+            rs = pstmt.executeQuery();
+
+            while (rs.next()) {
+                Event event = new Event();
+                event.setEventId(rs.getInt("eventId"));
+                event.setTitle(rs.getString("title"));
+                // ... (set các thuộc tính khác cho event từ ResultSet rs)
+                String startDateStr = rs.getString("startDate"); // Đọc dưới dạng String
+                String endDateStr = rs.getString("endDate");     // Đọc dưới dạng String
+
+                try {
+                    if (startDateStr != null && !startDateStr.isEmpty()) {
+                        event.setStartDate(DATE_FORMAT.parse(startDateStr)); // Parse bằng SimpleDateFormat đã định nghĩa
+                    }
+                    if (endDateStr != null && !endDateStr.isEmpty()) {
+                        event.setEndDate(DATE_FORMAT.parse(endDateStr));     // Parse bằng SimpleDateFormat đã định nghĩa
+                    }
+                } catch (java.text.ParseException e) {
+                    System.err.println("Error parsing date from DB string: " + e.getMessage());
+                    // Có thể gán null hoặc xử lý khác nếu parse lỗi
+                    event.setStartDate(null);
+                    event.setEndDate(null);
+                }
+                event.setStatus(rs.getString("status")); // Trạng thái chung của Event
+                event.setOrganizer(rs.getString("organizer"));
+                // ... (nạp các thuộc tính Event khác nếu cần)
+
+
+                Integer hoursParticipated = rs.getObject("hoursParticipated") != null ? rs.getInt("hoursParticipated") : null;
+                Integer ratingByOrg = rs.getObject("ratingByOrg") != null ? rs.getInt("ratingByOrg") : null;
+
+                // Lấy trạng thái tham gia của Volunteer (ví dụ từ Notification)
+                // Đây là phần bạn cần xác định logic chính xác cho hệ thống của mình
+                // Ví dụ: "Registered", "Attended", "Canceled by Volunteer"
+                String volunteerParticipationStatus = getVolunteerEventParticipationStatus(conn, volunteerUsername, event.getEventId());
+
+                EventParticipantDetails details = new EventParticipantDetails(
+                        event,
+                        volunteerUsername,
+                        hoursParticipated,
+                        ratingByOrg,
+                        volunteerParticipationStatus
+                );
+                
+                // Lấy tên Tổ chức nếu cần (có thể làm ở đây hoặc trong constructor của EventParticipantDetails)
+                // details.setOrganizerName(getOrganizerNameById(conn, event.getOrganizer()));
+
+
+                participationDetailsList.add(details);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            // Có thể ném một custom exception ở đây
+        } finally {
+            closeResources(conn, pstmt, rs);
+        }
+        return participationDetailsList;
+    }
+    
+    /**
+     * Phương thức trợ giúp để lấy trạng thái tham gia của Volunteer cho một Event.
+     * Bạn cần định nghĩa logic này dựa trên cách hệ thống quản lý (ví dụ: qua Notification)
+     */
+    private String getVolunteerEventParticipationStatus(Connection conn, String volunteerUsername, int eventId) throws SQLException {
+        // Ví dụ: lấy từ bảng Notification
+        PreparedStatement pstmtNotif = null;
+        ResultSet rsNotif = null;
+        // Lấy thông báo mới nhất liên quan đến volunteer và event này
+        String sqlNotif = "SELECT acceptStatus FROM Notification " +
+                          "WHERE username = ? AND eventId = ? " +
+                          "ORDER BY notificationId DESC LIMIT 1";
+        try {
+            pstmtNotif = conn.prepareStatement(sqlNotif);
+            pstmtNotif.setString(1, volunteerUsername);
+            pstmtNotif.setInt(2, eventId);
+            rsNotif = pstmtNotif.executeQuery();
+            if (rsNotif.next()) {
+                String status = rsNotif.getString("acceptStatus");
+                return status != null ? status : "Unknown"; // Hoặc một trạng thái mặc định
+            }
+        } finally {
+            if (rsNotif != null) rsNotif.close();
+            if (pstmtNotif != null) pstmtNotif.close();
+        }
+        // Nếu không có trong Notification, có thể tình nguyện viên đã được thêm trực tiếp
+        // hoặc bạn có logic khác để xác định trạng thái.
+        // Đây là một placeholder, bạn cần điều chỉnh cho phù hợp.
+        return "Registered"; // Trạng thái mặc định nếu không tìm thấy trong Notification
+    }
+    
+    // Phương thức trợ giúp để lấy tên tổ chức từ username (nếu cần)
+    private String getOrganizerNameById(Connection conn, String organizerUsername) throws SQLException {
+        PreparedStatement pstmtOrg = null;
+        ResultSet rsOrg = null;
+        String sqlOrg = "SELECT organizationName FROM VolunteerOrganization WHERE username = ?";
+        try {
+            pstmtOrg = conn.prepareStatement(sqlOrg);
+            pstmtOrg.setString(1, organizerUsername);
+            rsOrg = pstmtOrg.executeQuery();
+            if (rsOrg.next()) {
+                return rsOrg.getString("organizationName");
+            }
+        } finally {
+            if (rsOrg != null) rsOrg.close();
+            if (pstmtOrg != null) pstmtOrg.close();
+        }
+        return "Unknown Organization";
+    }
+
+
+    // Phương thức trợ giúp để đóng tài nguyên
+    private void closeResources(Connection conn, Statement stmt, ResultSet rs) {
+        try {
+            if (rs != null) rs.close();
+            if (stmt != null) stmt.close();
+            if (conn != null) conn.close(); // Chỉ đóng nếu kết nối được tạo trong phương thức đó
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+    
+    /**
+     * Lấy thông tin chi tiết của một Event dựa trên eventId.
+     * Bao gồm cả requiredSkills.
+     * @param eventId ID của sự kiện
+     * @return Đối tượng Event hoặc null nếu không tìm thấy
+     */
+   public Event getEventById(int eventId) {
+       Event event = null;
+       Connection conn = null;
+       PreparedStatement pstmt = null;
+       ResultSet rs = null;
+       String sql = "SELECT * FROM Events WHERE eventId = ?";
+
+       try {
+           conn = DriverManager.getConnection(DB_URL);
+           pstmt = conn.prepareStatement(sql);
+           pstmt.setInt(1, eventId);
+           rs = pstmt.executeQuery();
+
+           if (rs.next()) {
+               event = new Event();
+               event.setEventId(rs.getInt("eventId"));
+               event.setTitle(rs.getString("title"));
+               event.setMaxParticipantNumber(rs.getObject("maxParticipantNumber") != null ? rs.getInt("maxParticipantNumber") : null);
+
+               String startDateStr = rs.getString("startDate");
+               String endDateStr = rs.getString("endDate");
+               try {
+                   if (startDateStr != null && !startDateStr.isEmpty()) {
+                       event.setStartDate(DATE_FORMAT.parse(startDateStr));
+                   }
+                   if (endDateStr != null && !endDateStr.isEmpty()) {
+                       event.setEndDate(DATE_FORMAT.parse(endDateStr));
+                   }
+               } catch (java.text.ParseException e) {
+                   System.err.println("Error parsing date for event " + eventId + ": " + e.getMessage());
+               }
+
+               event.setEmergencyLevel(rs.getString("emergencyLevel"));
+               event.setDescription(rs.getString("description"));
+               event.setOrganizer(rs.getString("organizer"));
+               event.setNeeder(rs.getString("needer"));
+               event.setStatus(rs.getString("status"));
+
+               // Load required skills
+               loadEventSkills(conn, event); // Giả sử bạn có phương thức này (từ code EventController bạn gửi ban đầu)
+           }
+       } catch (SQLException e) {
+           e.printStackTrace();
+       } finally {
+           closeResources(conn, pstmt, rs);
+       }
+       return event;
+   }
+    
 }
