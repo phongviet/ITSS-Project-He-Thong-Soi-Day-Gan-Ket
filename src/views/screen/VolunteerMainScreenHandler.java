@@ -98,7 +98,7 @@ public class VolunteerMainScreenHandler implements Initializable {
             Parent root = loader.load();
 
             // Set the scene
-            Scene scene = new Scene(root);
+            Scene scene = new Scene(root, 1024, 768);
             stage.setScene(scene);
             stage.setTitle("Login");
             stage.show();

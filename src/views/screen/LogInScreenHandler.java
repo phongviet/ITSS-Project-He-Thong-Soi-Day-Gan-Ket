@@ -70,7 +70,7 @@ public class LogInScreenHandler {
                     controller.setStage(stage);
 
                     // Set the scene
-                    stage.setScene(new Scene(root));
+                    stage.setScene(new Scene(root, 1024, 768));
                     stage.setTitle("Admin Dashboard");
                     stage.show();
                 } else if ("VolunteerOrganization".equals(userType)) {
@@ -87,7 +87,7 @@ public class LogInScreenHandler {
                     controller.setStage(stage);
 
                     // Set the scene
-                    stage.setScene(new Scene(root));
+                    stage.setScene(new Scene(root, 1024, 768));
                     stage.setTitle("Volunteer Organization Dashboard");
                     stage.show();
                 } else if ("Volunteer".equals(userType)) {
@@ -104,7 +104,7 @@ public class LogInScreenHandler {
                     controller.setStage(stage);
 
                     // Set the scene
-                    stage.setScene(new Scene(root));
+                    stage.setScene(new Scene(root, 1024, 768));
                     stage.setTitle("Volunteer Dashboard");
                     stage.show();
                 } else if ("PersonInNeed".equals(userType)) {
@@ -121,7 +121,7 @@ public class LogInScreenHandler {
                     controller.setStage(stage);
 
                     // Set the scene
-                    stage.setScene(new Scene(root));
+                    stage.setScene(new Scene(root, 1024, 768));
                     stage.setTitle("Person In Need Dashboard");
                     stage.show();
                 } else if (userType != null) {
@@ -150,7 +150,7 @@ public class LogInScreenHandler {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/views/fxml/SignUp/RoleSelectionScreen.fxml"));
             Parent signUpRoot = loader.load();
             Stage stage = (Stage) signUpButton.getScene().getWindow();
-            stage.setScene(new Scene(signUpRoot));
+            stage.setScene(new Scene(signUpRoot, 1024, 768));
         } catch (IOException e) {
             messageLabel.setText("Error loading sign up screen: " + e.getMessage());
             messageLabel.setTextFill(Color.RED);

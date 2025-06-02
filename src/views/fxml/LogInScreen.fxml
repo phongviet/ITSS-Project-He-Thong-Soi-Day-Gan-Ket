@@ -6,30 +6,35 @@
 <?import javafx.scene.control.PasswordField?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 
-<AnchorPane prefHeight="768" prefWidth="1024" xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/23.0.1" fx:controller="views.screen.LogInScreenHandler">
+<AnchorPane xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="views.screen.LogInScreenHandler">
 
     <children>
-        <VBox alignment="CENTER" layoutX="362.0" layoutY="280.0" prefWidth="300" spacing="15.0" AnchorPane.leftAnchor="362.0" AnchorPane.topAnchor="280.0">
-            <children>
-
-                <Label style="-fx-font-size: 20px; -fx-font-weight: bold;" text="Login" />
-
-                <TextField fx:id="usernameField" prefWidth="200" promptText="Username" />
-
-                <PasswordField fx:id="passwordField" prefWidth="200" promptText="Password" />
-
-                <Button fx:id="loginButton" onAction="#handleLogin" prefWidth="200" text="Login" />
-
-                <Button fx:id="signUpButton" onAction="#handleSignUp" prefWidth="200" text="Sign Up" />
-
-                <Label fx:id="messageLabel" textFill="red" />
-
-            </children>
-            <padding>
-                <Insets bottom="10" left="10" right="10" top="10" />
-            </padding>
-        </VBox>
+      <StackPane AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+         <children>
+              <VBox alignment="CENTER" fillWidth="false" prefWidth="300" spacing="15.0">
+                  <children>
+      
+                      <Label style="-fx-font-size: 20px; -fx-font-weight: bold;" text="Login" />
+      
+                      <TextField fx:id="usernameField" prefWidth="300.0" promptText="Username" />
+      
+                      <PasswordField fx:id="passwordField" prefWidth="300.0" promptText="Password" />
+      
+                      <Button fx:id="loginButton" onAction="#handleLogin" prefWidth="200" text="Login" />
+      
+                      <Button fx:id="signUpButton" onAction="#handleSignUp" prefWidth="200" text="Sign Up" />
+      
+                      <Label fx:id="messageLabel" textFill="red" />
+      
+                  </children>
+                  <padding>
+                      <Insets bottom="10" left="10" right="10" top="10" />
+                  </padding>
+              </VBox>
+         </children>
+      </StackPane>
     </children>
 </AnchorPane>
