@@ -4,6 +4,14 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.text.Font?>
+<TableView fx:id="helpRequestTable" prefHeight="200">
+    <columns>
+        <TableColumn fx:id="titleColumn" text="Tiêu đề" prefWidth="200" />
+        <TableColumn fx:id="startDateColumn" text="Ngày bắt đầu" prefWidth="150" />
+        <TableColumn fx:id="emergencyLevelColumn" text="Mức khẩn cấp" prefWidth="120" />
+        <TableColumn fx:id="actionColumn" text="Hành động" prefWidth="150" />
+    </columns>
+</TableView>
 
 <BorderPane xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"

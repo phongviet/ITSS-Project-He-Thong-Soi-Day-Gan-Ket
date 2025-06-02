@@ -78,9 +78,9 @@ CREATE TABLE Events (
     "emergencyLevel" TEXT NULL,
     "description" TEXT NULL,
     "organizer" TEXT NOT NULL,
-    "needer" TEXT NULL,
-    "status" TEXT NULL DEFAULT 'Pending',
-    FOREIGN KEY (needer) REFERENCES PersonInNeed(username),
+    "requestId" TEXT NULL,
+    "status" TEXT NULL DEFAULT 'pending',
+    FOREIGN KEY (requestId) REFERENCES HelpRequest(requestId),
     FOREIGN KEY (organizer) REFERENCES VolunteerOrganization(username)
 );
 
@@ -98,7 +98,7 @@ CREATE TABLE Notification (
     "notificationId" INTEGER NOT NULL PRIMARY KEY,
     "eventId" INTEGER NULL,
     "username" TEXT NULL,
-    "acceptStatus" TEXT NULL DEFAULT 'Pending',
+    "acceptStatus" TEXT NULL DEFAULT 'pending',
     FOREIGN KEY (eventId) REFERENCES Events(eventId),
     FOREIGN KEY (username) REFERENCES Volunteer(username)
 );
@@ -110,7 +110,7 @@ CREATE TABLE HelpRequest (
     "emergencyLevel" TEXT NULL,
     "description" TEXT NULL,
     "personInNeedID" TEXT NULL,
-    "status" TEXT NULL DEFAULT 'Pending',
+    "status" TEXT NULL DEFAULT 'pending',
     FOREIGN KEY (personInNeedID) REFERENCES PersonInNeed(username)
 );
 
@@ -129,10 +129,10 @@ CREATE TABLE FinalReport (
 );
 
 CREATE TABLE EventSkills (
-    eventID INTEGER NOT NULL,
+    eventId INTEGER NOT NULL,
     skillId INTEGER NOT NULL,
-    PRIMARY KEY (eventID, skillId),
-    FOREIGN KEY (eventID) REFERENCES Events(eventId),
+    PRIMARY KEY (eventId, skillId),
+    FOREIGN KEY (eventId) REFERENCES Events(eventId),
     FOREIGN KEY (skillId) REFERENCES Skills(skillId)
 );
 
@@ -191,11 +191,11 @@ VALUES
 ('volunteer2', 4);
 
 -- Sample data for Events
-INSERT INTO Events (eventId, title, maxParticipantNumber, startDate, endDate, emergencyLevel, description, organizer, needer, status)
+INSERT INTO Events (eventId, title, maxParticipantNumber, startDate, endDate, emergencyLevel, description, organizer, requestId, status)
 VALUES
-(1, 'Dạy học cho trẻ em vùng cao', 10, '2025-06-15', '2025-06-20', 'Bình thường', 'Chương trình dạy học miễn phí cho trẻ em vùng cao Tây Bắc', 'tochuc', 'person1', 'Coming Soon'),
-(2, 'Chăm sóc người già neo đơn', 5, '2025-06-25', '2025-06-28', 'Khẩn cấp', 'Chăm sóc và hỗ trợ người già neo đơn tại Hà Nội', 'org2', 'person2', 'Coming Soon'),
-(3, 'Quyên góp sách vở cho trẻ em', 15, '2025-07-10', '2025-07-15', 'Bình thường', 'Quyên góp sách vở và đồ dùng học tập cho trẻ em nghèo', 'tochuc', NULL, 'Coming Soon');
+(1, 'Dạy học cho trẻ em vùng cao', 10, '2025-06-15', '2025-06-20', 'Medium', 'Chương trình dạy học miễn phí cho trẻ em vùng cao Tây Bắc', 'tochuc', NULL, 'Coming Soon'),
+(2, 'Chăm sóc người già neo đơn', 5, '2025-06-25', '2025-06-28', 'Critical', 'Chăm sóc và hỗ trợ người già neo đơn tại Hà Nội', 'org2', 1, 'Coming Soon'),
+(3, 'Quyên góp sách vở cho trẻ em', 15, '2025-07-10', '2025-07-15', 'Low', 'Quyên góp sách vở và đồ dùng học tập cho trẻ em nghèo', 'tochuc', NULL, 'Coming Soon');
 
 -- Sample data for EventParticipants
 INSERT INTO EventParticipants (eventId, username, hoursParticipated, ratingByOrg)
@@ -215,21 +215,23 @@ VALUES
 -- Sample data for HelpRequest
 INSERT INTO HelpRequest (requestId, title, startDate, emergencyLevel, description, personInNeedID, status)
 VALUES
-(1, 'Cần hỗ trợ chăm sóc người già', '2025-06-10', 'Khẩn cấp', 'Cần tình nguyện viên hỗ trợ chăm sóc người già tại gia đình', 'person1', 'đã phê duyệt'),
-(2, 'Cần hỗ trợ dạy kèm cho trẻ', '2025-06-20', 'Bình thường', 'Cần tình nguyện viên dạy kèm tiếng Anh cho trẻ em', 'person2', 'chờ phê duyệt');
+(1, 'Cần hỗ trợ chăm sóc người già', '2025-06-10', 'Critical', 'Cần tình nguyện viên hỗ trợ chăm sóc người già tại gia đình', 'person2', 'confirmed'),
+(2, 'Cần hỗ trợ dạy kèm cho trẻ', '2025-06-20', 'Medium', 'Cần tình nguyện viên dạy kèm tiếng Anh cho trẻ em', 'person2', 'pending'),
+(3, 'Cần hỗ trợ xây nhà', '2025-06-30', 'Medium', 'Cần tình nguyện viên xây lại căn nhà', 'person2', 'approved'),
+(4, 'Cần hỗ trợ chăm sóc bệnh nhân', '2025-07-15', 'High', 'Cần tình nguyện viên chăm sóc bệnh nhân trong 1 tuần', 'person2', 'closed');
 
 -- Sample data for Report
 INSERT INTO Report (reportId, eventId, reportDate, progress, note)
 VALUES
 (1, 1, '2025-06-18', 50, 'Đã hoàn thành một nửa chương trình'),
-(2, 1, '2025-06-20', 100, 'Đã hoàn thành toàn bộ chương trình');
+(2, 1, '2025-06-20', 100, 'Đã hoàn thàn toàn bộ chương trình');
 
 -- Sample data for FinalReport
 INSERT INTO FinalReport (reportId)
 VALUES (2);
 
 -- Sample data for EventSkills
-INSERT INTO EventSkills (eventID, skillId)
+INSERT INTO EventSkills (eventId, skillId)
 VALUES
 (1, 3),
 (2, 2),

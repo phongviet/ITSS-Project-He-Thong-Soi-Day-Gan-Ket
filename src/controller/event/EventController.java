@@ -9,11 +9,85 @@ import java.util.List;
 import java.util.Date;
 import java.util.Calendar;
 import java.text.SimpleDateFormat;
+import entity.requests.HelpRequest;
+import java.text.ParseException;
+import java.util.Date;
+import java.text.SimpleDateFormat;
 
 public class EventController {
 
     private static final String DB_URL = "jdbc:sqlite:assets/db/SoiDayGanKet_sqlite.db";
     private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
+
+    public List<HelpRequest> getApprovedHelpRequests() {
+        List<HelpRequest> helpRequests = new ArrayList<>();
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+
+        try {
+            conn = DriverManager.getConnection(DB_URL);
+            String sql = "SELECT * FROM HelpRequest WHERE status = ?";
+            pstmt = conn.prepareStatement(sql);
+            pstmt.setString(1, "approved");
+            rs = pstmt.executeQuery();
+
+            while (rs.next()) {
+                HelpRequest hr = new HelpRequest();
+                hr.setRequestId(rs.getInt("requestId"));
+                hr.setTitle(rs.getString("title"));
+                String startDateStr = rs.getString("startDate");
+                if (startDateStr != null && !startDateStr.isEmpty()) {
+                    try {
+                        Date d = DATE_FORMAT.parse(startDateStr);
+                        hr.setStartDate(d);
+                    } catch (ParseException ex) {
+                        System.err.println("Không thể parse startDate: " + startDateStr);
+                    }
+                }
+                hr.setEmergencyLevel(rs.getString("emergencyLevel"));
+                hr.setDescription(rs.getString("description"));
+                hr.setPersonInNeedID(rs.getString("personInNeedID"));
+                hr.setStatus(rs.getString("status"));
+                helpRequests.add(hr);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (rs != null) rs.close();
+                if (pstmt != null) pstmt.close();
+                if (conn != null) conn.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+
+        return helpRequests;
+    }
+    public boolean updateHelpRequestStatus(int requestId, String newStatus) {
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        try {
+            conn = DriverManager.getConnection(DB_URL);
+            String sql = "UPDATE HelpRequest SET status = ? WHERE requestId = ?";
+            pstmt = conn.prepareStatement(sql);
+            pstmt.setString(1, newStatus);
+            pstmt.setInt(2, requestId);
+            int affectedRows = pstmt.executeUpdate();
+            return affectedRows > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        } finally {
+            try {
+                if (pstmt != null) pstmt.close();
+                if (conn != null) conn.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+    }
 
     public boolean registerEvent(Event event, VolunteerOrganization organization) {
         Connection conn = null;
