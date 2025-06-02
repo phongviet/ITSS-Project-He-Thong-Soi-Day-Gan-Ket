@@ -373,19 +373,19 @@ public class EventManagementScreenHandler implements Initializable {
             boolean success = adminApprovalController.approveEvent(event.getEventId());
 
             if (success) {
-                // Update the status in our list
-                event.setStatus("Approved");
+                // Update the status in our list to "Coming Soon"
+                event.setStatus("Coming Soon");
 
                 // Refresh the table
                 eventTableView.refresh();
 
                 // Show success message
-                statusMessage.setText("Event '" + event.getTitle() + "' has been approved successfully.");
+                statusMessage.setText("Event '" + event.getTitle() + "' has been processed and set to Coming Soon.");
             } else {
-                statusMessage.setText("Failed to approve event.");
+                statusMessage.setText("Failed to process event.");
             }
         } catch (Exception e) {
-            statusMessage.setText("Error approving event: " + e.getMessage());
+            statusMessage.setText("Error processing event: " + e.getMessage());
             e.printStackTrace();
         }
     }
@@ -397,36 +397,23 @@ public class EventManagementScreenHandler implements Initializable {
      */
     private void handleRejectEvent(Event event) {
         try {
-            // Create a simple dialog to get rejection reason
-            TextInputDialog dialog = new TextInputDialog();
-            dialog.setTitle("Reject Event");
-            dialog.setHeaderText("You are about to reject event: " + event.getTitle());
-            dialog.setContentText("Please provide a reason for rejection:");
+            // Call AdminApprovalController to reject the event
+            boolean success = adminApprovalController.rejectEvent(event.getEventId());
 
-            dialog.showAndWait().ifPresent(reason -> {
-                try {
-                    // Sử dụng AdminApprovalController để từ chối sự kiện
-                    boolean success = adminApprovalController.rejectEvent(event.getEventId(), reason);
+            if (success) {
+                // Update the status in our list to "Rejected"
+                event.setStatus("Rejected");
 
-                    if (success) {
-                        // Update the status in our list
-                        event.setStatus("Rejected");
+                // Refresh the table
+                eventTableView.refresh();
 
-                        // Refresh the table
-                        eventTableView.refresh();
-
-                        // Show success message
-                        statusMessage.setText("Event '" + event.getTitle() + "' has been rejected.");
-                    } else {
-                        statusMessage.setText("Failed to reject event.");
-                    }
-                } catch (Exception e) {
-                    statusMessage.setText("Error rejecting event: " + e.getMessage());
-                    e.printStackTrace();
-                }
-            });
+                // Show success message
+                statusMessage.setText("Event '" + event.getTitle() + "' has been rejected.");
+            } else {
+                statusMessage.setText("Failed to reject event.");
+            }
         } catch (Exception e) {
-            statusMessage.setText("Error showing rejection dialog: " + e.getMessage());
+            statusMessage.setText("Error rejecting event: " + e.getMessage());
             e.printStackTrace();
         }
     }

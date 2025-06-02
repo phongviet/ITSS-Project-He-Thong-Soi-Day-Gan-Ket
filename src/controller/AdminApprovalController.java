@@ -3,7 +3,10 @@ package controller;
 import entity.events.Event;
 import entity.requests.HelpRequest;
 import entity.users.Admin;
+import java.sql.*;
 import java.util.List;
+import java.util.ArrayList;
+import java.text.SimpleDateFormat;
 
 /**
  * Controller class for handling administrative approval of help requests and events
@@ -11,6 +14,7 @@ import java.util.List;
 public class AdminApprovalController {
 
     private Admin admin;
+    private static final String DB_URL = "jdbc:sqlite:assets/db/SoiDayGanKet_sqlite.db";
 
     /**
      * Constructor for the AdminApprovalController
@@ -79,20 +83,24 @@ public class AdminApprovalController {
      * @return true if approval was successful, false otherwise
      */
     public boolean approveEvent(int eventId) {
-        try {
+        try (Connection connection = DriverManager.getConnection(DB_URL)) {
             // Get the event by ID
             Event event = findEventById(eventId);
             if (event == null) {
                 return false;
             }
 
-            // Update event status to Approved
-            event.setStatus("Approved");
+            // Update event status to Coming Soon in the database
+            String updateQuery = "UPDATE Events SET status = ? WHERE eventId = ?";
+            try (PreparedStatement preparedStatement = connection.prepareStatement(updateQuery)) {
+                preparedStatement.setString(1, "Coming Soon");
+                preparedStatement.setInt(2, eventId);
+                int rowsUpdated = preparedStatement.executeUpdate();
 
-            // Here you would update the event in your database
-            // For now, we just return true indicating success
-            return true;
-        } catch (Exception e) {
+                // Check if the update was successful
+                return rowsUpdated > 0;
+            }
+        } catch (SQLException e) {
             e.printStackTrace();
             return false;
         }
@@ -102,24 +110,27 @@ public class AdminApprovalController {
      * Rejects an event
      *
      * @param eventId The ID of the event to reject
-     * @param reason The reason for rejection
      * @return true if rejection was successful, false otherwise
      */
-    public boolean rejectEvent(int eventId, String reason) {
-        try {
+    public boolean rejectEvent(int eventId) {
+        try (Connection connection = DriverManager.getConnection(DB_URL)) {
             // Get the event by ID
             Event event = findEventById(eventId);
             if (event == null) {
                 return false;
             }
 
-            // Update event status to Rejected
-            event.setStatus("Rejected");
+            // Update event status to Rejected in the database
+            String updateQuery = "UPDATE Events SET status = ? WHERE eventId = ?";
+            try (PreparedStatement preparedStatement = connection.prepareStatement(updateQuery)) {
+                preparedStatement.setString(1, "Rejected");
+                preparedStatement.setInt(2, eventId);
+                int rowsUpdated = preparedStatement.executeUpdate();
 
-            // Here you would update the event in your database
-            // For now, we just return true indicating success
-            return true;
-        } catch (Exception e) {
+                // Check if the update was successful
+                return rowsUpdated > 0;
+            }
+        } catch (SQLException e) {
             e.printStackTrace();
             return false;
         }
@@ -132,19 +143,70 @@ public class AdminApprovalController {
      * @return The Event object if found, null otherwise
      */
     private Event findEventById(int eventId) {
-        // In a real implementation, this would query the database
-        // For now, we'll simulate finding an event
-        List<Event> allEvents = getAllEvents();
-        if (allEvents == null) {
-            return null;
-        }
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        try {
+            conn = DriverManager.getConnection(DB_URL);
+            String sql = "SELECT * FROM Events WHERE eventId = ?";
+            stmt = conn.prepareStatement(sql);
+            stmt.setInt(1, eventId);
+            rs = stmt.executeQuery();
 
-        for (Event event : allEvents) {
-            if (event.getEventId() == eventId) {
+            if (rs.next()) {
+                Event event = new Event();
+                event.setEventId(rs.getInt("eventId"));
+                event.setTitle(rs.getString("title"));
+                event.setMaxParticipantNumber(rs.getInt("maxParticipantNumber"));
+
+                // Handle date conversion
+                String startDateStr = rs.getString("startDate");
+                String endDateStr = rs.getString("endDate");
+
+                if (startDateStr != null && !startDateStr.isEmpty()) {
+                    try {
+                        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+                        event.setStartDate(dateFormat.parse(startDateStr));
+                    } catch (Exception e) {
+                        System.out.println("Error parsing start date: " + e.getMessage());
+                    }
+                }
+
+                if (endDateStr != null && !endDateStr.isEmpty()) {
+                    try {
+                        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+                        event.setEndDate(dateFormat.parse(endDateStr));
+                    } catch (Exception e) {
+                        System.out.println("Error parsing end date: " + e.getMessage());
+                    }
+                }
+
+                event.setEmergencyLevel(rs.getString("emergencyLevel"));
+                event.setDescription(rs.getString("description"));
+                event.setOrganizer(rs.getString("organizer"));
+                event.setStatus(rs.getString("status"));
+
                 return event;
             }
+            return null;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return null;
+        } finally {
+            closeResources(conn, stmt, rs);
         }
+    }
 
-        return null;
+    /**
+     * Close database connection and statement resources
+     */
+    private void closeResources(Connection conn, Statement stmt, ResultSet rs) {
+        try {
+            if (rs != null) rs.close();
+            if (stmt != null) stmt.close();
+            if (conn != null) conn.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 }
