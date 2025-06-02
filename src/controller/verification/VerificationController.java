@@ -568,12 +568,12 @@ public class VerificationController {
                 String dateStr = rs.getString("dateOfBirth");
                 if (dateStr != null && !dateStr.isEmpty()) {
                     try {
-                        java.sql.Date sqlDate = rs.getDate("dateOfBirth");
-                        if (sqlDate != null) {
-                            volunteer.setDateOfBirth(new Date(sqlDate.getTime()));
-                        }
-                    } catch (SQLException e) {
-                        System.err.println("Error parsing date: " + e.getMessage());
+                        // Parse the string representation obtained from the database, assuming "yyyy-mm-dd" format
+                        java.sql.Date sqlDate = java.sql.Date.valueOf(dateStr);
+                        volunteer.setDateOfBirth(new Date(sqlDate.getTime()));
+                    } catch (IllegalArgumentException e) { // Catch parsing errors for the string format
+                        System.err.println("Error parsing date string from database: \"" + dateStr + "\" - " + e.getMessage());
+                        // Date will remain null if parsing fails, consistent with original behavior if sqlDate was null or dateStr was empty
                     }
                 }
 
@@ -674,12 +674,10 @@ public class VerificationController {
                 String dateStr = rs.getString("dateOfBirth");
                 if (dateStr != null && !dateStr.isEmpty()) {
                     try {
-                        java.sql.Date sqlDate = rs.getDate("dateOfBirth");
-                        if (sqlDate != null) {
-                            personInNeed.setDateOfBirth(new Date(sqlDate.getTime()));
-                        }
-                    } catch (SQLException e) {
-                        System.err.println("Error parsing date: " + e.getMessage());
+                        java.sql.Date sqlDate = java.sql.Date.valueOf(dateStr);
+                        personInNeed.setDateOfBirth(new Date(sqlDate.getTime()));
+                    } catch (IllegalArgumentException e) {
+                        System.err.println("Error parsing date string from database: \"" + dateStr + "\" - " + e.getMessage());
                     }
                 }
 
