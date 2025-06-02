@@ -40,6 +40,8 @@ public class VolunteerSuggestedEventsScreenHandler implements Initializable {
     @FXML private TableColumn<Event, String> statusColumn; // Trạng thái chung của Event
     @FXML private TableColumn<Event, Void> actionsColumn;
     @FXML private TextField searchField;
+    // THÊM @FXML CHO COMBOBOX MỚI
+    @FXML private ComboBox<String> registrationStatusFilterComboBox;
     @FXML private Label statusMessage;
 
     private Stage stage;
@@ -53,6 +55,7 @@ public class VolunteerSuggestedEventsScreenHandler implements Initializable {
     private SimpleDateFormat dateFormatter = new SimpleDateFormat("dd/MM/yyyy");
 
     private String currentSearchText = "";
+    private String currentRegistrationStatusFilter = "All Events"; // Giá trị mặc định mới
 
     public VolunteerSuggestedEventsScreenHandler() {
         this.eventController = new EventController();
@@ -76,7 +79,8 @@ public class VolunteerSuggestedEventsScreenHandler implements Initializable {
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
         setupTableColumns();
-        setupSearchFilter();
+        //setupSearchFilter();
+        setupFilters();
         statusMessage.setText("");
     }
     
@@ -175,23 +179,83 @@ public class VolunteerSuggestedEventsScreenHandler implements Initializable {
         });
     }
 
-    private void setupSearchFilter() {
+    private void setupFilters() { // Đổi tên hàm này để bao gồm cả hai filter
+        // Search Field Listener
         searchField.textProperty().addListener((obs, oldVal, newVal) -> {
             currentSearchText = newVal != null ? newVal.toLowerCase() : "";
             applyFilters();
         });
+
+        // Registration Status Filter ComboBox Listener
+        // Các giá trị phải khớp với FXML
+        registrationStatusFilterComboBox.setItems(FXCollections.observableArrayList(
+                "All Events", "Not Registered", "Waiting for Approval", "Approved"
+        ));
+        registrationStatusFilterComboBox.setValue("All Events"); // Giá trị mặc định
+
+        registrationStatusFilterComboBox.valueProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal != null) {
+                currentRegistrationStatusFilter = newVal;
+                applyFilters();
+            }
+        });
     }
 
     private void applyFilters() {
-        if (allSuggestedEventsList == null) return;
+        if (allSuggestedEventsList == null || volunteer == null) { // Thêm kiểm tra volunteer
+             if (filteredSuggestedEvents != null) filteredSuggestedEvents.setPredicate(p->false); // Xóa bảng nếu dữ liệu chưa sẵn sàng
+            return;
+        }
 
-        Predicate<Event> searchPredicate = event -> {
-            if (currentSearchText.isEmpty()) return true;
-            return event.getTitle() != null && event.getTitle().toLowerCase().contains(currentSearchText);
+        Predicate<Event> combinedPredicate = event -> {
+            boolean titleMatch = true;
+            if (!currentSearchText.isEmpty() && event.getTitle() != null) {
+                titleMatch = event.getTitle().toLowerCase().contains(currentSearchText);
+            }
+
+            boolean registrationStatusMatch = true;
+            if (!"All Events".equals(currentRegistrationStatusFilter)) {
+                try {
+                    String actualStatus = notificationController.getVolunteerNotificationStatusForEvent(
+                            volunteer.getUsername(), event.getEventId());
+
+                    if ("Not Registered".equals(currentRegistrationStatusFilter)) {
+                        registrationStatusMatch = (actualStatus == null);
+                    } else if ("Waiting for Approval".equals(currentRegistrationStatusFilter)) {
+                        registrationStatusMatch = "Pending".equalsIgnoreCase(actualStatus);
+                    } else if ("Approved".equals(currentRegistrationStatusFilter)) {
+                        registrationStatusMatch = "Approved".equalsIgnoreCase(actualStatus) ||
+                                                 "Registered".equalsIgnoreCase(actualStatus); // Coi Registered là Approved
+                    }
+                    // Bạn có thể thêm các trường hợp khác như "Rejected", "Canceled" nếu có trong ComboBox
+                } catch (SQLException e) {
+                    System.err.println("Error applying registration status filter for event " + event.getEventId() + ": " + e.getMessage());
+                    registrationStatusMatch = false; // Nếu lỗi thì coi như không khớp để tránh hiển thị sai
+                }
+            }
+            return titleMatch && registrationStatusMatch;
         };
-        // Hiện tại không có filter theo ComboBox
-        filteredSuggestedEvents.setPredicate(searchPredicate);
-        statusMessage.setText(filteredSuggestedEvents.isEmpty() ? "No suggested events match your search." : "");
+
+        filteredSuggestedEvents.setPredicate(combinedPredicate);
+        updateStatusMessageAfterFilter();
+    }
+    
+    private void updateStatusMessageAfterFilter() {
+        if (filteredSuggestedEvents == null) return;
+        if (filteredSuggestedEvents.isEmpty()) {
+            if (!currentSearchText.isEmpty() && !"All Events".equals(currentRegistrationStatusFilter)) {
+                statusMessage.setText("No events match title '" + currentSearchText + "' and status '" + currentRegistrationStatusFilter + "'.");
+            } else if (!currentSearchText.isEmpty()) {
+                statusMessage.setText("No events match title '" + currentSearchText + "'.");
+            } else if (!"All Events".equals(currentRegistrationStatusFilter)) {
+                statusMessage.setText("No events found with status: '" + currentRegistrationStatusFilter + "'.");
+            } else {
+                // Trường hợp này không nên xảy ra nếu allSuggestedEventsList không rỗng và filter là "All"
+                statusMessage.setText("No suggested events available.");
+            }
+        } else {
+            statusMessage.setText("");
+        }
     }
 
     private void loadSuggestedEvents() {
@@ -283,6 +347,19 @@ public class VolunteerSuggestedEventsScreenHandler implements Initializable {
             statusMessage.setText("Error returning to dashboard: " + e.getMessage());
             e.printStackTrace();
         }
+    }
+    
+    @FXML // ĐẢM BẢO CÓ ANNOTATION NÀY
+    public void handleRegistrationStatusFilter() {
+        // Vì chúng ta đã sử dụng valueProperty().addListener() trong setupFilters()
+        // để tự động gọi applyFilters() khi giá trị ComboBox thay đổi,
+        // phương thức onAction này có thể không thực sự cần làm gì nhiều.
+        // Tuy nhiên, nó vẫn cần tồn tại để FXML không báo lỗi.
+        // Bạn có thể thêm log ở đây để kiểm tra xem nó có được gọi không nếu muốn.
+        // System.out.println("handleRegistrationStatusFilter called - ComboBox value: " + registrationStatusFilterComboBox.getValue());
+        
+        // applyFilters(); // Không cần gọi lại ở đây nếu listener đã gọi
+        // updateStatusMessageAfterFilter(); // Không cần gọi lại ở đây nếu listener đã gọi
     }
 
     @FXML

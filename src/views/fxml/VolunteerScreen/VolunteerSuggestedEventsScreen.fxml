@@ -30,14 +30,32 @@
                 <Insets top="20" right="20" bottom="20" left="20"/>
             </padding>
 
-            <!-- Search and Filter Controls (Có thể giữ lại nếu muốn, hoặc đơn giản hóa) -->
-            <HBox spacing="15" alignment="CENTER_LEFT">
-                <HBox spacing="5" alignment="CENTER_LEFT" HBox.hgrow="ALWAYS">
+            <!-- Search and Filter Controls -->
+            <HBox spacing="15" alignment="CENTER_LEFT"> <!-- Cho HBox này chiếm hết chiều rộng -->
+                <!-- Title search field -->
+                <HBox spacing="5" alignment="CENTER_LEFT" HBox.hgrow="ALWAYS"> <!-- Cho phép co giãn -->
                     <Label text="Search by title:" />
                     <TextField fx:id="searchField" promptText="Enter event title" HBox.hgrow="ALWAYS" onKeyReleased="#handleSearch"/>
                     <Button text="Clear" onAction="#handleClearSearch" style="-fx-background-color: #95a5a6; -fx-text-fill: white;"/>
                 </HBox>
-                <!-- Bạn có thể thêm ComboBox để lọc theo mức độ khẩn cấp nếu muốn -->
+
+           
+
+                <!-- Registration Status Filter -->
+                <HBox spacing="5" alignment="CENTER_RIGHT">
+                    <Label text="Filter by my status:" />
+                    <ComboBox fx:id="registrationStatusFilterComboBox" onAction="#handleRegistrationStatusFilter" prefWidth="180">
+                        <items>
+                            <FXCollections fx:factory="observableArrayList">
+                                <String fx:value="All Events" /> <!-- Đổi tên để rõ ràng hơn -->
+                                <String fx:value="Not Registered" />
+                                <String fx:value="Waiting for Approval" />
+                                <String fx:value="Approved" />
+                                <!-- Bạn có thể thêm "Rejected", "Canceled by Me" nếu cần -->
+                            </FXCollections>
+                        </items>
+                    </ComboBox>
+                </HBox>
             </HBox>
 
             <TableView fx:id="eventTableView" VBox.vgrow="ALWAYS">
