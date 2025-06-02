@@ -36,25 +36,29 @@
                         text="Register an Event"
                         onAction="#handleRegisterEvent"
                         style="-fx-background-color: #2ecc71; -fx-text-fill: white;"
-                        prefWidth="200" prefHeight="40"/>
-
+                        prefWidth="200" prefHeight="60"/>
                 <Button fx:id="viewEventsButton"
                         text="View My Events"
                         onAction="#handleViewEvents"
                         style="-fx-background-color: #3498db; -fx-text-fill: white;"
-                        prefWidth="200" prefHeight="40"/>
+                        prefWidth="200" prefHeight="60"/>
 
                 <Button fx:id="listHelpRequestButton"
                         text="List Help Requests"
                         onAction="#handleListHelpRequest"
                         style="-fx-background-color: #f39c12; -fx-text-fill: white;"
-                        prefWidth="200" prefHeight="40"/>
+                        prefWidth="200" prefHeight="60"/>
 
                 <Button fx:id="listRegistButton"
                         text="List Regist"
                         onAction="#handleListRegist"
                         style="-fx-background-color: #9b59b6; -fx-text-fill: white;"
-                        prefWidth="200" prefHeight="40"/>
+                        prefWidth="200" prefHeight="60"/>
+                <Button fx:id="reviewButton"
+                        text="Review"
+                        onAction="#handleReview"
+                        style="-fx-background-color:rgb(230, 34, 83); -fx-text-fill: white;"
+                        prefWidth="200" prefHeight="60"/>
             </HBox>
 
             <!-- Khu vực hiển thị thông báo lỗi / trạng thái -->
@@ -91,7 +95,6 @@
         </VBox>
     </center>
 
-    <!-- Phần dưới cùng (footer) -->
     <bottom>
         <HBox alignment="CENTER_RIGHT" style="-fx-background-color: #ecf0f1; -fx-padding: 10;">
             <Button text="Logout" onAction="#handleLogout"/>

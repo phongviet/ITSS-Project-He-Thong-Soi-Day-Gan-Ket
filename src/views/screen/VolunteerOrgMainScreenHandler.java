@@ -28,7 +28,8 @@ import java.util.List;
 import java.util.ResourceBundle;
 
 public class VolunteerOrgMainScreenHandler implements Initializable {
-
+    @FXML
+    private Button reviewButton;
     @FXML
     private Button registerEventButton;
 
@@ -290,6 +291,26 @@ public class VolunteerOrgMainScreenHandler implements Initializable {
             stage.show();
         } catch (IOException e) {
             statusMessage.setText("Error loading registration screen: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+    @FXML
+    public void handleReview() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource(
+                "/views/fxml/OrganizationScreen/VolunteerOrgReviewEventListScreen.fxml"));
+            Parent root = loader.load();
+
+            VolunteerOrgReviewEventListScreenHandler controller = loader.getController();
+            controller.setStage(stage);
+            controller.setOrganization(organization);
+
+            Scene scene = new Scene(root);
+            stage.setScene(scene);
+            stage.setTitle("Review Events");
+            stage.show();
+        } catch (IOException e) {
+            statusMessage.setText("Error loading review screen: " + e.getMessage());
             e.printStackTrace();
         }
     }
