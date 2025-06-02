@@ -1,6 +1,7 @@
 package views.screen;
 
 import controller.event.EventController;
+import controller.verification.VerificationController;
 import entity.events.Event; // Cần import Event
 import entity.events.EventParticipantDetails;
 import entity.users.Volunteer;
@@ -44,7 +45,8 @@ public class VolunteerViewEventDetailScreenHandler implements Initializable {
     private Volunteer volunteer; // TNV hiện tại
     private EventParticipantDetails eventDetails; // Thông tin chi tiết đã được tổng hợp
     private EventController eventController;
-    private SimpleDateFormat dateFormatter = new SimpleDateFormat("dd/MM/yyyy 'at' HH:mm"); // Định dạng chi tiết hơn
+    private VerificationController verificationController;
+    private SimpleDateFormat dateFormatter = new SimpleDateFormat("dd/MM/yyyy"); // Định dạng chi tiết hơn
 
     // Constructor mặc định
     public VolunteerViewEventDetailScreenHandler() {

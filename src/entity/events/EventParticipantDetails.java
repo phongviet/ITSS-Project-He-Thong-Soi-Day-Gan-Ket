@@ -42,6 +42,7 @@ public class EventParticipantDetails {
         this.hoursParticipated = hoursParticipated;
         this.ratingByOrg = ratingByOrg;
         this.volunteerParticipationStatus = volunteerParticipationStatus;
+        //this.organizerName = organizerName;
     }
 
 

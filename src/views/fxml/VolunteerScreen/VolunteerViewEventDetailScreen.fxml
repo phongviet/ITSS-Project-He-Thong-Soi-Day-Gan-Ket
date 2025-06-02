@@ -9,7 +9,7 @@
 <BorderPane xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
             fx:controller="views.screen.VolunteerViewEventDetailScreenHandler"
-            prefHeight="600" prefWidth="800">
+            prefHeight="768" prefWidth="1024">
     <top>
         <HBox alignment="CENTER" style="-fx-background-color: #9b59b6;" spacing="10">
             <padding>
