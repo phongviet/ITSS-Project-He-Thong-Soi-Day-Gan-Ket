@@ -454,18 +454,30 @@ public class EventController {
                 event.setTitle(rs.getString("title"));
                 event.setMaxParticipantNumber(rs.getInt("maxParticipantNumber"));
 
-                // Lấy ngày trực tiếp từ cơ sở dữ liệu bằng rs.getDate
-                java.sql.Date startSqlDate = rs.getDate("startDate");
-                java.sql.Date endSqlDate = rs.getDate("endDate");
+                // Lấy ngày từ cột DATE trong DB
+                try {
+                    String startDateStr = rs.getString("startDate");
+                    String endDateStr = rs.getString("endDate");
 
-                if (startSqlDate != null) {
-                    // Chuyển từ java.sql.Date sang java.util.Date
-                    event.setStartDate(new java.util.Date(startSqlDate.getTime()));
-                }
+                    if (startDateStr != null && !startDateStr.isEmpty()) {
+                        try {
+                            // Parse từ chuỗi định dạng YYYY-MM-DD
+                            event.setStartDate(DATE_FORMAT.parse(startDateStr));
+                        } catch (Exception ex) {
+                            System.err.println("Không thể chuyển đổi ngày bắt đầu: " + startDateStr);
+                        }
+                    }
 
-                if (endSqlDate != null) {
-                    // Chuyển từ java.sql.Date sang java.util.Date
-                    event.setEndDate(new java.util.Date(endSqlDate.getTime()));
+                    if (endDateStr != null && !endDateStr.isEmpty()) {
+                        try {
+                            // Parse từ chuỗi định dạng YYYY-MM-DD
+                            event.setEndDate(DATE_FORMAT.parse(endDateStr));
+                        } catch (Exception ex) {
+                            System.err.println("Không thể chuyển đổi ngày kết thúc: " + endDateStr);
+                        }
+                    }
+                } catch (SQLException e) {
+                    System.err.println("Lỗi khi đọc ngày tháng: " + e.getMessage());
                 }
 
                 event.setEmergencyLevel(rs.getString("emergencyLevel"));
@@ -481,16 +493,7 @@ public class EventController {
             }
         } catch (SQLException e) {
             e.printStackTrace();
-        } finally {
-            try {
-                if (rs != null) rs.close();
-                if (stmt != null) stmt.close();
-                if (conn != null) conn.close();
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
         }
-
         return events;
     }
     
