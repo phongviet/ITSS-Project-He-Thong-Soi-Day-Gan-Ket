@@ -56,11 +56,33 @@ public class VolunteerMainScreenHandler implements Initializable {
     }
 
     @FXML
-    public void handleViewInvitations() {
-        // This will be implemented later
-        statusMessage.setText("View Invitations feature will be implemented soon.");
-    }
+    public void handleViewInvitations() { // THAY ĐỔI PHƯƠNG THỨC NÀY
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/views/fxml/VolunteerScreen/VolunteerSuggestedEventsScreen.fxml"));
+            Parent root = loader.load();
 
+            VolunteerSuggestedEventsScreenHandler controller = loader.getController();
+            controller.setStage(this.stage);
+            if (this.volunteer != null) {
+                controller.setVolunteer(this.volunteer); // Truyền TNV hiện tại
+            } else {
+                statusMessage.setText("Error: User data not found. Please login again.");
+                System.err.println("Volunteer object is null when viewing invitations.");
+                // Có thể chuyển về màn hình login
+                return;
+            }
+
+            Scene scene = new Scene(root);
+            this.stage.setScene(scene);
+            this.stage.setTitle("Suggested Event Invitations");
+            this.stage.show();
+
+        } catch (IOException e) {
+            statusMessage.setText("Error opening suggested events: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+    
     @FXML
     public void handleViewMyEvents() {
         try {
