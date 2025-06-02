@@ -78,9 +78,9 @@ CREATE TABLE Events (
     "emergencyLevel" TEXT NULL,
     "description" TEXT NULL,
     "organizer" TEXT NOT NULL,
-    "needer" TEXT NULL,
+    "requestId" TEXT NULL,
     "status" TEXT NULL DEFAULT 'Pending',
-    FOREIGN KEY (needer) REFERENCES PersonInNeed(username),
+    FOREIGN KEY (requestId) REFERENCES HelpRequest(requestId),
     FOREIGN KEY (organizer) REFERENCES VolunteerOrganization(username)
 );
 

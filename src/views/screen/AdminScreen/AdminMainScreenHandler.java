@@ -115,8 +115,25 @@ public class AdminMainScreenHandler implements Initializable {
 
     @FXML
     public void handleViewStatistics() {
-        // This will be implemented later
-        statusMessage.setText("Statistics View feature will be implemented soon.");
+        try {
+            // Load the statistics report screen FXML
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/views/fxml/AdminScreen/StatisticReportScreen.fxml"));
+            Parent root = loader.load();
+
+            // Get the controller and set the stage and admin
+            StatisticReportScreenHandler controller = loader.getController();
+            controller.setStage(stage);
+            controller.setAdmin(admin);
+
+            // Set the scene
+            Scene scene = new Scene(root);
+            stage.setScene(scene);
+            stage.setTitle("Statistical Reports");
+            stage.show();
+        } catch (IOException e) {
+            statusMessage.setText("Error loading Statistics Report screen: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     @FXML

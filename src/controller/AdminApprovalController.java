@@ -31,7 +31,11 @@ public class AdminApprovalController {
      * @return true if approval was successful, false otherwise
      */
     public boolean approveEvent(int eventId) {
-        try (Connection connection = DriverManager.getConnection(DB_URL)) {
+        Connection connection = null;
+        try {
+            connection = DriverManager.getConnection(DB_URL);
+            connection.setAutoCommit(false);
+
             // Get the event by ID
             Event event = findEventById(eventId);
             if (event == null) {
@@ -39,18 +43,58 @@ public class AdminApprovalController {
             }
 
             // Update event status to Coming Soon in the database
-            String updateQuery = "UPDATE Events SET status = ? WHERE eventId = ?";
-            try (PreparedStatement preparedStatement = connection.prepareStatement(updateQuery)) {
+            String updateEventQuery = "UPDATE Events SET status = ? WHERE eventId = ?";
+            try (PreparedStatement preparedStatement = connection.prepareStatement(updateEventQuery)) {
                 preparedStatement.setString(1, "Coming Soon");
                 preparedStatement.setInt(2, eventId);
                 int rowsUpdated = preparedStatement.executeUpdate();
 
-                // Check if the update was successful
-                return rowsUpdated > 0;
+                if (rowsUpdated <= 0) {
+                    connection.rollback();
+                    return false;
+                }
             }
+
+            // Check if this event is associated with a help request
+            String checkRequestQuery = "SELECT requestId FROM Events WHERE eventId = ? AND requestId IS NOT NULL";
+            try (PreparedStatement checkStmt = connection.prepareStatement(checkRequestQuery)) {
+                checkStmt.setInt(1, eventId);
+                ResultSet rs = checkStmt.executeQuery();
+
+                // If associated request exists, update its status to "Closed"
+                if (rs.next()) {
+                    String requestId = rs.getString("requestId");
+                    if (requestId != null && !requestId.isEmpty()) {
+                        String updateRequestQuery = "UPDATE HelpRequest SET status = 'Closed' WHERE requestId = ?";
+                        try (PreparedStatement requestStmt = connection.prepareStatement(updateRequestQuery)) {
+                            requestStmt.setString(1, requestId);
+                            requestStmt.executeUpdate();
+                        }
+                    }
+                }
+            }
+
+            connection.commit();
+            return true;
         } catch (SQLException e) {
+            try {
+                if (connection != null) {
+                    connection.rollback();
+                }
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
             e.printStackTrace();
             return false;
+        } finally {
+            try {
+                if (connection != null) {
+                    connection.setAutoCommit(true);
+                    connection.close();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
         }
     }
 
