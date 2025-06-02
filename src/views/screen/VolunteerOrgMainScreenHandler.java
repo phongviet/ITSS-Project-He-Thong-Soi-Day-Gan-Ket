@@ -363,7 +363,7 @@ public class VolunteerOrgMainScreenHandler implements Initializable {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/views/fxml/LogInScreen.fxml"));
             Parent root = loader.load();
 
-            Scene scene = new Scene(root);
+            Scene scene = new Scene(root, 1024, 768);
             stage.setScene(scene);
             stage.setTitle("Login");
             stage.show();

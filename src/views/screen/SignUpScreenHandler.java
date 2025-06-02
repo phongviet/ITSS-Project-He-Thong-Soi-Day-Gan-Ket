@@ -389,7 +389,7 @@ public class SignUpScreenHandler {
                         FXMLLoader loader = new FXMLLoader(getClass().getResource("/views/fxml/LogInScreen.fxml"));
                         Parent loginRoot = loader.load();
                         Stage stage = (Stage) loginLink.getScene().getWindow();
-                        stage.setScene(new Scene(loginRoot));
+                        stage.setScene(new Scene(loginRoot, 1024, 768));
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -577,7 +577,7 @@ public class SignUpScreenHandler {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/views/fxml/LogInScreen.fxml"));
             Parent loginRoot = loader.load();
             Stage stage = (Stage) loginLink.getScene().getWindow();
-            stage.setScene(new Scene(loginRoot));
+            stage.setScene(new Scene(loginRoot, 1024, 768));
         } catch (Exception e) {
             messageLabel.setText("Error navigating to login screen");
             e.printStackTrace();
