@@ -9,6 +9,8 @@ import java.util.List;
 import java.util.Date;
 import java.util.Calendar;
 import java.text.SimpleDateFormat;
+import java.util.Collections;
+import java.util.Comparator;
 
 public class EventController {
 
@@ -617,5 +619,200 @@ public class EventController {
        }
        return event;
    }
-    
+   
+// File: src/controller/event/EventController.java
+
+// ... (các hằng số DB_URL, DATE_FORMAT_DB đã có)
+
+    /**
+     * Lớp nội bộ để bọc Event cùng với điểm số phù hợp (số skill khớp)
+     */
+    private static class SuggestedEventWrapper {
+        private Event event;
+        private int matchedSkillsCount; // Điểm này có thể là số skill khớp, hoặc một giá trị đặc biệt
+                                        // cho sự kiện không yêu cầu skill (ví dụ Integer.MAX_VALUE)
+
+        public SuggestedEventWrapper(Event event, int matchedSkillsCount) {
+            this.event = event;
+            this.matchedSkillsCount = matchedSkillsCount;
+        }
+
+        public Event getEvent() {
+            return event;
+        }
+
+        public int getMatchedSkillsCount() {
+            return matchedSkillsCount;
+        }
+    }
+
+    /**
+     * Chuyển đổi mức độ khẩn cấp (String) thành một số nguyên để sắp xếp.
+     * Số nhỏ hơn nghĩa là ưu tiên cao hơn (khẩn cấp hơn).
+     * @param emergencyLevel Chuỗi mức độ khẩn cấp
+     * @return Số nguyên đại diện cho độ ưu tiên
+     */
+    private int getEmergencyLevelPriority(String emergencyLevel) {
+        if (emergencyLevel == null || emergencyLevel.trim().isEmpty()) {
+            return Integer.MAX_VALUE; // Mức ưu tiên thấp nhất nếu không có hoặc rỗng
+        }
+        switch (emergencyLevel.trim().toLowerCase()) {
+            case "khẩn cấp":        // Hoặc "Urgent", "Critical", etc.
+                return 1;
+            case "cao":             // Hoặc "High"
+                return 2;
+            case "bình thường":     // Hoặc "Normal", "Medium"
+                return 3;
+            case "thấp":            // Hoặc "Low"
+                return 4;
+            default:
+                System.out.println("Unknown emergency level for priority: " + emergencyLevel);
+                return 5; // Mức thấp nhất cho các giá trị không xác định
+        }
+    }
+
+    /**
+     * Lấy tất cả các sự kiện đang mở và còn chỗ.
+     * Mở: status là "Approved", "Pending", "Coming Soon" VÀ startDate là trong tương lai.
+     * Còn chỗ: số người tham gia hiện tại < maxParticipantNumber.
+     * Đồng thời load requiredSkills cho mỗi event.
+     * @return List các Event
+     */
+    public List<Event> getAllOpenAndAvailableEvents() {
+        List<Event> openEvents = new ArrayList<>();
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        String sql = "SELECT e.*, " +
+                     "(SELECT COUNT(ep_inner.username) FROM EventParticipants ep_inner WHERE ep_inner.eventId = e.eventId) as currentParticipants " +
+                     "FROM Events e " +
+                     "WHERE (e.status = 'Approved' OR e.status = 'Pending' OR e.status = 'Coming Soon') " +
+                     "AND DATE(e.startDate) >= DATE('now') "; // Lấy sự kiện từ hôm nay trở đi
+
+        try {
+            conn = DriverManager.getConnection(DB_URL);
+            pstmt = conn.prepareStatement(sql);
+            rs = pstmt.executeQuery();
+
+            while (rs.next()) {
+                int currentParticipants = rs.getInt("currentParticipants");
+                Integer maxParticipants = rs.getObject("maxParticipantNumber") != null ? rs.getInt("maxParticipantNumber") : null;
+
+                // Chỉ thêm vào nếu còn chỗ hoặc không giới hạn số lượng người tham gia
+                if (maxParticipants == null || currentParticipants < maxParticipants) {
+                    Event event = new Event();
+                    event.setEventId(rs.getInt("eventId"));
+                    event.setTitle(rs.getString("title"));
+                    event.setMaxParticipantNumber(maxParticipants);
+
+                    String startDateStr = rs.getString("startDate");
+                    String endDateStr = rs.getString("endDate");
+                    try {
+                        if (startDateStr != null && !startDateStr.isEmpty()) {
+                            event.setStartDate(DATE_FORMAT.parse(startDateStr));
+                        }
+                        if (endDateStr != null && !endDateStr.isEmpty()) {
+                            event.setEndDate(DATE_FORMAT.parse(endDateStr));
+                        }
+                    } catch (java.text.ParseException e) {
+                        System.err.println("Error parsing date in getAllOpenAndAvailableEvents for eventId " + event.getEventId() + ": " + e.getMessage());
+                    }
+                    event.setEmergencyLevel(rs.getString("emergencyLevel"));
+                    event.setDescription(rs.getString("description"));
+                    event.setOrganizer(rs.getString("organizer"));
+                    event.setNeeder(rs.getString("needer"));
+                    event.setStatus(rs.getString("status"));
+
+                    loadEventSkills(conn, event); // Load kỹ năng yêu cầu cho sự kiện này
+
+                    openEvents.add(event);
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("SQL Error in getAllOpenAndAvailableEvents: " + e.getMessage());
+            e.printStackTrace();
+        } finally {
+            // Sử dụng hàm closeResources đã có
+            closeResources(conn, pstmt, rs);
+        }
+        return openEvents;
+    }
+
+    /**
+     * Đề xuất danh sách các sự kiện phù hợp cho một Tình nguyện viên cụ thể.
+     *
+     * Thuật toán:
+     * 1. Lấy tất cả sự kiện đang mở và còn chỗ (sử dụng getAllOpenAndAvailableEvents).
+     * 2. Lọc ra các sự kiện có ít nhất một kỹ năng yêu cầu khớp với kỹ năng của TNV
+     *    (hoặc sự kiện không yêu cầu kỹ năng nào).
+     * 3. Sắp xếp sự kiện:
+     *    - Ưu tiên 1 (Giảm dần): Số kỹ năng khớp (sự kiện không yêu cầu skill được coi là khớp nhiều nhất).
+     *    - Ưu tiên 2 (Giảm dần theo độ ưu tiên - tức là tăng dần theo số priority): Mức độ khẩn cấp.
+     *    - Ưu tiên 3 (Tăng dần): Ngày bắt đầu sự kiện (sớm hơn được ưu tiên).
+     *
+     * @param volunteer TNV cần đề xuất sự kiện
+     * @return List các Event đã được sắp xếp theo mức độ phù hợp
+     */
+    public List<Event> getSuggestedEventsForVolunteer(Volunteer volunteer) {
+        if (volunteer == null || volunteer.getUsername() == null) {
+            System.err.println("getSuggestedEventsForVolunteer: Volunteer object or username is null.");
+            return new ArrayList<>();
+        }
+        // Đảm bảo volunteer.getSkills() đã được nạp trước khi gọi hàm này
+        List<String> volunteerSkills = volunteer.getSkills();
+        if (volunteerSkills == null) {
+            System.err.println("getSuggestedEventsForVolunteer: Volunteer skills list is null for user " + volunteer.getUsername());
+            // Có thể thử nạp lại skills ở đây nếu cần, hoặc trả về rỗng
+            // volunteerSkills = verificationController.getVolunteer(volunteer.getUsername()).getSkills(); // Ví dụ
+            // if(volunteerSkills == null) return new ArrayList<>();
+            return new ArrayList<>();
+        }
+
+
+        List<Event> allOpenEvents = getAllOpenAndAvailableEvents();
+        List<SuggestedEventWrapper> suggestedEventsWithScore = new ArrayList<>();
+
+        for (Event event : allOpenEvents) {
+            int matchedSkillsCount = 0;
+            boolean eventRequiresSkills = event.getRequiredSkills() != null && !event.getRequiredSkills().isEmpty();
+            int effectiveMatchScore;
+
+            if (eventRequiresSkills) {
+                for (String requiredSkill : event.getRequiredSkills()) {
+                    if (volunteerSkills.contains(requiredSkill)) {
+                        matchedSkillsCount++;
+                    }
+                }
+                // Chỉ thêm nếu có ít nhất 1 skill khớp
+                if (matchedSkillsCount > 0) {
+                    effectiveMatchScore = matchedSkillsCount;
+                    suggestedEventsWithScore.add(new SuggestedEventWrapper(event, effectiveMatchScore));
+                }
+            } else {
+                // Sự kiện không yêu cầu kỹ năng nào => coi như phù hợp cao nhất về mặt kỹ năng
+                effectiveMatchScore = Integer.MAX_VALUE; // Để ưu tiên lên đầu khi sắp xếp theo skill
+                suggestedEventsWithScore.add(new SuggestedEventWrapper(event, effectiveMatchScore));
+            }
+        }
+
+        // Sắp xếp danh sách đề xuất
+        Collections.sort(suggestedEventsWithScore, Comparator
+                .comparingInt(SuggestedEventWrapper::getMatchedSkillsCount).reversed() // 1. Skill khớp giảm dần
+                .thenComparing(wrapper -> wrapper.getEvent().getEmergencyLevel(),
+                        Comparator.nullsLast(Comparator.comparingInt(this::getEmergencyLevelPriority))) // 2. Mức độ khẩn cấp (ưu tiên cao hơn lên trước)
+                .thenComparing(wrapper -> wrapper.getEvent().getStartDate(),
+                        Comparator.nullsLast(Comparator.naturalOrder())) // 3. Ngày bắt đầu tăng dần (sớm hơn lên trước)
+        );
+
+        List<Event> sortedSuggestedEvents = new ArrayList<>();
+        for (SuggestedEventWrapper wrapper : suggestedEventsWithScore) {
+            sortedSuggestedEvents.add(wrapper.getEvent());
+        }
+
+        return sortedSuggestedEvents;
+    }
+
+    // Đảm bảo bạn có các phương thức loadEventSkills và closeResources đã tồn tại và hoạt động đúng
+    // private void loadEventSkills(Connection conn, Event event) throws SQLException { ... }
+    // private void closeResources(Connection conn, Statement stmt, ResultSet rs) { ... }
 }
