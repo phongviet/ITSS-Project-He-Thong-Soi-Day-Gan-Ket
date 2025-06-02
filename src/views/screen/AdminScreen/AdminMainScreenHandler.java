@@ -92,8 +92,25 @@ public class AdminMainScreenHandler implements Initializable {
 
     @FXML
     public void handleHelpRequestManagement() {
-        // Will be implemented later
-        statusMessage.setText("Help Request Management feature will be implemented later.");
+        try {
+            // Load the help request management screen FXML
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/views/fxml/AdminScreen/HelpRequestManagementScreen.fxml"));
+            Parent root = loader.load();
+
+            // Get the controller and set the stage and admin
+            HelpRequestManagementScreenHandler controller = loader.getController();
+            controller.setStage(stage);
+            controller.setAdmin(admin);
+
+            // Set the scene
+            Scene scene = new Scene(root);
+            stage.setScene(scene);
+            stage.setTitle("Help Request Management");
+            stage.show();
+        } catch (IOException e) {
+            statusMessage.setText("Error loading Help Request Management screen: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     @FXML

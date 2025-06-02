@@ -7,6 +7,7 @@ import java.sql.*;
 import java.util.List;
 import java.util.ArrayList;
 import java.text.SimpleDateFormat;
+import java.util.Date;
 
 /**
  * Controller class for handling administrative approval of help requests and events
@@ -21,59 +22,6 @@ public class AdminApprovalController {
      *
      */
     public AdminApprovalController() {
-    }
-
-    /**
-     * Retrieves all pending help requests that need admin approval
-     *
-     * @return List of pending help requests
-     */
-    public List<HelpRequest> getPendingHelpRequests() {
-        // This will be implemented later
-        return null;
-    }
-
-    /**
-     * Approves a help request
-     *
-     * @param helpRequest The help request to approve
-     * @return true if approval was successful, false otherwise
-     */
-    public boolean approveHelpRequest(HelpRequest helpRequest) {
-        // This will be implemented later
-        return false;
-    }
-
-    /**
-     * Rejects a help request
-     *
-     * @param helpRequest The help request to reject
-     * @param reason The reason for rejection
-     * @return true if rejection was successful, false otherwise
-     */
-    public boolean rejectHelpRequest(HelpRequest helpRequest, String reason) {
-        // This will be implemented later
-        return false;
-    }
-
-    /**
-     * Retrieves all pending events that need admin approval
-     *
-     * @return List of pending events
-     */
-    public List<Event> getPendingEvents() {
-        // This will be implemented later
-        return null;
-    }
-
-    /**
-     * Retrieves all events for admin review
-     *
-     * @return List of all events in the system
-     */
-    public List<Event> getAllEvents() {
-        // This will be implemented later
-        return null;
     }
 
     /**
@@ -198,6 +146,139 @@ public class AdminApprovalController {
     }
 
     /**
+     * Retrieves all help requests for admin review
+     *
+     * @return List of all help requests in the system
+     */
+    public List<HelpRequest> getAllHelpRequests() {
+        List<HelpRequest> helpRequests = new ArrayList<>();
+
+        try (Connection connection = DriverManager.getConnection(DB_URL);
+             Statement statement = connection.createStatement();
+             ResultSet resultSet = statement.executeQuery("SELECT * FROM HelpRequest")) {
+
+            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+            while (resultSet.next()) {
+                HelpRequest helpRequest = new HelpRequest();
+
+                helpRequest.setRequestId(resultSet.getInt("requestId"));
+                helpRequest.setTitle(resultSet.getString("title"));
+
+                String startDateStr = resultSet.getString("startDate");
+                if (startDateStr != null && !startDateStr.isEmpty()) {
+                    try {
+                        helpRequest.setStartDate(dateFormat.parse(startDateStr));
+                    } catch (Exception e) {
+                        System.out.println("Error parsing start date: " + e.getMessage());
+                    }
+                }
+
+                helpRequest.setEmergencyLevel(resultSet.getString("emergencyLevel"));
+                helpRequest.setDescription(resultSet.getString("description"));
+                helpRequest.setPersonInNeedID(resultSet.getString("personInNeedID"));
+                helpRequest.setStatus(resultSet.getString("status"));
+
+                helpRequests.add(helpRequest);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return helpRequests;
+    }
+
+    /**
+     * Retrieves all pending help requests that need admin approval
+     *
+     * @return List of pending help requests
+     */
+    public List<HelpRequest> getPendingHelpRequests() {
+        List<HelpRequest> pendingRequests = new ArrayList<>();
+
+        try (Connection connection = DriverManager.getConnection(DB_URL);
+             PreparedStatement statement = connection.prepareStatement(
+                     "SELECT * FROM HelpRequest WHERE status = 'Pending' OR status IS NULL OR status = 'chờ phê duyệt'")) {
+
+            ResultSet resultSet = statement.executeQuery();
+            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+
+            while (resultSet.next()) {
+                HelpRequest helpRequest = new HelpRequest();
+
+                helpRequest.setRequestId(resultSet.getInt("requestId"));
+                helpRequest.setTitle(resultSet.getString("title"));
+
+                String startDateStr = resultSet.getString("startDate");
+                if (startDateStr != null && !startDateStr.isEmpty()) {
+                    try {
+                        helpRequest.setStartDate(dateFormat.parse(startDateStr));
+                    } catch (Exception e) {
+                        System.out.println("Error parsing start date: " + e.getMessage());
+                    }
+                }
+
+                helpRequest.setEmergencyLevel(resultSet.getString("emergencyLevel"));
+                helpRequest.setDescription(resultSet.getString("description"));
+                helpRequest.setPersonInNeedID(resultSet.getString("personInNeedID"));
+                helpRequest.setStatus(resultSet.getString("status"));
+
+                pendingRequests.add(helpRequest);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return pendingRequests;
+    }
+
+    /**
+     * Approves a help request
+     *
+     * @param helpRequest The help request to approve
+     * @return true if approval was successful, false otherwise
+     */
+    public boolean approveHelpRequest(HelpRequest helpRequest) {
+        try (Connection connection = DriverManager.getConnection(DB_URL)) {
+            String updateQuery = "UPDATE HelpRequest SET status = ? WHERE requestId = ?";
+            try (PreparedStatement preparedStatement = connection.prepareStatement(updateQuery)) {
+                preparedStatement.setString(1, "đã phê duyệt");
+                preparedStatement.setInt(2, helpRequest.getRequestId());
+                int rowsUpdated = preparedStatement.executeUpdate();
+
+                // Check if the update was successful
+                return rowsUpdated > 0;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    /**
+     * Rejects a help request
+     *
+     * @param helpRequest The help request to reject
+     * @param reason The reason for rejection
+     * @return true if rejection was successful, false otherwise
+     */
+    public boolean rejectHelpRequest(HelpRequest helpRequest, String reason) {
+        try (Connection connection = DriverManager.getConnection(DB_URL)) {
+            String updateQuery = "UPDATE HelpRequest SET status = ? WHERE requestId = ?";
+            try (PreparedStatement preparedStatement = connection.prepareStatement(updateQuery)) {
+                preparedStatement.setString(1, "từ chối");
+                preparedStatement.setInt(2, helpRequest.getRequestId());
+                int rowsUpdated = preparedStatement.executeUpdate();
+
+                // Check if the update was successful
+                return rowsUpdated > 0;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    /**
      * Close database connection and statement resources
      */
     private void closeResources(Connection conn, Statement stmt, ResultSet rs) {
@@ -210,3 +291,4 @@ public class AdminApprovalController {
         }
     }
 }
+
