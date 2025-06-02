@@ -115,7 +115,7 @@ public class VolunteerOrgReviewEventListScreenHandler implements Initializable {
             statusMessage.setText("Organization chưa set.");
             return;
         }
-        List<String> statuses = Arrays.asList("done", "canceled");
+        List<String> statuses = Arrays.asList("Done", "Canceled");
         List<Event> list = eventController.getEventsByStatusForOrganizer(organization.getUsername(), statuses);
         if (list == null || list.isEmpty()) {
             eventData = FXCollections.observableArrayList();

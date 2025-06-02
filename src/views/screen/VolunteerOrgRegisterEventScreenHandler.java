@@ -195,7 +195,7 @@ public class VolunteerOrgRegisterEventScreenHandler implements Initializable {
 
                 // Nếu đến từ HelpRequest, cập nhật trạng thái HelpRequest thành "closed"
                 if (helpRequest != null) {
-                    eventController.updateHelpRequestStatus(helpRequest.getRequestId(), "closed");
+                    eventController.updateHelpRequestStatus(helpRequest.getRequestId(), "Closed");
                 }
 
                 // Thực hiện quay về dashboard

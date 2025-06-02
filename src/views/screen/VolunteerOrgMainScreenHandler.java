@@ -226,11 +226,11 @@ public class VolunteerOrgMainScreenHandler implements Initializable {
 
                         acceptButton.setOnAction(evt -> {
                             Notification no = getTableView().getItems().get(getIndex());
-                            handleNotificationDecision(no, "registered");
+                            handleNotificationDecision(no, "Registered");
                         });
                         rejectButton.setOnAction(evt -> {
                             Notification no = getTableView().getItems().get(getIndex());
-                            handleNotificationDecision(no, "canceled");
+                            handleNotificationDecision(no, "Canceled");
                         });
                     }
 

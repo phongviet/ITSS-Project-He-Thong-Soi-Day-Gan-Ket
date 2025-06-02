@@ -33,7 +33,7 @@ public class EventController {
             conn = DriverManager.getConnection(DB_URL);
             String sql = "SELECT * FROM HelpRequest WHERE status = ?";
             pstmt = conn.prepareStatement(sql);
-            pstmt.setString(1, "approved");
+            pstmt.setString(1, "Approved");
             rs = pstmt.executeQuery();
 
             while (rs.next()) {
@@ -166,7 +166,7 @@ public class EventController {
             conn.setAutoCommit(false);
 
             // Set the initial status to "pending"
-            event.setStatus("pending");
+            event.setStatus("Pending");
 
             // Format dates for SQLite
             String startDateStr = null;
@@ -344,7 +344,7 @@ public class EventController {
 
                 // Get status from database, default to "pending" if null
                 String status = rs.getString("status");
-                event.setStatus(status != null ? status : "pending");
+                event.setStatus(status != null ? status : "Pending");
 
                 // Load required skills for this event
                 loadEventSkills(conn, event);
@@ -567,8 +567,8 @@ public class EventController {
                 int maxParticipants = rs.getInt("maxParticipantNumber");
                 int currentParticipants = rs.getInt("currentParticipants");
 
-                if (!"approved".equals(status)) {
-                    return false; // Event is not approved
+                if (!"Approved".equals(status)) {
+                    return false; // Event is not Approved
                 }
 
                 if (currentParticipants >= maxParticipants) {
@@ -880,7 +880,7 @@ public class EventController {
             PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setString(1, organizerUsername);
-            pstmt.setString(2, "pending");
+            pstmt.setString(2, "Pending");
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) {
                     entity.notifications.Notification no = new entity.notifications.Notification();
