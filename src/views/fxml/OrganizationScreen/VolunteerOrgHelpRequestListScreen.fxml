@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.text.Font?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="views.screen.VolunteerOrgHelpRequestListScreenHandler"
+            prefHeight="768" prefWidth="1024">
+
+    <!-- Header -->
+    <top>
+        <HBox alignment="CENTER" style="-fx-background-color: #3498db;">
+            <padding>
+                <Insets top="15" right="15" bottom="15" left="15"/>
+            </padding>
+            <Label text="Danh sách Help Requests" textFill="WHITE">
+                <font>
+                    <Font name="System Bold" size="24.0"/>
+                </font>
+            </Label>
+        </HBox>
+    </top>
+
+    <!-- Center: Table HelpRequests -->
+    <center>
+        <VBox alignment="TOP_CENTER" spacing="10">
+            <padding>
+                <Insets top="20" right="20" bottom="20" left="20"/>
+            </padding>
+
+            <Label text="Help Requests đã được Approved" style="-fx-font-size: 18; -fx-font-weight: bold;"/>
+            <TableView fx:id="helpRequestTable" prefHeight="500" prefWidth="900">
+                <columns>
+                    <TableColumn fx:id="titleColumn" text="Tiêu đề" prefWidth="250"/>
+                    <TableColumn fx:id="startDateColumn" text="Ngày bắt đầu" prefWidth="150"/>
+                    <TableColumn fx:id="emergencyLevelColumn" text="Mức khẩn cấp" prefWidth="150"/>
+                    <TableColumn fx:id="actionColumn" text="Hành động" prefWidth="200"/>
+                </columns>
+            </TableView>
+
+            <Label fx:id="statusMessage" textFill="#e74c3c" wrapText="true"/>
+        </VBox>
+    </center>
+
+    <bottom>
+        <HBox alignment="CENTER_RIGHT" style="-fx-background-color: #ecf0f1; -fx-padding: 10;">
+            <Button text="Back to Dashboard" onAction="#handleBackToDashboard"
+                    style="-fx-background-color: #3498db; -fx-text-fill: white;"
+                    prefWidth="150" prefHeight="30"/>
+        </HBox>
+    </bottom>
+</BorderPane>

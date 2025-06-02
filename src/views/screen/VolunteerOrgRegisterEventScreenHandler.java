@@ -19,8 +19,10 @@ import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.ResourceBundle;
+import entity.requests.HelpRequest;
 
 public class VolunteerOrgRegisterEventScreenHandler implements Initializable {
+    private HelpRequest helpRequest;
 
     @FXML
     private TextField eventTitle;
@@ -67,6 +69,10 @@ public class VolunteerOrgRegisterEventScreenHandler implements Initializable {
     private Stage stage;
     private VolunteerOrganization organization;
     private EventController eventController;
+
+    public void setHelpRequest(HelpRequest helpRequest) {
+        this.helpRequest = helpRequest;
+    }
 
     public VolunteerOrgRegisterEventScreenHandler() {
         this.eventController = new EventController();
@@ -186,7 +192,13 @@ public class VolunteerOrgRegisterEventScreenHandler implements Initializable {
 
             if (success) {
                 statusMessage.setText("Event registered successfully!");
-                // Navigate back to main screen after successful registration
+
+                // Nếu đến từ HelpRequest, cập nhật trạng thái HelpRequest thành "closed"
+                if (helpRequest != null) {
+                    eventController.updateHelpRequestStatus(helpRequest.getRequestId(), "closed");
+                }
+
+                // Thực hiện quay về dashboard
                 handleBack();
             } else {
                 statusMessage.setText("Failed to register event. Please try again.");

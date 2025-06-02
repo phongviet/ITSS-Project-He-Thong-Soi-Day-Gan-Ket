@@ -15,13 +15,14 @@ public class Event {
     private ArrayList<String> requiredSkills; // Skills as ArrayList
     private String organizer;
     private String status;   // "pending", "approved", etc.
+    private String requestId;
 
     public Event() {
         this.requiredSkills = new ArrayList<>();
     }
 
     public Event(int eventId, String title, int maxParticipantNumber, Date startDate, Date endDate,
-                String emergencyLevel, String description, String organizer, String status) {
+                String emergencyLevel, String description, String organizer, String status, String requestId) {
         this.eventId = eventId;
         this.title = title;
         this.maxParticipantNumber = maxParticipantNumber;
@@ -31,6 +32,7 @@ public class Event {
         this.description = description;
         this.organizer = organizer;
         this.status = status;
+        this.requestId = requestId;
         this.requiredSkills = new ArrayList<>();
     }
 
@@ -121,12 +123,12 @@ public class Event {
         this.status = status;
     }
 
-    public String getNeeder() {
-        return null; // No longer used
+    public String getRequestId() {
+        return requestId;
     }
 
-    public void setNeeder(String needer) {
-        // No longer used
+    public void setRequestId(String requestId) {
+        this.requestId = requestId;
     }
     
 }

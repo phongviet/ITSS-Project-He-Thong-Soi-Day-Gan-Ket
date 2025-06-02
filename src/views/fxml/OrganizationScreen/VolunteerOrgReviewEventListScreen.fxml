@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.text.Font?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="views.screen.VolunteerOrgReviewEventListScreenHandler"
+            prefHeight="600" prefWidth="900">
+    <!-- Header -->
+    <top>
+        <HBox alignment="CENTER" style="-fx-background-color: #2c3e50;">
+            <padding>
+                <Insets top="15" right="15" bottom="15" left="15"/>
+            </padding>
+            <Label text="Review Events" textFill="WHITE">
+                <font>
+                    <Font name="System Bold" size="24.0"/>
+                </font>
+            </Label>
+        </HBox>
+    </top>
+
+    <!-- Center: Table các event -->
+    <center>
+        <VBox alignment="TOP_CENTER" spacing="10">
+            <padding>
+                <Insets top="20" right="20" bottom="20" left="20"/>
+            </padding>
+
+            <Label text="Chọn event để review (Done/Canceled)" 
+                   style="-fx-font-size: 18; -fx-font-weight: bold;"/>
+
+            <TableView fx:id="eventTableView" prefHeight="400" prefWidth="850">
+                <columns>
+                    <TableColumn fx:id="titleColumn" text="Event Title" prefWidth="250"/>
+                    <TableColumn fx:id="statusColumn" text="Status" prefWidth="100"/>
+                    <TableColumn fx:id="actionColumn" text="Hành động" prefWidth="150"/>
+                </columns>
+            </TableView>
+
+            <Label fx:id="statusMessage" textFill="#e74c3c" wrapText="true"/>
+        </VBox>
+    </center>
+
+    <!-- Footer: Back to Dashboard -->
+    <bottom>
+        <HBox alignment="CENTER_RIGHT" style="-fx-background-color: #ecf0f1; -fx-padding: 10;">
+            <Button text="Back to Dashboard" onAction="#handleBackToDashboard"
+                    style="-fx-background-color: #3498db; -fx-text-fill: white;"
+                    prefWidth="150" prefHeight="30"/>
+        </HBox>
+    </bottom>
+</BorderPane>

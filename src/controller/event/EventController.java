@@ -11,12 +11,150 @@ import java.util.Calendar;
 import java.text.SimpleDateFormat;
 import java.util.Collections;
 import java.util.Comparator;
+import entity.requests.HelpRequest;
+import java.text.ParseException;
+import java.util.Date;
+import java.text.SimpleDateFormat;
+import entity.events.Event;
+
 
 public class EventController {
 
     private static final String DB_URL = "jdbc:sqlite:assets/db/SoiDayGanKet_sqlite.db";
     private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
 
+    public List<HelpRequest> getApprovedHelpRequests() {
+        List<HelpRequest> helpRequests = new ArrayList<>();
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+
+        try {
+            conn = DriverManager.getConnection(DB_URL);
+            String sql = "SELECT * FROM HelpRequest WHERE status = ?";
+            pstmt = conn.prepareStatement(sql);
+            pstmt.setString(1, "approved");
+            rs = pstmt.executeQuery();
+
+            while (rs.next()) {
+                HelpRequest hr = new HelpRequest();
+                hr.setRequestId(rs.getInt("requestId"));
+                hr.setTitle(rs.getString("title"));
+                String startDateStr = rs.getString("startDate");
+                if (startDateStr != null && !startDateStr.isEmpty()) {
+                    try {
+                        Date d = DATE_FORMAT.parse(startDateStr);
+                        hr.setStartDate(d);
+                    } catch (ParseException ex) {
+                        System.err.println("Không thể parse startDate: " + startDateStr);
+                    }
+                }
+                hr.setEmergencyLevel(rs.getString("emergencyLevel"));
+                hr.setDescription(rs.getString("description"));
+                hr.setPersonInNeedID(rs.getString("personInNeedID"));
+                hr.setStatus(rs.getString("status"));
+                helpRequests.add(hr);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (rs != null) rs.close();
+                if (pstmt != null) pstmt.close();
+                if (conn != null) conn.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+
+        return helpRequests;
+    }
+    public boolean updateHelpRequestStatus(int requestId, String newStatus) {
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        try {
+            conn = DriverManager.getConnection(DB_URL);
+            String sql = "UPDATE HelpRequest SET status = ? WHERE requestId = ?";
+            pstmt = conn.prepareStatement(sql);
+            pstmt.setString(1, newStatus);
+            pstmt.setInt(2, requestId);
+            int affectedRows = pstmt.executeUpdate();
+            return affectedRows > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        } finally {
+            try {
+                if (pstmt != null) pstmt.close();
+                if (conn != null) conn.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+    public List<EventParticipantDetails> getEventParticipantDetails(int eventId) {
+        List<EventParticipantDetails> list = new ArrayList<>();
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+
+        try {
+            conn = DriverManager.getConnection(DB_URL);
+
+            // Query kết hợp giữa Events và EventParticipants (không join Volunteer vì chúng ta chỉ cần username ở đây)
+            String sql = "SELECT e.eventId, e.title, e.startDate, e.endDate, e.status AS eventStatus, " +
+                         // Giả sử bạn muốn hiển thị tên tổ chức: cần join VolunteerOrganization hoặc SystemUser, 
+                         // nhưng ở đây ta chỉ giữ organizer username:
+                         "e.organizer, ep.username AS volunteerUsername, ep.hoursParticipated, ep.ratingByOrg, ep.acceptStatus " +
+                         "FROM Events e " +
+                         "JOIN EventParticipants ep ON e.eventId = ep.eventId " +
+                         "WHERE e.eventId = ?";
+
+            pstmt = conn.prepareStatement(sql);
+            pstmt.setInt(1, eventId);
+            rs = pstmt.executeQuery();
+
+            while (rs.next()) {
+                EventParticipantDetails dto = new EventParticipantDetails();
+
+                // Lấy trường từ Event
+                dto.setEventId(rs.getInt("eventId"));
+                dto.setTitle(rs.getString("title"));
+                // Chuyển từ java.sql.Date sang java.util.Date
+                java.sql.Date sdate = rs.getDate("startDate");
+                java.sql.Date edate = rs.getDate("endDate");
+                if (sdate != null) dto.setStartDate(new java.util.Date(sdate.getTime()));
+                if (edate != null) dto.setEndDate(new java.util.Date(edate.getTime()));
+                dto.setEventStatus(rs.getString("eventStatus"));
+                // Nếu muốn lấy tên tổ chức đầy đủ, bạn cần query thêm VolunteerOrganization—
+                // ở đây tạm set organizerName = organizer username:
+                dto.setOrganizerName(rs.getString("organizer"));
+
+                // Lấy trường từ EventParticipants
+                dto.setVolunteerUsername(rs.getString("volunteerUsername"));
+                int hours = rs.getInt("hoursParticipated");
+                if (!rs.wasNull()) dto.setHoursParticipated(hours);
+                int rateByOrg = rs.getInt("ratingByOrg");
+                if (!rs.wasNull()) dto.setRatingByOrg(rateByOrg);
+                // acceptStatus (có thể là Registered/Attended/…)
+                dto.setVolunteerParticipationStatus(rs.getString("acceptStatus"));
+
+                list.add(dto);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (rs != null)    rs.close();
+                if (pstmt != null) pstmt.close();
+                if (conn != null)  conn.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+
+        return list;
+    }
     public boolean registerEvent(Event event, VolunteerOrganization organization) {
         Connection conn = null;
         PreparedStatement pstmt = null;
@@ -44,8 +182,8 @@ public class EventController {
 
             // Insert into Events table using startDate and endDate columns
             String insertEventSQL = "INSERT INTO Events (title, maxParticipantNumber, startDate, endDate, " +
-                    "emergencyLevel, description, organizer, status) " +
-                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+                            "emergencyLevel, description, organizer, status, requestId) " +
+                            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
             pstmt = conn.prepareStatement(insertEventSQL, Statement.RETURN_GENERATED_KEYS);
             pstmt.setString(1, event.getTitle());
@@ -56,6 +194,7 @@ public class EventController {
             pstmt.setString(6, event.getDescription());
             pstmt.setString(7, organization.getUsername());
             pstmt.setString(8, event.getStatus());
+            pstmt.setString(9, event.getRequestId());
 
             int affectedRows = pstmt.executeUpdate();
 
@@ -201,7 +340,7 @@ public class EventController {
                 event.setEmergencyLevel(rs.getString("emergencyLevel"));
                 event.setDescription(rs.getString("description"));
                 event.setOrganizer(rs.getString("organizer"));
-                event.setNeeder(rs.getString("needer"));
+                event.setRequestId(rs.getString("RequestId"));
 
                 // Get status from database, default to "pending" if null
                 String status = rs.getString("status");
@@ -225,6 +364,115 @@ public class EventController {
         }
 
         return events;
+    }
+
+    public List<Event> getEventsByStatusForOrganizer(String organizerId, List<String> statuses) {
+        List<Event> events = new ArrayList<>();
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        try {
+            conn = DriverManager.getConnection(DB_URL);
+
+            // Xây dựng câu SQL với IN (?,?,...)
+            StringBuilder sql = new StringBuilder(
+                "SELECT eventId, title, status, requestId FROM Events " +
+                "WHERE organizer = ? AND status IN ("
+            );
+            for (int i = 0; i < statuses.size(); i++) {
+                sql.append("?");
+                if (i < statuses.size() - 1) sql.append(",");
+            }
+            sql.append(")");
+            pstmt = conn.prepareStatement(sql.toString());
+            pstmt.setString(1, organizerId);
+            for (int i = 0; i < statuses.size(); i++) {
+                pstmt.setString(2 + i, statuses.get(i));
+            }
+
+            rs = pstmt.executeQuery();
+            while (rs.next()) {
+                Event event = new Event();
+                event.setEventId(rs.getInt("eventId"));
+                event.setTitle(rs.getString("title"));
+                event.setStatus(rs.getString("status"));
+
+                // Lấy requestId (String) nếu có
+                String reqId = rs.getString("requestId");
+                if (reqId != null) {
+                    event.setRequestId(reqId);
+                }
+
+                // (Không gọi event.setNeeder(...) vì Event.java không có setter đó)
+                events.add(event);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (rs != null)    rs.close();
+                if (pstmt != null) pstmt.close();
+                if (conn != null)  conn.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+        return events;
+    }
+    /**
+     * Cập nhật rating cho Volunteer: tăng ratingCount lên 1, tính averageRating mới
+     * @param volunteerUsername username của Volunteer
+     * @param newScore điểm mới (1..5)
+     * @return true nếu thành công
+     */
+    public boolean updateVolunteerRating(String volunteerUsername, int newScore) {
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        try {
+            conn = DriverManager.getConnection(DB_URL);
+
+            // Truy xuất dữ liệu cũ
+            String selectSql = "SELECT averageRating, ratingCount FROM Volunteer WHERE username = ?";
+            pstmt = conn.prepareStatement(selectSql);
+            pstmt.setString(1, volunteerUsername);
+            ResultSet rs = pstmt.executeQuery();
+            if (!rs.next()) {
+                rs.close();
+                pstmt.close();
+                return false; // không tìm thấy volunteer
+            }
+            double oldAvg = rs.getDouble("averageRating");
+            int oldCount  = rs.getInt("ratingCount");
+            rs.close();
+            pstmt.close();
+
+            int newCount = oldCount + 1;
+            double newAvg;
+            if (oldCount == 0) {
+                newAvg = newScore;
+            } else {
+                newAvg = (oldAvg * oldCount + newScore) / newCount;
+            }
+
+            // Cập nhật vào DB
+            String updateSql = "UPDATE Volunteer SET averageRating = ?, ratingCount = ? WHERE username = ?";
+            pstmt = conn.prepareStatement(updateSql);
+            pstmt.setDouble(1, newAvg);
+            pstmt.setInt(2, newCount);
+            pstmt.setString(3, volunteerUsername);
+            int affected = pstmt.executeUpdate();
+            return affected > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        } finally {
+            try {
+                if (pstmt != null) pstmt.close();
+                if (conn != null)  conn.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     /**
@@ -382,24 +630,36 @@ public class EventController {
                 event.setTitle(rs.getString("title"));
                 event.setMaxParticipantNumber(rs.getInt("maxParticipantNumber"));
 
-                // Lấy ngày trực tiếp từ cơ sở dữ liệu bằng rs.getDate
-                java.sql.Date startSqlDate = rs.getDate("startDate");
-                java.sql.Date endSqlDate = rs.getDate("endDate");
+                // Lấy ngày từ cột DATE trong DB
+                try {
+                    String startDateStr = rs.getString("startDate");
+                    String endDateStr = rs.getString("endDate");
 
-                if (startSqlDate != null) {
-                    // Chuyển từ java.sql.Date sang java.util.Date
-                    event.setStartDate(new java.util.Date(startSqlDate.getTime()));
-                }
+                    if (startDateStr != null && !startDateStr.isEmpty()) {
+                        try {
+                            // Parse từ chuỗi định dạng YYYY-MM-DD
+                            event.setStartDate(DATE_FORMAT.parse(startDateStr));
+                        } catch (Exception ex) {
+                            System.err.println("Không thể chuyển đổi ngày bắt đầu: " + startDateStr);
+                        }
+                    }
 
-                if (endSqlDate != null) {
-                    // Chuyển từ java.sql.Date sang java.util.Date
-                    event.setEndDate(new java.util.Date(endSqlDate.getTime()));
+                    if (endDateStr != null && !endDateStr.isEmpty()) {
+                        try {
+                            // Parse từ chuỗi định dạng YYYY-MM-DD
+                            event.setEndDate(DATE_FORMAT.parse(endDateStr));
+                        } catch (Exception ex) {
+                            System.err.println("Không thể chuyển đổi ngày kết thúc: " + endDateStr);
+                        }
+                    }
+                } catch (SQLException e) {
+                    System.err.println("Lỗi khi đọc ngày tháng: " + e.getMessage());
                 }
 
                 event.setEmergencyLevel(rs.getString("emergencyLevel"));
                 event.setDescription(rs.getString("description"));
                 event.setOrganizer(rs.getString("organizer"));
-                event.setNeeder(rs.getString("needer"));
+                event.setRequestId(rs.getString("RequestId"));
                 event.setStatus(rs.getString("status"));
 
                 // Load required skills for this event
@@ -409,16 +669,7 @@ public class EventController {
             }
         } catch (SQLException e) {
             e.printStackTrace();
-        } finally {
-            try {
-                if (rs != null) rs.close();
-                if (stmt != null) stmt.close();
-                if (conn != null) conn.close();
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
         }
-
         return events;
     }
     
@@ -607,7 +858,7 @@ public class EventController {
                event.setEmergencyLevel(rs.getString("emergencyLevel"));
                event.setDescription(rs.getString("description"));
                event.setOrganizer(rs.getString("organizer"));
-               event.setNeeder(rs.getString("needer"));
+               event.setRequestId(rs.getString("RequestId"));
                event.setStatus(rs.getString("status"));
 
                // Load required skills
@@ -620,6 +871,51 @@ public class EventController {
        }
        return event;
    }
+    public List<entity.notifications.Notification> getPendingNotificationsByOrganizer(String organizerUsername) {
+        List<entity.notifications.Notification> result = new ArrayList<>();
+        String sql = "SELECT n.notificationId, n.eventId, n.username, n.acceptStatus, e.title " +
+                    "FROM Notification n " +
+                    "JOIN Events e ON n.eventId = e.eventId " +
+                    "WHERE e.organizer = ? AND n.acceptStatus = ?";
+        try (Connection conn = DriverManager.getConnection(DB_URL);
+            PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, organizerUsername);
+            pstmt.setString(2, "pending");
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    entity.notifications.Notification no = new entity.notifications.Notification();
+                    no.setNotificationId(rs.getInt("notificationId"));
+                    no.setEventId(rs.getInt("eventId"));
+                    no.setUsername(rs.getString("username"));
+                    no.setAcceptStatus(rs.getString("acceptStatus"));
+                    // Giả sử Notification class có thêm field eventTitle và setter tương ứng
+                    no.setEventTitle(rs.getString("title"));
+                    result.add(no);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return result;
+    }
+
+    public boolean updateNotificationStatus(int notificationId, String newStatus) {
+        String sql = "UPDATE Notification SET acceptStatus = ? WHERE notificationId = ?";
+        try (Connection conn = DriverManager.getConnection(DB_URL);
+            PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, newStatus);
+            pstmt.setInt(2, notificationId);
+            int affected = pstmt.executeUpdate();
+            return affected > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+   
    
 // File: src/controller/event/EventController.java
 
@@ -721,7 +1017,6 @@ public class EventController {
                     event.setEmergencyLevel(rs.getString("emergencyLevel"));
                     event.setDescription(rs.getString("description"));
                     event.setOrganizer(rs.getString("organizer"));
-                    event.setNeeder(rs.getString("needer"));
                     event.setStatus(rs.getString("status"));
 
                     loadEventSkills(conn, event); // Load kỹ năng yêu cầu cho sự kiện này

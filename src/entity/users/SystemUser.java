@@ -23,6 +23,18 @@ public abstract class SystemUser {
         return username;
     }
 
+    public String getEmail() {
+        return email;
+    }
+
+    public String getPhone() {
+        return phone;
+    }
+
+    public String getAddress() {
+        return address;
+    }
+
     public String getPassword() {
         return password;
     }

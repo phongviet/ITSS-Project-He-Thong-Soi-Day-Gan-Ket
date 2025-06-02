@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.Font?>
+<?import javafx.scene.text.Text?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="views.screen.AdminScreen.AdminViewEventDetailScreenHandler"
+            prefHeight="768" prefWidth="1024">
+    <top>
+        <HBox alignment="CENTER" style="-fx-background-color: #3498db;" spacing="10">
+            <padding>
+                <Insets top="15" right="15" bottom="15" left="15"/>
+            </padding>
+            <Label fx:id="eventTitleLabel" text="Event Details" textFill="WHITE">
+                <font>
+                    <Font name="System Bold" size="24.0"/>
+                </font>
+            </Label>
+        </HBox>
+    </top>
+
+    <center>
+        <ScrollPane fitToWidth="true" fitToHeight="true">
+            <content>
+                <GridPane hgap="10" vgap="10">
+                    <padding>
+                        <Insets top="20" right="30" bottom="20" left="30"/>
+                    </padding>
+
+                    <Label text="Event Title:" GridPane.rowIndex="0" GridPane.columnIndex="0">
+                        <font><Font name="System Bold" size="14.0"/></font>
+                    </Label>
+                    <Text fx:id="titleText" GridPane.rowIndex="0" GridPane.columnIndex="1" wrappingWidth="500"/>
+
+                    <Label text="Organizer:" GridPane.rowIndex="1" GridPane.columnIndex="0">
+                        <font><Font name="System Bold" size="14.0"/></font>
+                    </Label>
+                    <Text fx:id="organizerText" GridPane.rowIndex="1" GridPane.columnIndex="1" wrappingWidth="500"/>
+
+                    <Label text="Start Date:" GridPane.rowIndex="2" GridPane.columnIndex="0">
+                        <font><Font name="System Bold" size="14.0"/></font>
+                    </Label>
+                    <Text fx:id="startDateText" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+
+                    <Label text="End Date:" GridPane.rowIndex="3" GridPane.columnIndex="0">
+                        <font><Font name="System Bold" size="14.0"/></font>
+                    </Label>
+                    <Text fx:id="endDateText" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
+
+                    <Label text="Max Participants:" GridPane.rowIndex="4" GridPane.columnIndex="0">
+                        <font><Font name="System Bold" size="14.0"/></font>
+                    </Label>
+                    <Text fx:id="maxParticipantsText" GridPane.rowIndex="4" GridPane.columnIndex="1"/>
+
+                    <Label text="Emergency Level:" GridPane.rowIndex="5" GridPane.columnIndex="0">
+                        <font><Font name="System Bold" size="14.0"/></font>
+                    </Label>
+                    <Text fx:id="emergencyLevelText" GridPane.rowIndex="5" GridPane.columnIndex="1"/>
+
+                    <Label text="Status:" GridPane.rowIndex="6" GridPane.columnIndex="0">
+                        <font><Font name="System Bold" size="14.0"/></font>
+                    </Label>
+                    <Text fx:id="statusText" GridPane.rowIndex="6" GridPane.columnIndex="1" style="-fx-font-weight: bold;"/>
+
+                    <Label text="Description:" GridPane.rowIndex="7" GridPane.columnIndex="0" VBox.vgrow="ALWAYS" alignment="TOP_LEFT">
+                        <font><Font name="System Bold" size="14.0"/></font>
+                    </Label>
+                    <TextArea fx:id="descriptionTextArea" editable="false" wrapText="true" prefRowCount="5" GridPane.rowIndex="7" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS"/>
+
+                    <Label text="Required Skills:" GridPane.rowIndex="8" GridPane.columnIndex="0" alignment="TOP_LEFT">
+                        <font><Font name="System Bold" size="14.0"/></font>
+                    </Label>
+                    <ListView fx:id="requiredSkillsListView" prefHeight="80" GridPane.rowIndex="8" GridPane.columnIndex="1"/>
+
+                    <!-- Admin Actions -->
+                    <Label text="Admin Actions:" GridPane.rowIndex="9" GridPane.columnIndex="0" style="-fx-text-fill: #2980b9;">
+                        <font><Font name="System Bold" size="14.0"/></font>
+                    </Label>
+                    <HBox spacing="10" GridPane.rowIndex="9" GridPane.columnIndex="1" alignment="CENTER_LEFT">
+                        <Button fx:id="approveButton" text="Approve Event" onAction="#handleApproveEvent"
+                                style="-fx-background-color: #27ae60; -fx-text-fill: white;"/>
+                        <Button fx:id="rejectButton" text="Reject Event" onAction="#handleRejectEvent"
+                                style="-fx-background-color: #e74c3c; -fx-text-fill: white;"/>
+                    </HBox>
+
+                    <Label text="Participants:" GridPane.rowIndex="10" GridPane.columnIndex="0" style="-fx-text-fill: #2980b9;">
+                        <font><Font name="System Bold" size="14.0"/></font>
+                    </Label>
+                    <Label fx:id="participantsCountLabel" GridPane.rowIndex="10" GridPane.columnIndex="1" style="-fx-font-weight: bold;"/>
+
+                    <Label text="Participants List:" GridPane.rowIndex="11" GridPane.columnIndex="0" alignment="TOP_LEFT" style="-fx-text-fill: #2980b9;">
+                        <font><Font name="System Bold" size="14.0"/></font>
+                    </Label>
+                    <TableView fx:id="participantsTableView" prefHeight="150" GridPane.rowIndex="11" GridPane.columnIndex="1">
+                        <columns>
+                            <TableColumn fx:id="participantNameColumn" prefWidth="150" text="Name"/>
+                            <TableColumn fx:id="participantStatusColumn" prefWidth="100" text="Status"/>
+                            <TableColumn fx:id="participantHoursColumn" prefWidth="80" text="Hours"/>
+                            <TableColumn fx:id="participantRatingColumn" prefWidth="80" text="Rating"/>
+                        </columns>
+                    </TableView>
+
+                    <columnConstraints>
+                        <ColumnConstraints hgrow="NEVER" minWidth="150.0"/>
+                        <ColumnConstraints hgrow="ALWAYS"/>
+                    </columnConstraints>
+
+                </GridPane>
+            </content>
+        </ScrollPane>
+    </center>
+
+    <bottom>
+        <HBox alignment="CENTER_RIGHT" style="-fx-background-color: #ecf0f1; -fx-padding: 10;">
+            <Button fx:id="backButton" text="Back to Event List" onAction="#handleBackToList"
+                    style="-fx-background-color: #3498db; -fx-text-fill: white;"/>
+        </HBox>
+    </bottom>
+</BorderPane>

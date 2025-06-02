@@ -282,9 +282,25 @@ public class VolunteerOrgViewEventListScreenHandler implements Initializable {
     }
 
     private void handleViewEventDetails(Event event) {
-        // This would navigate to event details screen
-        // To be implemented in future
-        statusMessage.setText("View details for event: " + event.getTitle());
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource(
+                "/views/fxml/OrganizationScreen/VolunteerOrgEventDetailScreen.fxml"));
+            Parent root = loader.load();
+
+            VolunteerOrgEventDetailScreenHandler controller = loader.getController();
+            controller.setStage(stage);
+            controller.setOrganization(organization);
+            controller.setEvent(event);  // truyền Event cần hiển thị
+
+            Scene scene = new Scene(root);
+            stage.setScene(scene);
+            stage.setTitle("Event Details");
+            stage.show();
+
+        } catch (IOException e) {
+            statusMessage.setText("Error loading event detail screen: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     @FXML
