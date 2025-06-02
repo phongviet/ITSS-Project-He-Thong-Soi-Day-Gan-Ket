@@ -419,13 +419,31 @@ public class EventManagementScreenHandler implements Initializable {
     }
 
     /**
-     * Handler for View Details button click - chưa cần triển khai
+     * Handler for View Details button click - Opens the event detail view screen
      *
      * @param event The event to view details of
      */
     private void handleViewDetails(Event event) {
-        // Hiện tại chỉ hiển thị thông báo tạm thời
-        statusMessage.setText("View details for event: " + event.getTitle() + " (ID: " + event.getEventId() + ")");
+        try {
+            // Load the admin view event detail screen FXML
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/views/fxml/AdminScreen/AdminViewEventDetailScreen.fxml"));
+            Parent root = loader.load();
+
+            // Get the controller and set the stage, admin, and event
+            AdminViewEventDetailScreenHandler controller = loader.getController();
+            controller.setStage(stage);
+            controller.setAdmin(admin);
+            controller.setEvent(event);
+
+            // Set the scene
+            Scene scene = new Scene(root);
+            stage.setScene(scene);
+            stage.setTitle("Event Details: " + event.getTitle());
+            stage.show();
+        } catch (IOException e) {
+            statusMessage.setText("Error opening event details: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     /**
