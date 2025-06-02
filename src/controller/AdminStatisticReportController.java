@@ -1,11 +1,5 @@
 package controller;
 
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
-import views.screen.AdminScreen.StatisticReportScreenHandler.EventStatRow;
-import views.screen.AdminScreen.StatisticReportScreenHandler.RequestStatRow;
-import views.screen.AdminScreen.StatisticReportScreenHandler.UserStatRow;
-
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -79,36 +73,6 @@ public class AdminStatisticReportController {
         }
 
         return stats;
-    }
-
-    /**
-     * Gets user activity statistics for the table display
-     * @return List of user statistics by type
-     */
-    public ObservableList<UserStatRow> getUserActivityStatistics() {
-        ObservableList<UserStatRow> data = FXCollections.observableArrayList();
-        Map<String, Integer> stats = getUserStatistics();
-
-        // Create table rows from the statistics map with simplified data
-        data.add(new UserStatRow(
-            "Tình nguyện viên",
-            stats.getOrDefault("volunteers", 0),
-            0 // Last month new volunteers removed
-        ));
-
-        data.add(new UserStatRow(
-            "Người cần trợ giúp",
-            stats.getOrDefault("peopleInNeed", 0),
-            0 // Last month new people in need removed
-        ));
-
-        data.add(new UserStatRow(
-            "Tổ chức tình nguyện",
-            stats.getOrDefault("organizations", 0),
-            0 // Last month new organizations removed
-        ));
-
-        return data;
     }
 
     /**
@@ -202,63 +166,6 @@ public class AdminStatisticReportController {
     }
 
     /**
-     * Gets statistics about event types
-     * @return List of event statistics by type
-     */
-    public ObservableList<EventStatRow> getEventTypeStatistics() {
-        ObservableList<EventStatRow> data = FXCollections.observableArrayList();
-        Connection conn = null;
-        PreparedStatement pstmt = null;
-        ResultSet rs = null;
-
-        try {
-            conn = DriverManager.getConnection(DB_URL);
-
-            // Group events by title keywords to determine types
-            String query = "SELECT " +
-                    "CASE " +
-                    "  WHEN title LIKE '%Dạy%' OR title LIKE '%Giáo dục%' THEN 'Giáo dục' " +
-                    "  WHEN title LIKE '%Chăm sóc%' OR title LIKE '%Hỗ trợ%' THEN 'Hỗ trợ' " +
-                    "  WHEN title LIKE '%Quyên góp%' OR title LIKE '%Từ thiện%' THEN 'Từ thiện' " +
-                    "  WHEN title LIKE '%Y tế%' OR title LIKE '%Sức khỏe%' THEN 'Y tế' " +
-                    "  ELSE 'Khác' " +
-                    "END as eventType, " +
-                    "COUNT(*) as count, " +
-                    "AVG(maxParticipantNumber) as avgParticipants " +
-                    "FROM Events " +
-                    "GROUP BY eventType " +
-                    "ORDER BY count DESC";
-
-            pstmt = conn.prepareStatement(query);
-            rs = pstmt.executeQuery();
-
-            while (rs.next()) {
-                String eventType = rs.getString("eventType");
-                int count = rs.getInt("count");
-                double avgParticipants = rs.getDouble("avgParticipants");
-
-                data.add(new EventStatRow(eventType, count, avgParticipants));
-            }
-
-        } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, "Error fetching event type statistics", e);
-        } finally {
-            closeResources(conn, pstmt, rs);
-        }
-
-        // If no data was found, add some placeholder categories
-        if (data.isEmpty()) {
-            data.add(new EventStatRow("Giáo dục", 0, 0));
-            data.add(new EventStatRow("Hỗ trợ", 0, 0));
-            data.add(new EventStatRow("Từ thiện", 0, 0));
-            data.add(new EventStatRow("Y tế", 0, 0));
-            data.add(new EventStatRow("Khác", 0, 0));
-        }
-
-        return data;
-    }
-
-    /**
      * Gets statistics about help requests
      * @return A map containing various help request statistics
      */
@@ -316,62 +223,6 @@ public class AdminStatisticReportController {
         }
 
         return stats;
-    }
-
-    /**
-     * Gets statistics about help request types
-     * @return List of help request statistics by type
-     */
-    public ObservableList<RequestStatRow> getRequestTypeStatistics() {
-        ObservableList<RequestStatRow> data = FXCollections.observableArrayList();
-        Connection conn = null;
-        PreparedStatement pstmt = null;
-        ResultSet rs = null;
-
-        try {
-            conn = DriverManager.getConnection(DB_URL);
-
-            // Group help requests by title keywords to determine types
-            String query = "SELECT " +
-                    "CASE " +
-                    "  WHEN title LIKE '%Tài chính%' OR title LIKE '%Hỗ trợ tài chính%' THEN 'Hỗ trợ tài chính' " +
-                    "  WHEN title LIKE '%Thực phẩm%' OR title LIKE '%Lương thực%' THEN 'Hỗ trợ thực phẩm' " +
-                    "  WHEN title LIKE '%Y tế%' OR title LIKE '%Khám bệnh%' OR title LIKE '%Chăm sóc%' THEN 'Hỗ trợ y tế' " +
-                    "  WHEN title LIKE '%Nhà ở%' OR title LIKE '%Chỗ ở%' THEN 'Hỗ trợ nhà ở' " +
-                    "  WHEN title LIKE '%Giáo dục%' OR title LIKE '%Học tập%' OR title LIKE '%Dạy%' THEN 'Hỗ trợ giáo dục' " +
-                    "  ELSE 'Hỗ trợ khác' " +
-                    "END as requestType, " +
-                    "COUNT(*) as count " +
-                    "FROM HelpRequest " +
-                    "GROUP BY requestType " +
-                    "ORDER BY count DESC";
-
-            pstmt = conn.prepareStatement(query);
-            rs = pstmt.executeQuery();
-
-            while (rs.next()) {
-                String requestType = rs.getString("requestType");
-                int count = rs.getInt("count");
-
-                data.add(new RequestStatRow(requestType, count));
-            }
-
-        } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, "Error fetching help request type statistics", e);
-        } finally {
-            closeResources(conn, pstmt, rs);
-        }
-
-        // If no data was found, add some placeholder categories
-        if (data.isEmpty()) {
-            data.add(new RequestStatRow("Hỗ trợ tài chính", 0));
-            data.add(new RequestStatRow("Hỗ trợ thực phẩm", 0));
-            data.add(new RequestStatRow("Hỗ trợ y tế", 0));
-            data.add(new RequestStatRow("Hỗ trợ nhà ở", 0));
-            data.add(new RequestStatRow("Hỗ trợ giáo dục", 0));
-        }
-
-        return data;
     }
 
     /**

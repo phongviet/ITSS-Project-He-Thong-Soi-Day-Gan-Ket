@@ -63,8 +63,25 @@ public class AdminMainScreenHandler implements Initializable {
 
     @FXML
     public void handleUserManagement() {
-        // This will be implemented later
-        statusMessage.setText("User Management feature will be implemented soon.");
+        try {
+            // Load the user management screen FXML
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/views/fxml/AdminScreen/UserManagementScreen.fxml"));
+            Parent root = loader.load();
+
+            // Get the controller and set the stage and admin
+            UserManagementScreenHandler controller = loader.getController();
+            controller.setStage(stage);
+            controller.setAdmin(admin);
+
+            // Set the scene
+            Scene scene = new Scene(root);
+            stage.setScene(scene);
+            stage.setTitle("User Management");
+            stage.show();
+        } catch (IOException e) {
+            statusMessage.setText("Error loading User Management screen: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     @FXML
@@ -154,4 +171,5 @@ public class AdminMainScreenHandler implements Initializable {
         }
     }
 }
+
 
