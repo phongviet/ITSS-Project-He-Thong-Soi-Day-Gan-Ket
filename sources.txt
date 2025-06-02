@@ -37,3 +37,4 @@
 "C:\\Users\\Tan\\OneDrive - Hanoi University of Science and Technology\\Documents\\ITSS\\ITSS-Project-He-Thong-Soi-Day-Gan-Ket\\src\\views\\screen\\AdminScreen\\HelpRequestManagementScreenHandler.java"
 "C:\\Users\\Tan\\OneDrive - Hanoi University of Science and Technology\\Documents\\ITSS\\ITSS-Project-He-Thong-Soi-Day-Gan-Ket\\src\\views\\screen\\AdminScreen\\StatisticReportScreenHandler.java"
 "C:\\Users\\Tan\\OneDrive - Hanoi University of Science and Technology\\Documents\\ITSS\\ITSS-Project-He-Thong-Soi-Day-Gan-Ket\\src\\views\\screen\\AdminScreen\\UserManagementScreenHandler.java"
+"C:\\Users\\Tan\\OneDrive - Hanoi University of Science and Technology\\Documents\\ITSS\\ITSS-Project-He-Thong-Soi-Day-Gan-Ket\\src\\views\\screen\\VolunteerOrgEditParticipantsScreenHandler.java"

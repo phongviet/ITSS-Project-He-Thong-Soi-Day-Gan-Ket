@@ -11,7 +11,8 @@ import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
@@ -60,30 +61,30 @@ public class VolunteerOrgReviewEventListScreenHandler implements Initializable {
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
         setupTableColumns();
-        // loadEvents() được gọi khi setOrganization
+        // loadEvents() sẽ được gọi trong setOrganization(...)
     }
 
     private void setupTableColumns() {
-        // Title
+        // Cột Title
         titleColumn.setCellValueFactory(cellData ->
-                new SimpleStringProperty(cellData.getValue().getTitle()));
+            new SimpleStringProperty(cellData.getValue().getTitle()));
 
-        // Status
+        // Cột Status
         statusColumn.setCellValueFactory(cellData ->
-                new SimpleStringProperty(cellData.getValue().getStatus()));
+            new SimpleStringProperty(cellData.getValue().getStatus()));
 
-        // Hành động: nếu done thì nút "Review", nếu canceled thì label "Canceled" disabled
+        // Cột Action: nút "Edit" hoặc label "No Edit"
         actionColumn.setCellFactory(new Callback<TableColumn<Event, Void>, TableCell<Event, Void>>() {
             @Override
             public TableCell<Event, Void> call(TableColumn<Event, Void> param) {
                 return new TableCell<Event, Void>() {
-                    private final Button reviewButton = new Button("Review");
+                    private final Button editButton = new Button("Edit");
 
                     {
-                        reviewButton.setStyle("-fx-background-color: #2ecc71; -fx-text-fill: white;");
-                        reviewButton.setOnAction(evt -> {
+                        editButton.setStyle("-fx-background-color: #f1c40f; -fx-text-fill: white;");
+                        editButton.setOnAction(evt -> {
                             Event ev = getTableView().getItems().get(getIndex());
-                            openReviewParticipants(ev);
+                            openEditParticipants(ev);
                         });
                     }
 
@@ -95,11 +96,10 @@ public class VolunteerOrgReviewEventListScreenHandler implements Initializable {
                         } else {
                             Event ev = getTableView().getItems().get(getIndex());
                             if ("done".equalsIgnoreCase(ev.getStatus())) {
-                                reviewButton.setDisable(false);
-                                setGraphic(reviewButton);
+                                editButton.setDisable(false);
+                                setGraphic(editButton);
                             } else {
-                                // Nếu canceled, hiển thị một label "Canceled"
-                                Label canceledLabel = new Label("Canceled");
+                                Label canceledLabel = new Label("No Edit");
                                 canceledLabel.setStyle("-fx-text-fill: gray;");
                                 setGraphic(canceledLabel);
                             }
@@ -127,24 +127,24 @@ public class VolunteerOrgReviewEventListScreenHandler implements Initializable {
         eventTableView.setItems(eventData);
     }
 
-    private void openReviewParticipants(Event event) {
+    private void openEditParticipants(Event event) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource(
-                "/views/fxml/OrganizationScreen/VolunteerOrgReviewParticipantsScreen.fxml"));
+                "/views/fxml/OrganizationScreen/VolunteerOrgEditParticipantsScreen.fxml"));
             Parent root = loader.load();
 
-            VolunteerOrgReviewParticipantsScreenHandler controller = loader.getController();
+            VolunteerOrgEditParticipantsScreenHandler controller = loader.getController();
             controller.setStage(stage);
             controller.setOrganization(organization);
             controller.setEvent(event);
 
             Scene scene = new Scene(root);
             stage.setScene(scene);
-            stage.setTitle("Review Participants");
+            stage.setTitle("Edit Participant Details");
             stage.show();
 
         } catch (IOException e) {
-            statusMessage.setText("Error loading participants screen: " + e.getMessage());
+            statusMessage.setText("Error loading edit participants screen: " + e.getMessage());
             e.printStackTrace();
         }
     }

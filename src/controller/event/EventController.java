@@ -92,24 +92,24 @@ public class EventController {
             }
         }
     }
-    public List<EventParticipantDetails> getEventParticipantDetails(int eventId) {
-        List<EventParticipantDetails> list = new ArrayList<>();
+    public List<EventParticipantDetails> getParticipantDetailsForEvent(int eventId) {
+        List<EventParticipantDetails> result = new ArrayList<>();
         Connection conn = null;
         PreparedStatement pstmt = null;
         ResultSet rs = null;
 
+        String sql = ""
+            + "SELECT e.eventId, e.title, e.startDate, e.endDate, e.status AS eventStatus, "
+            + "       ep.username AS volunteerUsername, ep.hoursParticipated, ep.ratingByOrg, "
+            + "       n.acceptStatus AS volunteerParticipationStatus "
+            + "FROM Events e "
+            + "JOIN Notification n ON e.eventId = n.eventId "
+            + "JOIN EventParticipants ep ON e.eventId = ep.eventId AND ep.username = n.username "
+            + "WHERE e.eventId = ? "
+            + "  AND n.acceptStatus = 'registered'";
+
         try {
             conn = DriverManager.getConnection(DB_URL);
-
-            // Query kết hợp giữa Events và EventParticipants (không join Volunteer vì chúng ta chỉ cần username ở đây)
-            String sql = "SELECT e.eventId, e.title, e.startDate, e.endDate, e.status AS eventStatus, " +
-                         // Giả sử bạn muốn hiển thị tên tổ chức: cần join VolunteerOrganization hoặc SystemUser, 
-                         // nhưng ở đây ta chỉ giữ organizer username:
-                         "e.organizer, ep.username AS volunteerUsername, ep.hoursParticipated, ep.ratingByOrg, ep.acceptStatus " +
-                         "FROM Events e " +
-                         "JOIN EventParticipants ep ON e.eventId = ep.eventId " +
-                         "WHERE e.eventId = ?";
-
             pstmt = conn.prepareStatement(sql);
             pstmt.setInt(1, eventId);
             rs = pstmt.executeQuery();
@@ -117,29 +117,40 @@ public class EventController {
             while (rs.next()) {
                 EventParticipantDetails dto = new EventParticipantDetails();
 
-                // Lấy trường từ Event
+                // --- Lấy info từ Event ---
                 dto.setEventId(rs.getInt("eventId"));
                 dto.setTitle(rs.getString("title"));
-                // Chuyển từ java.sql.Date sang java.util.Date
-                java.sql.Date sdate = rs.getDate("startDate");
-                java.sql.Date edate = rs.getDate("endDate");
-                if (sdate != null) dto.setStartDate(new java.util.Date(sdate.getTime()));
-                if (edate != null) dto.setEndDate(new java.util.Date(edate.getTime()));
+
+                // Chuyển chuỗi "YYYY-MM-DD" sang java.sql.Date (extends java.util.Date)
+                String startDateStr = rs.getString("startDate");
+                if (startDateStr != null) {
+                    dto.setStartDate(java.sql.Date.valueOf(startDateStr));
+                }
+                String endDateStr = rs.getString("endDate");
+                if (endDateStr != null) {
+                    dto.setEndDate(java.sql.Date.valueOf(endDateStr));
+                }
+
                 dto.setEventStatus(rs.getString("eventStatus"));
-                // Nếu muốn lấy tên tổ chức đầy đủ, bạn cần query thêm VolunteerOrganization—
-                // ở đây tạm set organizerName = organizer username:
-                dto.setOrganizerName(rs.getString("organizer"));
+                // (Nếu cần organizerName, thêm logic join VolunteerOrganization để lấy tên)
 
-                // Lấy trường từ EventParticipants
+                // --- Lấy info từ EventParticipants ---
                 dto.setVolunteerUsername(rs.getString("volunteerUsername"));
-                int hours = rs.getInt("hoursParticipated");
-                if (!rs.wasNull()) dto.setHoursParticipated(hours);
-                int rateByOrg = rs.getInt("ratingByOrg");
-                if (!rs.wasNull()) dto.setRatingByOrg(rateByOrg);
-                // acceptStatus (có thể là Registered/Attended/…)
-                dto.setVolunteerParticipationStatus(rs.getString("acceptStatus"));
 
-                list.add(dto);
+                int hp = rs.getInt("hoursParticipated");
+                if (!rs.wasNull()) {
+                    dto.setHoursParticipated(hp);
+                }
+
+                int rbo = rs.getInt("ratingByOrg");
+                if (!rs.wasNull()) {
+                    dto.setRatingByOrg(rbo);
+                }
+
+                // --- Lấy acceptStatus ---
+                dto.setVolunteerParticipationStatus(rs.getString("volunteerParticipationStatus"));
+
+                result.add(dto);
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -152,8 +163,52 @@ public class EventController {
                 e.printStackTrace();
             }
         }
+        return result;
+    }
 
-        return list;
+    /**
+     * Cập nhật lại hoursParticipated và ratingByOrg cho một volunteer (username) trong EventParticipants.
+     * Trả về true nếu update thành công.
+     */
+    public boolean updateEventParticipantDetails(int eventId, String volunteerUsername,
+                                                 Integer hoursParticipated, Integer ratingByOrg) {
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        try {
+            conn = DriverManager.getConnection(DB_URL);
+
+            String sql = "UPDATE EventParticipants "
+                       + "SET hoursParticipated = ?, ratingByOrg = ? "
+                       + "WHERE eventId = ? AND username = ?";
+            pstmt = conn.prepareStatement(sql);
+
+            // Nếu hoursParticipated = null => setNull
+            if (hoursParticipated != null) {
+                pstmt.setInt(1, hoursParticipated);
+            } else {
+                pstmt.setNull(1, Types.INTEGER);
+            }
+            if (ratingByOrg != null) {
+                pstmt.setInt(2, ratingByOrg);
+            } else {
+                pstmt.setNull(2, Types.INTEGER);
+            }
+            pstmt.setInt(3, eventId);
+            pstmt.setString(4, volunteerUsername);
+
+            int affected = pstmt.executeUpdate();
+            return affected > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        } finally {
+            try {
+                if (pstmt != null) pstmt.close();
+                if (conn != null)  conn.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
     }
     public boolean registerEvent(Event event, VolunteerOrganization organization) {
         Connection conn = null;

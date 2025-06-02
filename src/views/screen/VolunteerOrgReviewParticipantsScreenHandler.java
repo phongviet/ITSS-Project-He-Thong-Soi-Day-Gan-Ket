@@ -112,7 +112,7 @@ public class VolunteerOrgReviewParticipantsScreenHandler implements Initializabl
             statusMessage.setText("Event chưa set.");
             return;
         }
-        List<EventParticipantDetails> list = eventController.getEventParticipantDetails(event.getEventId());
+        List<EventParticipantDetails> list = eventController.getParticipantDetailsForEvent(event.getEventId());
         participantData = FXCollections.observableArrayList();
         for (EventParticipantDetails dto : list) {
             String volUser = dto.getVolunteerUsername();
