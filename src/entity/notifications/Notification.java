@@ -8,6 +8,7 @@ public class Notification {
     private Integer eventId;
     private String username;
     private String acceptStatus;
+    private String eventTitle;
 
     public Notification() {
     }
@@ -49,5 +50,12 @@ public class Notification {
 
     public void setAcceptStatus(String acceptStatus) {
         this.acceptStatus = acceptStatus;
+    }
+    public String getEventTitle() {
+        return eventTitle;
+    }
+
+    public void setEventTitle(String eventTitle) {
+        this.eventTitle = eventTitle;
     }
 }

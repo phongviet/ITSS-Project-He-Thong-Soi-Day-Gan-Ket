@@ -691,5 +691,48 @@ public class EventController {
        }
        return event;
    }
-    
+    public List<entity.notifications.Notification> getPendingNotificationsByOrganizer(String organizerUsername) {
+        List<entity.notifications.Notification> result = new ArrayList<>();
+        String sql = "SELECT n.notificationId, n.eventId, n.username, n.acceptStatus, e.title " +
+                    "FROM Notification n " +
+                    "JOIN Events e ON n.eventId = e.eventId " +
+                    "WHERE e.organizer = ? AND n.acceptStatus = ?";
+        try (Connection conn = DriverManager.getConnection(DB_URL);
+            PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, organizerUsername);
+            pstmt.setString(2, "pending");
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    entity.notifications.Notification no = new entity.notifications.Notification();
+                    no.setNotificationId(rs.getInt("notificationId"));
+                    no.setEventId(rs.getInt("eventId"));
+                    no.setUsername(rs.getString("username"));
+                    no.setAcceptStatus(rs.getString("acceptStatus"));
+                    // Giả sử Notification class có thêm field eventTitle và setter tương ứng
+                    no.setEventTitle(rs.getString("title"));
+                    result.add(no);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return result;
+    }
+
+    public boolean updateNotificationStatus(int notificationId, String newStatus) {
+        String sql = "UPDATE Notification SET acceptStatus = ? WHERE notificationId = ?";
+        try (Connection conn = DriverManager.getConnection(DB_URL);
+            PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, newStatus);
+            pstmt.setInt(2, notificationId);
+            int affected = pstmt.executeUpdate();
+            return affected > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
 }

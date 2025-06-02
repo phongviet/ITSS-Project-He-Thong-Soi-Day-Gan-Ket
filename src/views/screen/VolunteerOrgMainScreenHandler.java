@@ -1,29 +1,31 @@
 package views.screen;
 
 import controller.event.EventController;
+import entity.requests.HelpRequest;
+import entity.notifications.Notification;
 import entity.users.VolunteerOrganization;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.stage.Stage;
-
-import java.io.IOException;
-import java.net.URL;
-import java.util.ResourceBundle;
-import entity.requests.HelpRequest;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
-import javafx.scene.control.Button;
-import java.util.Date;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
+import javafx.util.Callback;
+
+import java.io.IOException;
+import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.List;
+import java.util.ResourceBundle;
 
 public class VolunteerOrgMainScreenHandler implements Initializable {
 
@@ -34,7 +36,18 @@ public class VolunteerOrgMainScreenHandler implements Initializable {
     private Button viewEventsButton;
 
     @FXML
+    private Button listHelpRequestButton;
+
+    @FXML
+    private Button listRegistButton;
+
+    @FXML
     private Label statusMessage;
+
+    // ================= HelpRequest Pane =================
+    @FXML
+    private VBox helpRequestPane;
+
     @FXML
     private TableView<HelpRequest> helpRequestTable;
 
@@ -48,10 +61,31 @@ public class VolunteerOrgMainScreenHandler implements Initializable {
     private TableColumn<HelpRequest, String> emergencyLevelColumn;
 
     @FXML
-    private TableColumn<HelpRequest, Void> actionColumn;
+    private TableColumn<HelpRequest, Void> helpRequestActionColumn;
 
-    // Formatter để hiển thị date
+    private ObservableList<HelpRequest> helpRequestData;
+
+    // Formatter để hiển thị ngày
     private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
+
+    // ================= Notification Pane =================
+    @FXML
+    private VBox notificationPane;
+
+    @FXML
+    private TableView<Notification> notificationTable;
+
+    @FXML
+    private TableColumn<Notification, String> eventTitleColumn;
+
+    @FXML
+    private TableColumn<Notification, String> volunteerColumn;
+
+    @FXML
+    private TableColumn<Notification, Void> notificationActionColumn;
+
+    private ObservableList<Notification> notificationData;
+
     private Stage stage;
     private VolunteerOrganization organization;
     private EventController eventController;
@@ -62,97 +96,102 @@ public class VolunteerOrgMainScreenHandler implements Initializable {
         this.eventController = new EventController();
     }
 
-    // Add a default constructor
     public VolunteerOrgMainScreenHandler() {
         this.eventController = new EventController();
     }
 
-    // Add setter methods
     public void setStage(Stage stage) {
         this.stage = stage;
     }
 
     public void setOrganization(VolunteerOrganization organization) {
         this.organization = organization;
-    }
-
-    public void setStatusMessage(String message) {
-        statusMessage.setText(message);
+        // Chỉ load dữ liệu sau khi organization đã được gán
+        loadHelpRequests();
+        loadPendingNotifications();
     }
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
-        // Clear any previous status message
         statusMessage.setText("");
+
+        // Chỉ thiết lập cấu hình cột, không load dữ liệu
         setupHelpRequestTable();
-        loadHelpRequests();
+        setupNotificationTable();
+
+        // Ẩn cả hai pane lúc khởi tạo
+        helpRequestPane.setVisible(false);
+        notificationPane.setVisible(false);
     }
-    /**
-     * Thiết lập cách hiển thị các cột trong TableView<HelpRequest>
-     */
+
+    // ===================== HelpRequest =====================
+
     private void setupHelpRequestTable() {
-        // Column "Title"
         titleColumn.setCellValueFactory(cellData ->
             new SimpleStringProperty(cellData.getValue().getTitle()));
 
-        // Column "Start Date"
         startDateColumn.setCellValueFactory(cellData -> {
-            Date d = cellData.getValue().getStartDate();
-            String s = (d != null) ? DATE_FORMAT.format(d) : "N/A";
-            return new SimpleStringProperty(s);
+            if (cellData.getValue().getStartDate() != null) {
+                return new SimpleStringProperty(DATE_FORMAT.format(cellData.getValue().getStartDate()));
+            } else {
+                return new SimpleStringProperty("N/A");
+            }
         });
 
-        // Column "Emergency Level"
         emergencyLevelColumn.setCellValueFactory(cellData ->
             new SimpleStringProperty(cellData.getValue().getEmergencyLevel()));
 
-        // Column "Nhận yêu cầu" (Action)
-        actionColumn.setCellFactory(col -> new TableCell<HelpRequest, Void>() {
-            private final Button acceptButton = new Button("Nhận yêu cầu");
-
-            {
-                acceptButton.setStyle("-fx-background-color: #2ecc71; -fx-text-fill: white;");
-                acceptButton.setOnAction(event -> {
-                    HelpRequest hr = getTableView().getItems().get(getIndex());
-                    handleAcceptHelpRequest(hr);
-                });
-            }
-
+        helpRequestActionColumn.setCellFactory(new Callback<TableColumn<HelpRequest, Void>, TableCell<HelpRequest, Void>>() {
             @Override
-            protected void updateItem(Void item, boolean empty) {
-                super.updateItem(item, empty);
-                if (empty) {
-                    setGraphic(null);
-                } else {
-                    setGraphic(acceptButton);
-                }
+            public TableCell<HelpRequest, Void> call(TableColumn<HelpRequest, Void> param) {
+                return new TableCell<HelpRequest, Void>() {
+                    private final Button acceptButton = new Button("Nhận yêu cầu");
+
+                    {
+                        acceptButton.setStyle("-fx-background-color: #2ecc71; -fx-text-fill: white;");
+                        acceptButton.setOnAction(evt -> {
+                            HelpRequest hr = getTableView().getItems().get(getIndex());
+                            handleAcceptHelpRequest(hr);
+                        });
+                    }
+
+                    @Override
+                    protected void updateItem(Void item, boolean empty) {
+                        super.updateItem(item, empty);
+                        if (empty) {
+                            setGraphic(null);
+                        } else {
+                            setGraphic(acceptButton);
+                        }
+                    }
+                };
             }
         });
     }
 
-    /**
-     * Lấy danh sách HelpRequest "approved" từ DB và đổ vào TableView
-     */
     private void loadHelpRequests() {
-        List<HelpRequest> helpRequests = eventController.getApprovedHelpRequests();
-        if (helpRequests == null || helpRequests.isEmpty()) {
-            statusMessage.setText("Không có yêu cầu hỗ trợ nào đang ở trạng thái 'approved'.");
+        if (organization == null) return; // tránh gọi khi organization chưa set
+
+        List<HelpRequest> list = eventController.getApprovedHelpRequests();
+        if (list == null || list.isEmpty()) {
+            helpRequestData = FXCollections.observableArrayList();
         } else {
-            ObservableList<HelpRequest> data = FXCollections.observableArrayList(helpRequests);
-            helpRequestTable.setItems(data);
+            helpRequestData = FXCollections.observableArrayList(list);
+            statusMessage.setText("");
         }
+        helpRequestTable.setItems(helpRequestData);
     }
+
     private void handleAcceptHelpRequest(HelpRequest helpRequest) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource(
-                "/views/fxml/OrganizationScreen/VolunteerOrgRegisterEventScreen.fxml"));
+                    "/views/fxml/OrganizationScreen/VolunteerOrgRegisterEventScreen.fxml"));
             Parent root = loader.load();
 
-            // Lấy controller của màn hình RegisterEvent
             VolunteerOrgRegisterEventScreenHandler controller = loader.getController();
             controller.setStage(stage);
             controller.setOrganization(organization);
-            controller.setHelpRequest(helpRequest);    // truyền helpRequest để sau khi tạo xong sẽ xử lý
+            controller.setHelpRequest(helpRequest);
 
             Scene scene = new Scene(root);
             stage.setScene(scene);
@@ -163,19 +202,88 @@ public class VolunteerOrgMainScreenHandler implements Initializable {
             e.printStackTrace();
         }
     }
+
+    // ===================== Notification =====================
+
+    private void setupNotificationTable() {
+        eventTitleColumn.setCellValueFactory(cellData ->
+            new SimpleStringProperty(cellData.getValue().getEventTitle()));
+
+        volunteerColumn.setCellValueFactory(cellData ->
+            new SimpleStringProperty(cellData.getValue().getUsername()));
+
+        notificationActionColumn.setCellFactory(new Callback<TableColumn<Notification, Void>, TableCell<Notification, Void>>() {
+            @Override
+            public TableCell<Notification, Void> call(TableColumn<Notification, Void> param) {
+                return new TableCell<Notification, Void>() {
+                    private final Button acceptButton = new Button("Đồng ý");
+                    private final Button rejectButton = new Button("Từ chối");
+
+                    {
+                        acceptButton.setStyle("-fx-background-color: #2ecc71; -fx-text-fill: white;");
+                        rejectButton.setStyle("-fx-background-color: #e74c3c; -fx-text-fill: white;");
+
+                        acceptButton.setOnAction(evt -> {
+                            Notification no = getTableView().getItems().get(getIndex());
+                            handleNotificationDecision(no, "registered");
+                        });
+                        rejectButton.setOnAction(evt -> {
+                            Notification no = getTableView().getItems().get(getIndex());
+                            handleNotificationDecision(no, "canceled");
+                        });
+                    }
+
+                    @Override
+                    protected void updateItem(Void item, boolean empty) {
+                        super.updateItem(item, empty);
+                        if (empty) {
+                            setGraphic(null);
+                        } else {
+                            HBox box = new HBox(10, acceptButton, rejectButton);
+                            setGraphic(box);
+                        }
+                    }
+                };
+            }
+        });
+    }
+
+    private void loadPendingNotifications() {
+        if (organization == null) return; // tránh gọi khi organization chưa set
+
+        List<Notification> list = eventController.getPendingNotificationsByOrganizer(organization.getUsername());
+        if (list == null || list.isEmpty()) {
+            notificationData = FXCollections.observableArrayList();
+        } else {
+            notificationData = FXCollections.observableArrayList(list);
+            statusMessage.setText("");
+        }
+        notificationTable.setItems(notificationData);
+    }
+
+    private void handleNotificationDecision(Notification no, String newStatus) {
+        boolean ok = eventController.updateNotificationStatus(no.getNotificationId(), newStatus);
+        if (ok) {
+            notificationData.remove(no);
+            statusMessage.setText("Updated notification " + no.getNotificationId() + " → " + newStatus);
+        } else {
+            statusMessage.setText("Failed to update notification " + no.getNotificationId());
+        }
+    }
+
+    // ===================== Handlers cho các nút =====================
+
     @FXML
     public void handleRegisterEvent() {
         try {
-            // Load the event registration screen
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/views/fxml/OrganizationScreen/VolunteerOrgRegisterEventScreen.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource(
+                    "/views/fxml/OrganizationScreen/VolunteerOrgRegisterEventScreen.fxml"));
             Parent root = loader.load();
 
-            // Get the controller and pass the organization data
             VolunteerOrgRegisterEventScreenHandler controller = loader.getController();
             controller.setStage(stage);
             controller.setOrganization(organization);
 
-            // Set the scene
             Scene scene = new Scene(root);
             stage.setScene(scene);
             stage.setTitle("Register New Event");
@@ -189,16 +297,14 @@ public class VolunteerOrgMainScreenHandler implements Initializable {
     @FXML
     public void handleViewEvents() {
         try {
-            // Load the event list screen
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/views/fxml/OrganizationScreen/VolunteerOrgViewEventListScreen.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource(
+                    "/views/fxml/OrganizationScreen/VolunteerOrgViewEventListScreen.fxml"));
             Parent root = loader.load();
 
-            // Get the controller and pass the organization data
             VolunteerOrgViewEventListScreenHandler controller = loader.getController();
             controller.setStage(stage);
             controller.setOrganization(organization);
 
-            // Set the scene
             Scene scene = new Scene(root);
             stage.setScene(scene);
             stage.setTitle("My Events List");
@@ -210,13 +316,53 @@ public class VolunteerOrgMainScreenHandler implements Initializable {
     }
 
     @FXML
+    public void handleListHelpRequest() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource(
+                "/views/fxml/OrganizationScreen/VolunteerOrgHelpRequestListScreen.fxml"));
+            Parent root = loader.load();
+
+            VolunteerOrgHelpRequestListScreenHandler controller = loader.getController();
+            controller.setStage(stage);
+            controller.setOrganization(organization);
+
+            Scene scene = new Scene(root);
+            stage.setScene(scene);
+            stage.setTitle("List Help Requests");
+            stage.show();
+        } catch (IOException e) {
+            statusMessage.setText("Error loading HelpRequest list screen: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    @FXML
+    public void handleListRegist() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource(
+                "/views/fxml/OrganizationScreen/VolunteerOrgRegistListScreen.fxml"));
+            Parent root = loader.load();
+
+            VolunteerOrgRegistListScreenHandler controller = loader.getController();
+            controller.setStage(stage);
+            controller.setOrganization(organization);
+
+            Scene scene = new Scene(root);
+            stage.setScene(scene);
+            stage.setTitle("List Regist");
+            stage.show();
+        } catch (IOException e) {
+            statusMessage.setText("Error loading register list screen: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    @FXML
     public void handleLogout() {
         try {
-            // Load the login FXML
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/views/fxml/LogInScreen.fxml"));
             Parent root = loader.load();
 
-            // Set the scene
             Scene scene = new Scene(root);
             stage.setScene(scene);
             stage.setTitle("Login");

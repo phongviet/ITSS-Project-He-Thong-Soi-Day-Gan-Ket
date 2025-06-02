@@ -1,22 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.text.Font?>
-<TableView fx:id="helpRequestTable" prefHeight="200">
-    <columns>
-        <TableColumn fx:id="titleColumn" text="Tiêu đề" prefWidth="200" />
-        <TableColumn fx:id="startDateColumn" text="Ngày bắt đầu" prefWidth="150" />
-        <TableColumn fx:id="emergencyLevelColumn" text="Mức khẩn cấp" prefWidth="120" />
-        <TableColumn fx:id="actionColumn" text="Hành động" prefWidth="150" />
-    </columns>
-</TableView>
 
 <BorderPane xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
             fx:controller="views.screen.VolunteerOrgMainScreenHandler"
             prefHeight="768" prefWidth="1024">
+
+    <!-- Phần trên cùng (header) -->
     <top>
         <HBox alignment="CENTER" style="-fx-background-color: #3498db;">
             <padding>
@@ -30,41 +23,78 @@
         </HBox>
     </top>
 
+    <!-- Phần giữa (center) -->
     <center>
         <VBox alignment="TOP_CENTER" spacing="20">
             <padding>
-                <Insets top="30" right="30" bottom="30" left="30"/>
+                <Insets top="20" right="20" bottom="20" left="20"/>
             </padding>
 
+            <!-- Hàng các nút chức năng -->
             <HBox alignment="CENTER" spacing="20">
-                <Button fx:id="registerEventButton" text="Register an Event"
+                <Button fx:id="registerEventButton"
+                        text="Register an Event"
                         onAction="#handleRegisterEvent"
                         style="-fx-background-color: #2ecc71; -fx-text-fill: white;"
-                        prefWidth="200" prefHeight="40">
-                    <font>
-                        <Font size="14.0"/>
-                    </font>
-                </Button>
+                        prefWidth="200" prefHeight="40"/>
 
-                <Button fx:id="viewEventsButton" text="View My Events"
+                <Button fx:id="viewEventsButton"
+                        text="View My Events"
                         onAction="#handleViewEvents"
                         style="-fx-background-color: #3498db; -fx-text-fill: white;"
-                        prefWidth="200" prefHeight="40">
-                    <font>
-                        <Font size="14.0"/>
-                    </font>
-                </Button>
+                        prefWidth="200" prefHeight="40"/>
+
+                <Button fx:id="listHelpRequestButton"
+                        text="List Help Requests"
+                        onAction="#handleListHelpRequest"
+                        style="-fx-background-color: #f39c12; -fx-text-fill: white;"
+                        prefWidth="200" prefHeight="40"/>
+
+                <Button fx:id="listRegistButton"
+                        text="List Regist"
+                        onAction="#handleListRegist"
+                        style="-fx-background-color: #9b59b6; -fx-text-fill: white;"
+                        prefWidth="200" prefHeight="40"/>
             </HBox>
 
-            <!-- Status message area -->
+            <!-- Khu vực hiển thị thông báo lỗi / trạng thái -->
             <Label fx:id="statusMessage" textFill="#e74c3c" wrapText="true"/>
+
+            <!-- Bảng HelpRequest (ẩn mặc định) -->
+            <VBox fx:id="helpRequestPane" spacing="10" visible="false" prefHeight="300" prefWidth="800">
+                <Label text="Danh sách Help Requests (approved)"
+                       style="-fx-font-size: 18; -fx-font-weight: bold;"/>
+
+                <TableView fx:id="helpRequestTable" prefHeight="240" prefWidth="800">
+                    <columns>
+                        <TableColumn fx:id="titleColumn" text="Tiêu đề" prefWidth="250"/>
+                        <TableColumn fx:id="startDateColumn" text="Ngày bắt đầu" prefWidth="150"/>
+                        <TableColumn fx:id="emergencyLevelColumn" text="Mức khẩn cấp" prefWidth="120"/>
+                        <TableColumn fx:id="helpRequestActionColumn" text="Hành động" prefWidth="150"/>
+                    </columns>
+                </TableView>
+            </VBox>
+
+            <!-- Bảng Notification (ẩn mặc định) -->
+            <VBox fx:id="notificationPane" spacing="10" visible="false" prefHeight="300" prefWidth="800">
+                <Label text="Danh sách Volunteer đăng ký (pending)"
+                       style="-fx-font-size: 18; -fx-font-weight: bold;"/>
+
+                <TableView fx:id="notificationTable" prefHeight="240" prefWidth="800">
+                    <columns>
+                        <TableColumn fx:id="eventTitleColumn" text="Event Title" prefWidth="250"/>
+                        <TableColumn fx:id="volunteerColumn" text="Volunteer" prefWidth="150"/>
+                        <TableColumn fx:id="notificationActionColumn" text="Hành động" prefWidth="200"/>
+                    </columns>
+                </TableView>
+            </VBox>
         </VBox>
     </center>
 
+    <!-- Phần dưới cùng (footer) -->
     <bottom>
         <HBox alignment="CENTER_RIGHT" style="-fx-background-color: #ecf0f1; -fx-padding: 10;">
             <Button text="Logout" onAction="#handleLogout"/>
         </HBox>
     </bottom>
 </BorderPane>
-
