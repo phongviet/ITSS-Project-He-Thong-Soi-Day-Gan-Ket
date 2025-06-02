@@ -400,7 +400,6 @@ public class EventController {
                 if (reqId != null) {
                     event.setRequestId(reqId);
                 }
-
                 // (Không gọi event.setNeeder(...) vì Event.java không có setter đó)
                 events.add(event);
             }
