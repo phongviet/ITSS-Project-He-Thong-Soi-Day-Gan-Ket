@@ -210,12 +210,6 @@ public class VolunteerViewMyEventsScreenHandler implements Initializable {
         }
     }
 
-    private void handleViewEventDetails(EventParticipantDetails details) {
-        // TODO: Implement navigation to an event detail screen
-        // Truyền details.getEventId() hoặc toàn bộ đối tượng details nếu cần
-        statusMessage.setText("Viewing details for: " + details.getTitle() + " (Not implemented yet).");
-    }
-
     @FXML
     public void handleBackToDashboard() {
         try {
@@ -229,6 +223,27 @@ public class VolunteerViewMyEventsScreenHandler implements Initializable {
             this.stage.setTitle("Volunteer Dashboard");
         } catch (IOException e) {
             statusMessage.setText("Error returning to dashboard: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+    
+    private void handleViewEventDetails(EventParticipantDetails details) { // THAY ĐỔI THAM SỐ
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/views/fxml/VolunteerScreen/VolunteerViewEventDetailScreen.fxml"));
+            Parent root = loader.load();
+
+            VolunteerViewEventDetailScreenHandler detailController = loader.getController();
+            detailController.setStage(this.stage);
+            detailController.setVolunteer(this.volunteer);
+            detailController.setEventDetails(details); // TRUYỀN EventParticipantDetails
+
+            Scene scene = new Scene(root);
+            this.stage.setScene(scene);
+            this.stage.setTitle("Event Details: " + details.getTitle()); // Cập nhật tiêu đề
+            this.stage.show();
+
+        } catch (IOException e) {
+            statusMessage.setText("Error opening event details: " + e.getMessage());
             e.printStackTrace();
         }
     }

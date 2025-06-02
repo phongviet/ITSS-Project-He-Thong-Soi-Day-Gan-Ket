@@ -563,4 +563,59 @@ public class EventController {
         }
     }
     
+    /**
+     * Lấy thông tin chi tiết của một Event dựa trên eventId.
+     * Bao gồm cả requiredSkills.
+     * @param eventId ID của sự kiện
+     * @return Đối tượng Event hoặc null nếu không tìm thấy
+     */
+   public Event getEventById(int eventId) {
+       Event event = null;
+       Connection conn = null;
+       PreparedStatement pstmt = null;
+       ResultSet rs = null;
+       String sql = "SELECT * FROM Events WHERE eventId = ?";
+
+       try {
+           conn = DriverManager.getConnection(DB_URL);
+           pstmt = conn.prepareStatement(sql);
+           pstmt.setInt(1, eventId);
+           rs = pstmt.executeQuery();
+
+           if (rs.next()) {
+               event = new Event();
+               event.setEventId(rs.getInt("eventId"));
+               event.setTitle(rs.getString("title"));
+               event.setMaxParticipantNumber(rs.getObject("maxParticipantNumber") != null ? rs.getInt("maxParticipantNumber") : null);
+
+               String startDateStr = rs.getString("startDate");
+               String endDateStr = rs.getString("endDate");
+               try {
+                   if (startDateStr != null && !startDateStr.isEmpty()) {
+                       event.setStartDate(DATE_FORMAT.parse(startDateStr));
+                   }
+                   if (endDateStr != null && !endDateStr.isEmpty()) {
+                       event.setEndDate(DATE_FORMAT.parse(endDateStr));
+                   }
+               } catch (java.text.ParseException e) {
+                   System.err.println("Error parsing date for event " + eventId + ": " + e.getMessage());
+               }
+
+               event.setEmergencyLevel(rs.getString("emergencyLevel"));
+               event.setDescription(rs.getString("description"));
+               event.setOrganizer(rs.getString("organizer"));
+               event.setNeeder(rs.getString("needer"));
+               event.setStatus(rs.getString("status"));
+
+               // Load required skills
+               loadEventSkills(conn, event); // Giả sử bạn có phương thức này (từ code EventController bạn gửi ban đầu)
+           }
+       } catch (SQLException e) {
+           e.printStackTrace();
+       } finally {
+           closeResources(conn, pstmt, rs);
+       }
+       return event;
+   }
+    
 }
