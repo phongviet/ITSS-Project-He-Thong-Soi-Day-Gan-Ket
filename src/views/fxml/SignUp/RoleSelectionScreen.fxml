@@ -16,74 +16,75 @@
     </fx:define>
 
     <children>
-        <VBox alignment="CENTER" layoutX="312.0" layoutY="50.0"
-              prefWidth="400" prefHeight="500" maxHeight="500"
-              AnchorPane.leftAnchor="312.0" AnchorPane.topAnchor="50.0">
-
-            <padding>
-                <Insets top="20" bottom="20" left="30" right="30" />
-            </padding>
-
-            <Label text="Sign Up" style="-fx-font-weight: bold;">
-                <font>
-                    <Font size="24.0" />
-                </font>
-            </Label>
-
-            <!-- Role Selection Section -->
-            <VBox spacing="15" alignment="CENTER">
-                <Label text="Select your role:" style="-fx-font-weight: bold; -fx-text-fill: #000000;">
-                    <font>
-                        <Font size="16.0" />
-                    </font>
-                </Label>
-                <VBox spacing="15" alignment="CENTER_LEFT">
+        <StackPane AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+            <children>
+                <VBox alignment="CENTER" fillWidth="false" prefWidth="350" spacing="20.0">
                     <padding>
-                        <Insets left="50" right="50" top="10" bottom="10" />
+                        <Insets top="20" bottom="20" left="30" right="30" />
                     </padding>
-                    <RadioButton fx:id="volunteerRadio" text="Volunteer" toggleGroup="$roleGroup" selected="true" style="-fx-text-fill: #000000;">
+
+                    <Label text="Sign Up" style="-fx-font-weight: bold;">
+                        <font>
+                            <Font size="24.0" />
+                        </font>
+                    </Label>
+
+                    <!-- Role Selection Section -->
+                    <VBox spacing="15" alignment="CENTER">
+                        <Label text="Select your role:" style="-fx-font-weight: bold; -fx-text-fill: #000000;">
+                            <font>
+                                <Font size="16.0" />
+                            </font>
+                            <VBox.margin>
+                                <Insets bottom="10"/>
+                            </VBox.margin>
+                        </Label>
+                        <VBox spacing="10" alignment="CENTER_LEFT">
+                            <padding>
+                                <Insets left="30" right="30" />
+                            </padding>
+                            <RadioButton fx:id="volunteerRadio" text="Volunteer" toggleGroup="$roleGroup" selected="true" style="-fx-text-fill: #000000;">
+                                <font><Font size="14.0" /></font>
+                            </RadioButton>
+                            <RadioButton fx:id="organizationRadio" text="Volunteer Organization" toggleGroup="$roleGroup" style="-fx-text-fill: #000000;">
+                                <font><Font size="14.0" /></font>
+                            </RadioButton>
+                            <RadioButton fx:id="personInNeedRadio" text="Person In Need" toggleGroup="$roleGroup" style="-fx-text-fill: #000000;">
+                                <font><Font size="14.0" /></font>
+                            </RadioButton>
+                        </VBox>
+                        <Button fx:id="continueButton" text="Continue" onAction="#handleContinue"
+                                prefWidth="200" prefHeight="30">
+                            <font>
+                                <Font size="14.0" />
+                            </font>
+                            <VBox.margin>
+                                <Insets top="15"/>
+                            </VBox.margin>
+                        </Button>
+                    </VBox>
+
+                    <Label fx:id="messageLabel" style="-fx-text-fill: red;" alignment="CENTER" maxWidth="Infinity">
                         <font>
                             <Font size="14.0" />
                         </font>
-                    </RadioButton>
-                    <RadioButton fx:id="organizationRadio" text="Volunteer Organization" toggleGroup="$roleGroup" style="-fx-text-fill: #000000;">
-                        <font>
-                            <Font size="14.0" />
-                        </font>
-                    </RadioButton>
-                    <RadioButton fx:id="personInNeedRadio" text="Person In Need" toggleGroup="$roleGroup" style="-fx-text-fill: #000000;">
-                        <font>
-                            <Font size="14.0" />
-                        </font>
-                    </RadioButton>
+                    </Label>
+
+                    <HBox alignment="CENTER" spacing="5">
+                        <Label text="Already have an account? " style="-fx-text-fill: #000000;">
+                            <font>
+                                <Font size="14.0" />
+                            </font>
+                        </Label>
+                        <Hyperlink fx:id="loginLink" text="Log In" onAction="#handleLoginLink">
+                            <font>
+                                <Font size="14.0" />
+                            </font>
+                        </Hyperlink>
+                    </HBox>
                 </VBox>
-                <Button fx:id="continueButton" text="Continue" onAction="#handleContinue"
-                        prefWidth="200" prefHeight="30">
-                    <font>
-                        <Font size="14.0" />
-                    </font>
-                </Button>
-            </VBox>
-
-            <Label fx:id="messageLabel" style="-fx-text-fill: red;">
-                <font>
-                    <Font size="14.0" />
-                </font>
-            </Label>
-
-            <HBox alignment="CENTER">
-                <Label text="Already have an account? " style="-fx-text-fill: #000000;">
-                    <font>
-                        <Font size="14.0" />
-                    </font>
-                </Label>
-                <Hyperlink fx:id="loginLink" text="Log In" onAction="#handleLoginLink">
-                    <font>
-                        <Font size="14.0" />
-                    </font>
-                </Hyperlink>
-            </HBox>
-        </VBox>
+            </children>
+        </StackPane>
     </children>
 </AnchorPane>
 

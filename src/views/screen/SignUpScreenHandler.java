@@ -10,6 +10,8 @@ import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -56,7 +58,7 @@ public class SignUpScreenHandler {
     private TextField cccdField;
 
     @FXML
-    private TextField dateOfBirthField;
+    private DatePicker dateOfBirthPicker;
 
     @FXML
     private TextField organizationNameField;
@@ -138,6 +140,7 @@ public class SignUpScreenHandler {
 
     private String currentUserType = null;
     private VerificationController verificationController = new VerificationController();
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     /**
      * Initialize method called after FXML is loaded
@@ -270,7 +273,10 @@ public class SignUpScreenHandler {
             if ("volunteer".equals(currentUserType)) {
                 String fullName = fullNameField.getText().trim();
                 String cccd = cccdField != null ? cccdField.getText().trim() : null;
-                String dateOfBirth = dateOfBirthField != null ? dateOfBirthField.getText().trim() : null;
+                String dateOfBirth = null;
+                if (dateOfBirthPicker != null && dateOfBirthPicker.getValue() != null) {
+                    dateOfBirth = dateOfBirthPicker.getValue().format(DATE_FORMATTER);
+                }
 
                 // Get skills list
                 List<String> skills = getSelectedSkills();
@@ -305,7 +311,10 @@ public class SignUpScreenHandler {
             } else if ("personInNeed".equals(currentUserType)) {
                 String fullName = fullNameField.getText().trim();
                 String cccd = cccdField != null ? cccdField.getText().trim() : null;
-                String dateOfBirth = dateOfBirthField != null ? dateOfBirthField.getText().trim() : null;
+                String dateOfBirth = null;
+                if (dateOfBirthPicker != null && dateOfBirthPicker.getValue() != null) {
+                    dateOfBirth = dateOfBirthPicker.getValue().format(DATE_FORMATTER);
+                }
 
                 registrationSuccess = verificationController.registerPersonInNeed(
                         username, password, email, phone, address, fullName, cccd, dateOfBirth);
@@ -443,11 +452,11 @@ public class SignUpScreenHandler {
             }
 
             // Date validation if field exists
-            if (dateOfBirthField != null && !dateOfBirthField.getText().trim().isEmpty()) {
-                if (!dateOfBirthField.getText().trim().matches("\\d{4}-\\d{2}-\\d{2}")) {
-                    messageLabel.setText("Date of birth must be in format YYYY-MM-DD");
-                    return false;
-                }
+            if (dateOfBirthPicker != null && dateOfBirthPicker.getValue() == null && currentUserType.equals("volunteer")) {
+                // For volunteer, date of birth might be optional or handled differently, check requirements
+                // If it's mandatory for volunteer, add: 
+                // messageLabel.setText("Date of birth is required");
+                // return false;
             }
 
             // Validate at least one skill is selected
@@ -492,11 +501,9 @@ public class SignUpScreenHandler {
             }
 
             // Date validation if field exists
-            if (dateOfBirthField != null && !dateOfBirthField.getText().trim().isEmpty()) {
-                if (!dateOfBirthField.getText().trim().matches("\\d{4}-\\d{2}-\\d{2}")) {
-                    messageLabel.setText("Date of birth must be in format YYYY-MM-DD");
-                    return false;
-                }
+            if (dateOfBirthPicker != null && dateOfBirthPicker.getValue() == null) {
+                messageLabel.setText("Date of birth is required");
+                return false;
             }
         } else if ("organization".equals(currentUserType)) {
             if (organizationNameField.getText().trim().isEmpty()) {
@@ -533,7 +540,7 @@ public class SignUpScreenHandler {
 
         if (fullNameField != null) fullNameField.clear();
         if (cccdField != null) cccdField.clear();
-        if (dateOfBirthField != null) dateOfBirthField.clear();
+        if (dateOfBirthPicker != null) dateOfBirthPicker.setValue(null);
         if (organizationNameField != null) organizationNameField.clear();
         if (licenseNumberField != null) licenseNumberField.clear();
         if (fieldComboBox != null) fieldComboBox.getSelectionModel().clearSelection();

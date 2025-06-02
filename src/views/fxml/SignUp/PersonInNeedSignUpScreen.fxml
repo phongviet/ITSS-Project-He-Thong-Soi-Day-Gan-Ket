@@ -4,6 +4,10 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.text.Font?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.control.DatePicker?>
 
 <AnchorPane prefHeight="768" prefWidth="1024"
             xmlns="http://javafx.com/javafx"
@@ -11,151 +15,95 @@
             fx:controller="views.screen.SignUpScreenHandler"
             style="-fx-background-color: white;">
     <children>
-        <VBox alignment="CENTER" layoutX="312.0" layoutY="50.0"
-              prefWidth="400" prefHeight="650" maxHeight="650"
-              AnchorPane.leftAnchor="312.0" AnchorPane.topAnchor="30.0">
+        <StackPane AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+            <children>
+                <VBox alignment="CENTER" fillWidth="false" prefWidth="450.0" spacing="15.0" StackPane.alignment="CENTER">
+                    <padding>
+                        <Insets bottom="20" left="20" right="20" top="20" />
+                    </padding>
+                    <children>
+                        <Label text="Person In Need Sign Up" style="-fx-font-weight: bold;">
+                            <font>
+                                <Font size="24.0" />
+                            </font>
+                        </Label>
 
-            <padding>
-                <Insets top="20" bottom="20" left="30" right="30" />
-            </padding>
-
-            <Label text="Person In Need Sign Up" style="-fx-font-weight: bold;">
-                <font>
-                    <Font size="24.0" />
-                </font>
-            </Label>
-
-            <!-- Registration Form Section -->
-            <ScrollPane fitToWidth="true" hbarPolicy="NEVER" vbarPolicy="AS_NEEDED"
-                        prefHeight="550" maxHeight="550"
-                        style="-fx-background-color: transparent; -fx-background: transparent; -fx-border-color: transparent;">
-                <content>
-                    <VBox spacing="10">
-                        <padding>
-                            <Insets top="10" bottom="10" left="5" right="5" />
-                        </padding>
-
+                        <!-- Registration Information Section -->
                         <Label text="Registration Information:" style="-fx-font-weight: bold; -fx-text-fill: #000000;">
                             <font>
                                 <Font size="16.0" />
                             </font>
                         </Label>
+                        <GridPane hgap="10" vgap="8">
+                            <columnConstraints>
+                                <ColumnConstraints halignment="LEFT" hgrow="SOMETIMES" minWidth="10.0" prefWidth="120.0" />
+                                <ColumnConstraints hgrow="ALWAYS" minWidth="10.0" />
+                            </columnConstraints>
+                            <children>
+                                <Label text="Username:" style="-fx-text-fill: #000000;" GridPane.columnIndex="0" GridPane.rowIndex="0"><font><Font size="14.0" /></font></Label>
+                                <TextField fx:id="usernameField" promptText="Enter username" GridPane.columnIndex="1" GridPane.rowIndex="0" />
 
-                        <Label text="Username:" style="-fx-text-fill: #000000;">
-                            <font>
-                                <Font size="14.0" />
-                            </font>
-                        </Label>
-                        <TextField fx:id="usernameField" promptText="Enter username" prefHeight="30" />
+                                <Label text="Password:" style="-fx-text-fill: #000000;" GridPane.columnIndex="0" GridPane.rowIndex="1"><font><Font size="14.0" /></font></Label>
+                                <PasswordField fx:id="passwordField" promptText="Enter password" GridPane.columnIndex="1" GridPane.rowIndex="1" />
 
-                        <Label text="Password:" style="-fx-text-fill: #000000;">
-                            <font>
-                                <Font size="14.0" />
-                            </font>
-                        </Label>
-                        <PasswordField fx:id="passwordField" promptText="Enter password" prefHeight="30" />
+                                <Label text="Confirm Password:" style="-fx-text-fill: #000000;" GridPane.columnIndex="0" GridPane.rowIndex="2"><font><Font size="14.0" /></font></Label>
+                                <PasswordField fx:id="confirmPasswordField" promptText="Confirm password" GridPane.columnIndex="1" GridPane.rowIndex="2" />
 
-                        <Label text="Confirm Password:" style="-fx-text-fill: #000000;">
-                            <font>
-                                <Font size="14.0" />
-                            </font>
-                        </Label>
-                        <PasswordField fx:id="confirmPasswordField" promptText="Confirm password" prefHeight="30" />
+                                <Label text="Email:" style="-fx-text-fill: #000000;" GridPane.columnIndex="0" GridPane.rowIndex="3"><font><Font size="14.0" /></font></Label>
+                                <TextField fx:id="emailField" promptText="Enter email" GridPane.columnIndex="1" GridPane.rowIndex="3" />
 
-                        <Label text="Email:" style="-fx-text-fill: #000000;">
-                            <font>
-                                <Font size="14.0" />
-                            </font>
-                        </Label>
-                        <TextField fx:id="emailField" promptText="Enter email" prefHeight="30" />
+                                <Label text="Phone:" style="-fx-text-fill: #000000;" GridPane.columnIndex="0" GridPane.rowIndex="4"><font><Font size="14.0" /></font></Label>
+                                <TextField fx:id="phoneField" promptText="Enter phone number" GridPane.columnIndex="1" GridPane.rowIndex="4" />
 
-                        <Label text="Phone:" style="-fx-text-fill: #000000;">
-                            <font>
-                                <Font size="14.0" />
-                            </font>
-                        </Label>
-                        <TextField fx:id="phoneField" promptText="Enter phone number" prefHeight="30" />
+                                <Label text="Address:" style="-fx-text-fill: #000000;" GridPane.columnIndex="0" GridPane.rowIndex="5"><font><Font size="14.0" /></font></Label>
+                                <TextField fx:id="addressField" promptText="Enter address" GridPane.columnIndex="1" GridPane.rowIndex="5" />
+                            </children>
+                            <rowConstraints><RowConstraints /><RowConstraints /><RowConstraints /><RowConstraints /><RowConstraints /><RowConstraints /></rowConstraints>
+                        </GridPane>
 
-                        <Label text="Address:" style="-fx-text-fill: #000000;">
-                            <font>
-                                <Font size="14.0" />
-                            </font>
-                        </Label>
-                        <TextField fx:id="addressField" promptText="Enter address" prefHeight="30" />
-
-                        <!-- Person In Need specific fields -->
+                        <!-- Personal Information Section -->
                         <Label text="Personal Information:" style="-fx-font-weight: bold; -fx-text-fill: #000000;">
-                            <font>
-                                <Font size="16.0" />
-                            </font>
-                            <padding>
-                                <Insets top="15" bottom="5" />
-                            </padding>
+                            <font><Font size="16.0" /></font>
+                            <padding><Insets top="15" bottom="5" /></padding>
                         </Label>
+                        <GridPane hgap="10" vgap="8">
+                            <columnConstraints>
+                                <ColumnConstraints halignment="LEFT" hgrow="SOMETIMES" minWidth="10.0" prefWidth="150.0" />
+                                <ColumnConstraints hgrow="ALWAYS" minWidth="10.0" />
+                            </columnConstraints>
+                            <children>
+                                <Label text="Full Name:" style="-fx-text-fill: #000000;" GridPane.columnIndex="0" GridPane.rowIndex="0"><font><Font size="14.0" /></font></Label>
+                                <TextField fx:id="fullNameField" promptText="Enter your full name" GridPane.columnIndex="1" GridPane.rowIndex="0" />
 
-                        <Label text="Full Name:" style="-fx-text-fill: #000000;">
-                            <font>
-                                <Font size="14.0" />
-                            </font>
-                        </Label>
-                        <TextField fx:id="fullNameField" promptText="Enter your full name" prefHeight="30" />
+                                <Label text="CCCD (Citizen ID):" style="-fx-text-fill: #000000;" GridPane.columnIndex="0" GridPane.rowIndex="1"><font><Font size="14.0" /></font></Label>
+                                <TextField fx:id="cccdField" promptText="Enter your citizen ID number" GridPane.columnIndex="1" GridPane.rowIndex="1" />
 
-                        <!-- CCCD field -->
-                        <Label text="CCCD (Citizen ID):" style="-fx-text-fill: #000000;">
-                            <font>
-                                <Font size="14.0" />
-                            </font>
-                        </Label>
-                        <TextField fx:id="cccdField" promptText="Enter your citizen ID number" prefHeight="30" />
-
-                        <!-- Date of Birth field -->
-                        <Label text="Date of Birth (YYYY-MM-DD):" style="-fx-text-fill: #000000;">
-                            <font>
-                                <Font size="14.0" />
-                            </font>
-                        </Label>
-                        <TextField fx:id="dateOfBirthField" promptText="e.g. 1990-01-15" prefHeight="30" />
+                                <Label text="Date of Birth:" style="-fx-text-fill: #000000;" GridPane.columnIndex="0" GridPane.rowIndex="2"><font><Font size="14.0" /></font></Label>
+                                <DatePicker fx:id="dateOfBirthPicker" promptText="Select date" maxWidth="Infinity" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                            </children>
+                            <rowConstraints><RowConstraints /><RowConstraints /><RowConstraints /></rowConstraints>
+                        </GridPane>
 
                         <HBox spacing="20" alignment="CENTER">
                             <padding>
                                 <Insets top="20" bottom="10" />
                             </padding>
-                            <Button fx:id="backButton" text="Back" onAction="#handleBack"
-                                    prefWidth="150" prefHeight="30">
-                                <font>
-                                    <Font size="14.0" />
-                                </font>
-                            </Button>
-                            <Button fx:id="signUpButton" text="Sign Up" onAction="#handleSignUp"
-                                    prefWidth="150" prefHeight="30">
-                                <font>
-                                    <Font size="14.0" />
-                                </font>
-                            </Button>
+                            <Button fx:id="backButton" text="Back" onAction="#handleBack" prefWidth="150" prefHeight="30"><font><Font size="14.0" /></font></Button>
+                            <Button fx:id="signUpButton" text="Sign Up" onAction="#handleSignUp" prefWidth="150" prefHeight="30"><font><Font size="14.0" /></font></Button>
                         </HBox>
-                    </VBox>
-                </content>
-            </ScrollPane>
 
-            <Label fx:id="messageLabel" style="-fx-text-fill: red;">
-                <font>
-                    <Font size="14.0" />
-                </font>
-            </Label>
+                        <Label fx:id="messageLabel" style="-fx-text-fill: red;" alignment="CENTER" maxWidth="Infinity">
+                            <font><Font size="14.0" /></font>
+                        </Label>
 
-            <HBox alignment="CENTER">
-                <Label text="Already have an account? " style="-fx-text-fill: #000000;">
-                    <font>
-                        <Font size="14.0" />
-                    </font>
-                </Label>
-                <Hyperlink fx:id="loginLink" text="Log In" onAction="#handleLoginLink">
-                    <font>
-                        <Font size="14.0" />
-                    </font>
-                </Hyperlink>
-            </HBox>
-        </VBox>
+                        <HBox alignment="CENTER">
+                            <Label text="Already have an account? " style="-fx-text-fill: #000000;"><font><Font size="14.0" /></font></Label>
+                            <Hyperlink fx:id="loginLink" text="Log In" onAction="#handleLoginLink"><font><Font size="14.0" /></font></Hyperlink>
+                        </HBox>
+                    </children>
+                </VBox>
+            </children>
+        </StackPane>
     </children>
 </AnchorPane>
 
