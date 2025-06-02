@@ -44,10 +44,10 @@
                         <items>
                             <FXCollections fx:factory="observableArrayList">
                                 <String fx:value="All" />
-                                <String fx:value="Pending" /> <!-- TNV có thể xem sự kiện họ đăng ký nhưng chưa được duyệt bởi Org -->
-                                <String fx:value="Registered" /> <!-- Trạng thái mới cho TNV, sự kiện đã được Org chấp nhận -->
-                                <String fx:value="Upcoming" />
-                                <String fx:value="Ongoing" /> <!-- Trạng thái mới, sự kiện đang diễn ra -->
+                                <String fx:value="Pending" />
+                                <String fx:value="Approved" />
+                                <String fx:value="Rejected" />
+                                <String fx:value="Coming Soon" />
                                 <String fx:value="Completed" />
                                 <String fx:value="Canceled" />
                             </FXCollections>
