@@ -79,7 +79,7 @@ CREATE TABLE Events (
     "description" TEXT NULL,
     "organizer" TEXT NOT NULL,
     "requestId" TEXT,
-    "status" TEXT NULL DEFAULT 'pending',
+    "status" TEXT NULL DEFAULT 'Pending',
     FOREIGN KEY (requestId) REFERENCES HelpRequest(requestId),
     FOREIGN KEY (organizer) REFERENCES VolunteerOrganization(username)
 );
@@ -191,26 +191,25 @@ VALUES
 ('volunteer2', 4);
 
 -- Sample data for Events
-INSERT INTO Events (eventId, title, maxParticipantNumber, startDate, endDate, emergencyLevel, description, organizer, needer, status)
+INSERT INTO Events (eventId, title, maxParticipantNumber, startDate, endDate, emergencyLevel, description, organizer, requestId, status)
 VALUES
-(1, 'Dạy học cho trẻ em vùng cao', 10, '2025-06-15', '2025-06-20', 'Bình thường', 'Chương trình dạy học miễn phí cho trẻ em vùng cao Tây Bắc', 'tochuc', 'person1', 'Coming Soon'),
-(2, 'Chăm sóc người già neo đơn', 5, '2025-06-25', '2025-06-28', 'Khẩn cấp', 'Chăm sóc và hỗ trợ người già neo đơn tại Hà Nội', 'org2', 'person2', 'Coming Soon'),
+(1, 'Dạy học cho trẻ em vùng cao', 10, '2025-06-15', '2025-06-20', 'Bình thường', 'Chương trình dạy học miễn phí cho trẻ em vùng cao Tây Bắc', 'tochuc', NULL, 'Done'),
+(2, 'Chăm sóc người già neo đơn', 5, '2025-06-25', '2025-06-28', 'Khẩn cấp', 'Chăm sóc và hỗ trợ người già neo đơn tại Hà Nội', 'org2', '1', 'Coming Soon'),
 (3, 'Quyên góp sách vở cho trẻ em', 15, '2025-07-10', '2025-07-15', 'Bình thường', 'Quyên góp sách vở và đồ dùng học tập cho trẻ em nghèo', 'tochuc', NULL, 'Pending');
 
 -- Sample data for EventParticipants
 INSERT INTO EventParticipants (eventId, username, hoursParticipated, ratingByOrg)
 VALUES
-(1, 'tnv', 20, 5),
 (1, 'volunteer2', 15, 4),
 (3, 'tnv', NULL, NULL);
 
 -- Sample data for Notification
 INSERT INTO Notification (notificationId, eventId, username, acceptStatus)
 VALUES
-(1, 1, 'volunteer1', 'registered'),
-(2, 1, 'volunteer2', 'registered'),
-(3, 2, 'volunteer1', 'pending'),
-(4, 3, 'volunteer2', 'canceled');
+(1, 1, 'tnv', 'Registered'),
+(2, 1, 'volunteer2', 'Registered'),
+(3, 2, 'volunteer1', 'Pending'),
+(4, 3, 'volunteer2', 'Canceled');
 
 -- Sample data for HelpRequest
 INSERT INTO HelpRequest (requestId, title, startDate, emergencyLevel, description, personInNeedID, status)
