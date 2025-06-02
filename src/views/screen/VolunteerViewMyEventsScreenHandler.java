@@ -1,7 +1,7 @@
 package views.screen;
 
 import controller.event.EventController;
-import entity.events.Event; // Bạn cần tạo lớp Event.java trước
+import entity.events.EventParticipantDetails; // SỬ DỤNG LỚP MỚI
 import entity.users.Volunteer;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -15,46 +15,41 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.stage.Stage;
-import javafx.util.Callback; // Cần import Callback
+import javafx.util.Callback;
 
 import java.io.IOException;
 import java.net.URL;
-import java.text.SimpleDateFormat; // Sử dụng SimpleDateFormat cho nhất quán
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.ResourceBundle;
 import java.util.function.Predicate;
 
-// Giả sử bạn có một lớp EventParticipantDetails để chứa thông tin kết hợp
-// giữa Event và thông tin tham gia của TNV (hours, rating).
-// Nếu không, bạn cần điều chỉnh cách lấy và hiển thị dữ liệu này.
-// Tạm thời, chúng ta sẽ cố gắng hiển thị dựa trên đối tượng Event và truy vấn thêm.
-
 public class VolunteerViewMyEventsScreenHandler implements Initializable {
 
     @FXML
-    private TableView<Event> eventTableView; // Sẽ hiển thị Event, nhưng cần lấy thêm thông tin từ EventParticipants
+    private TableView<EventParticipantDetails> eventTableView; // THAY ĐỔI KIỂU DỮ LIỆU
 
     @FXML
-    private TableColumn<Event, String> titleColumn;
+    private TableColumn<EventParticipantDetails, String> titleColumn;
 
     @FXML
-    private TableColumn<Event, String> startDateColumn;
+    private TableColumn<EventParticipantDetails, String> startDateColumn;
 
     @FXML
-    private TableColumn<Event, String> endDateColumn;
+    private TableColumn<EventParticipantDetails, String> endDateColumn;
 
     @FXML
-    private TableColumn<Event, String> statusColumn; // Trạng thái tham gia của TNV
+    private TableColumn<EventParticipantDetails, String> statusColumn; // Trạng thái tham gia của TNV
 
     @FXML
-    private TableColumn<Event, String> hoursParticipatedColumn; // THAY ĐỔI kiểu thành String để hiển thị
+    private TableColumn<EventParticipantDetails, String> hoursParticipatedColumn;
 
     @FXML
-    private TableColumn<Event, String> ratingByOrgColumn; // THAY ĐỔI kiểu thành String để hiển thị
+    private TableColumn<EventParticipantDetails, String> ratingByOrgColumn;
 
     @FXML
-    private TableColumn<Event, Void> actionsColumn;
+    private TableColumn<EventParticipantDetails, Void> actionsColumn;
 
     @FXML
     private TextField searchField;
@@ -65,34 +60,35 @@ public class VolunteerViewMyEventsScreenHandler implements Initializable {
     @FXML
     private Label statusMessage;
 
-    @FXML
-    private Button backButton;
+    // Nút Back không cần @FXML nếu không có logic đặc biệt trong initialize
+    // @FXML private Button backButton;
 
     private Stage stage;
-    private Volunteer volunteer; // TNV hiện tại
+    private Volunteer volunteer;
     private EventController eventController;
     private SimpleDateFormat dateFormatter = new SimpleDateFormat("dd/MM/yyyy");
 
-
-    private ObservableList<Event> allMyEventsList;
-    private FilteredList<Event> filteredMyEvents;
+    private ObservableList<EventParticipantDetails> allMyParticipationDetailsList;
+    private FilteredList<EventParticipantDetails> filteredMyParticipationDetails;
 
     private String currentSearchText = "";
     private String currentStatusFilter = "All";
 
-    // Constructor mặc định
     public VolunteerViewMyEventsScreenHandler() {
         this.eventController = new EventController();
     }
 
-    // Setter để truyền dữ liệu từ màn hình trước
     public void setStage(Stage stage) {
         this.stage = stage;
     }
 
     public void setVolunteer(Volunteer volunteer) {
         this.volunteer = volunteer;
-        loadMyEventData(); // Tải dữ liệu khi có thông tin TNV
+        if (this.volunteer != null) {
+            loadMyEventParticipationData();
+        } else {
+            statusMessage.setText("Error: Volunteer data is not available.");
+        }
     }
 
     @Override
@@ -100,6 +96,7 @@ public class VolunteerViewMyEventsScreenHandler implements Initializable {
         setupTableColumns();
         setupFilters();
         statusMessage.setText("");
+        // Không cần load data ở đây vì volunteer có thể chưa được set
     }
 
     private void setupTableColumns() {
@@ -116,49 +113,29 @@ public class VolunteerViewMyEventsScreenHandler implements Initializable {
             return new SimpleStringProperty(date != null ? dateFormatter.format(date) : "N/A");
         });
 
-        // Cột Status (Trạng thái tham gia của TNV với sự kiện)
-        // Cần logic để lấy trạng thái từ bảng EventParticipants hoặc Notification
-        statusColumn.setCellValueFactory(cellData -> {
-            // Tạm thời để "Registered" hoặc lấy từ Event.status nếu phù hợp
-            // TODO: Cần lấy acceptStatus từ Notification hoặc trạng thái từ EventParticipants
-            Event event = cellData.getValue();
-            // Đây là trạng thái chung của sự kiện, không phải trạng thái tham gia của TNV
-            String eventGlobalStatus = event.getStatus() != null ? event.getStatus() : "Unknown";
-            // Bạn cần một cách để lấy trạng thái tham gia cụ thể của TNV này với sự kiện này.
-            // Ví dụ: eventController.getVolunteerEventStatus(volunteer.getUsername(), event.getEventId());
-            return new SimpleStringProperty("Registered (" + eventGlobalStatus + ")"); // Placeholder
-        });
+        // Trạng thái tham gia của TNV với sự kiện này
+        statusColumn.setCellValueFactory(cellData ->
+                new SimpleStringProperty(cellData.getValue().getVolunteerParticipationStatus()));
 
-        // Cột Hours Participated
         hoursParticipatedColumn.setCellValueFactory(cellData -> {
-            Event event = cellData.getValue();
-            // TODO: Cần lấy hoursParticipated từ bảng EventParticipants cho TNV này và Event này
-            // Ví dụ: int hours = eventController.getHoursParticipated(volunteer.getUsername(), event.getEventId());
-            // return new SimpleStringProperty(hours > 0 ? String.valueOf(hours) : "N/A");
-            return new SimpleStringProperty("N/A"); // Placeholder
+            Integer hours = cellData.getValue().getHoursParticipated();
+            return new SimpleStringProperty(hours != null && hours > 0 ? hours.toString() : "N/A");
         });
 
-        // Cột Org Rating
         ratingByOrgColumn.setCellValueFactory(cellData -> {
-            Event event = cellData.getValue();
-            // TODO: Cần lấy ratingByOrg từ bảng EventParticipants cho TNV này và Event này
-            // Ví dụ: int rating = eventController.getRatingByOrg(volunteer.getUsername(), event.getEventId());
-            // return new SimpleStringProperty(rating > 0 ? String.valueOf(rating) + "/5" : "N/A");
-            return new SimpleStringProperty("N/A"); // Placeholder
+            Integer rating = cellData.getValue().getRatingByOrg();
+            return new SimpleStringProperty(rating != null && rating > 0 ? rating.toString() + "/5" : "N/A");
         });
 
-
-        actionsColumn.setCellFactory(param -> new TableCell<Event, Void>() {
+        actionsColumn.setCellFactory(param -> new TableCell<EventParticipantDetails, Void>() {
             private final Button viewButton = new Button("View Details");
-
             {
                 viewButton.setOnAction(event -> {
-                    Event selectedEvent = getTableView().getItems().get(getIndex());
-                    handleViewEventDetails(selectedEvent);
+                    EventParticipantDetails selectedData = getTableView().getItems().get(getIndex());
+                    handleViewEventDetails(selectedData);
                 });
-                viewButton.setStyle("-fx-background-color: #9b59b6; -fx-text-fill: white;");
+                viewButton.setStyle("-fx-background-color: #9b59b6; -fx-text-fill: white;"); // Màu nút
             }
-
             @Override
             protected void updateItem(Void item, boolean empty) {
                 super.updateItem(item, empty);
@@ -168,14 +145,13 @@ public class VolunteerViewMyEventsScreenHandler implements Initializable {
     }
 
     private void setupFilters() {
-        // Các trạng thái có thể liên quan đến TNV
         statusFilterComboBox.setItems(FXCollections.observableArrayList(
-                "All", "Registered", "Upcoming", "Ongoing", "Completed", "Canceled"
+                "All", "Registered", "Pending Invite", "Attended", "Completed", "Canceled" // Các trạng thái tham gia của TNV
         ));
         statusFilterComboBox.setValue("All");
 
         searchField.textProperty().addListener((obs, oldVal, newVal) -> {
-            currentSearchText = newVal;
+            currentSearchText = newVal != null ? newVal.toLowerCase() : "";
             applyFilters();
         });
 
@@ -186,90 +162,71 @@ public class VolunteerViewMyEventsScreenHandler implements Initializable {
     }
 
     private void applyFilters() {
-        Predicate<Event> searchPredicate = event -> {
-            if (currentSearchText == null || currentSearchText.isEmpty()) {
+        if (allMyParticipationDetailsList == null) return;
+
+        Predicate<EventParticipantDetails> searchPredicate = details -> {
+            if (currentSearchText.isEmpty()) {
                 return true;
             }
-            return event.getTitle().toLowerCase().contains(currentSearchText.toLowerCase());
+            return details.getTitle() != null && details.getTitle().toLowerCase().contains(currentSearchText);
         };
 
-        Predicate<Event> statusPredicate = event -> {
+        Predicate<EventParticipantDetails> statusPredicate = details -> {
             if (currentStatusFilter == null || currentStatusFilter.equals("All")) {
                 return true;
             }
-            // TODO: Cần logic lọc theo trạng thái tham gia của TNV với sự kiện
-            // String volunteerEventStatus = getVolunteerEventStatusLogic(event, volunteer.getUsername());
-            // return currentStatusFilter.equalsIgnoreCase(volunteerEventStatus);
-            return true; // Placeholder, cần implement logic lọc theo status của TNV
+            // Lọc theo trạng thái tham gia của TNV
+            return details.getVolunteerParticipationStatus() != null &&
+                   details.getVolunteerParticipationStatus().equalsIgnoreCase(currentStatusFilter);
         };
 
-        if (allMyEventsList != null) {
-            filteredMyEvents.setPredicate(searchPredicate.and(statusPredicate));
-        }
+        filteredMyParticipationDetails.setPredicate(searchPredicate.and(statusPredicate));
+        statusMessage.setText(filteredMyParticipationDetails.isEmpty() ? "No events match your criteria." : "");
     }
 
-    private void loadMyEventData() {
-        if (volunteer == null) {
-            statusMessage.setText("Volunteer data not available.");
+    private void loadMyEventParticipationData() {
+        if (volunteer == null || volunteer.getUsername() == null) {
+            statusMessage.setText("Cannot load events: Volunteer information is missing.");
+            eventTableView.setItems(FXCollections.observableArrayList()); // Xóa bảng nếu không có volunteer
             return;
         }
         try {
-            // TODO: Cần một phương thức trong EventController để lấy các sự kiện TNV đã tham gia/đăng ký
-            // List<Event> events = eventController.getEventsForVolunteer(volunteer.getUsername());
-            // Tạm thời, để test, ta có thể lấy tất cả sự kiện rồi lọc thủ công (không tối ưu)
-            List<Event> events = eventController.getAllEvents(); // Đây chỉ là placeholder, CẦN THAY ĐỔI
-                                                                // để chỉ lấy sự kiện của TNV này
-
-            if (events.isEmpty()) {
-                statusMessage.setText("You are not participating in any events yet.");
-                allMyEventsList = FXCollections.observableArrayList();
+            List<EventParticipantDetails> detailsList = eventController.getEventParticipationDetailsForVolunteer(volunteer.getUsername());
+            if (detailsList.isEmpty()) {
+                statusMessage.setText("You are not currently participating in any events.");
+                allMyParticipationDetailsList = FXCollections.observableArrayList();
             } else {
                 statusMessage.setText("");
-                allMyEventsList = FXCollections.observableArrayList(events);
+                allMyParticipationDetailsList = FXCollections.observableArrayList(detailsList);
             }
-            filteredMyEvents = new FilteredList<>(allMyEventsList, p -> true);
-            eventTableView.setItems(filteredMyEvents);
-            applyFilters(); // Áp dụng filter ban đầu (All)
+            filteredMyParticipationDetails = new FilteredList<>(allMyParticipationDetailsList, p -> true);
+            eventTableView.setItems(filteredMyParticipationDetails);
+            applyFilters(); // Áp dụng filter ban đầu
 
         } catch (Exception e) {
-            statusMessage.setText("Error loading your events: " + e.getMessage());
+            statusMessage.setText("Error loading your event participations: " + e.getMessage());
             e.printStackTrace();
+            eventTableView.setItems(FXCollections.observableArrayList());
         }
     }
 
-    private void handleViewEventDetails(Event event) {
-        statusMessage.setText("View details for event: " + event.getTitle() + " (To be implemented).");
-        // Logic điều hướng đến màn hình chi tiết sự kiện sẽ ở đây
+    private void handleViewEventDetails(EventParticipantDetails details) {
+        // TODO: Implement navigation to an event detail screen
+        // Truyền details.getEventId() hoặc toàn bộ đối tượng details nếu cần
+        statusMessage.setText("Viewing details for: " + details.getTitle() + " (Not implemented yet).");
     }
 
     @FXML
     public void handleBackToDashboard() {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/views/fxml/VolunteerMainScreen.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/views/fxml/VolunteerScreen/VolunteerMainScreen.fxml"));
             Parent root = loader.load();
-
             VolunteerMainScreenHandler controller = loader.getController();
-            controller.setStage(stage);
-            // Quan trọng: Truyền lại đối tượng Volunteer khi quay về dashboard
-            if (this.volunteer != null) {
-                controller.setVolunteer(this.volunteer);
-            } else {
-                // Xử lý trường hợp volunteer là null, có thể là lỗi hoặc cần đăng nhập lại
-                System.err.println("Volunteer object is null when returning to dashboard.");
-                // Có thể chuyển về màn hình login thay vì dashboard nếu volunteer là null
-                 FXMLLoader loginLoader = new FXMLLoader(getClass().getResource("/views/fxml/LogInScreen.fxml"));
-                 Parent loginRoot = loginLoader.load();
-                 Scene loginScene = new Scene(loginRoot);
-                 stage.setScene(loginScene);
-                 stage.setTitle("Login");
-                 stage.show();
-                 return;
-            }
-
+            controller.setStage(this.stage);
+            controller.setVolunteer(this.volunteer); // Quan trọng: truyền lại volunteer
             Scene scene = new Scene(root);
-            stage.setScene(scene);
-            stage.setTitle("Volunteer Dashboard");
-            stage.show();
+            this.stage.setScene(scene);
+            this.stage.setTitle("Volunteer Dashboard");
         } catch (IOException e) {
             statusMessage.setText("Error returning to dashboard: " + e.getMessage());
             e.printStackTrace();
@@ -278,23 +235,22 @@ public class VolunteerViewMyEventsScreenHandler implements Initializable {
 
     @FXML
     public void handleSearch() {
-        currentSearchText = searchField.getText();
-        applyFilters();
-        statusMessage.setText(filteredMyEvents.isEmpty() ? "No events found matching your criteria." : "");
+        // Listener đã xử lý, hàm này có thể trống hoặc dùng để cập nhật UI phụ nếu cần
+        // currentSearchText = searchField.getText().toLowerCase();
+        // applyFilters();
     }
 
     @FXML
     public void handleClearSearch() {
-        searchField.clear();
-        // currentSearchText = ""; // không cần vì listener của textProperty sẽ tự cập nhật
-        // applyFilters(); // không cần vì listener của textProperty sẽ tự gọi
-        statusMessage.setText("");
+        searchField.clear(); // Listener sẽ tự động gọi applyFilters
+        // currentSearchText = "";
+        // applyFilters();
     }
 
     @FXML
     public void handleStatusFilter() {
-        // currentStatusFilter = statusFilterComboBox.getValue(); // không cần vì listener của valueProperty sẽ tự cập nhật
-        // applyFilters(); // không cần vì listener của valueProperty sẽ tự gọi
-        statusMessage.setText(filteredMyEvents.isEmpty() ? "No events found with status: " + currentStatusFilter : "");
+        // Listener đã xử lý, hàm này có thể trống
+        // currentStatusFilter = statusFilterComboBox.getValue();
+        // applyFilters();
     }
 }

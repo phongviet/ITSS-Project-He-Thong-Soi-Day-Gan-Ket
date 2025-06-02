@@ -63,8 +63,31 @@ public class VolunteerMainScreenHandler implements Initializable {
 
     @FXML
     public void handleViewMyEvents() {
-        // This will be implemented later
-        statusMessage.setText("View My Events feature will be implemented soon.");
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/views/fxml/VolunteerScreen/VolunteerViewMyEventsScreen.fxml")); // ĐƯỜNG DẪN FXML MỚI
+            Parent root = loader.load();
+
+            VolunteerViewMyEventsScreenHandler controller = loader.getController();
+            controller.setStage(this.stage); // Truyền stage hiện tại
+            if (this.volunteer != null) {
+                controller.setVolunteer(this.volunteer); // Truyền thông tin Volunteer hiện tại
+            } else {
+                // Xử lý nếu volunteer là null (có thể là lỗi, nên log lại hoặc hiển thị thông báo)
+                System.err.println("Volunteer object is null in VolunteerMainScreenHandler.");
+                statusMessage.setText("Error: User data not found. Please try logging in again.");
+                // Có thể quay lại màn hình login ở đây nếu cần
+                return;
+            }
+
+            Scene scene = new Scene(root);
+            this.stage.setScene(scene);
+            this.stage.setTitle("My Events List"); // Đặt tiêu đề cho cửa sổ mới
+            this.stage.show();
+
+        } catch (IOException e) {
+            statusMessage.setText("Error opening My Events screen: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     @FXML
