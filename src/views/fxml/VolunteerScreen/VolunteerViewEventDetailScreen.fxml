@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.Font?>
+<?import javafx.scene.text.Text?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="views.screen.VolunteerViewEventDetailScreenHandler"
+            prefHeight="600" prefWidth="800">
+    <top>
+        <HBox alignment="CENTER" style="-fx-background-color: #9b59b6;" spacing="10">
+            <padding>
+                <Insets top="15" right="15" bottom="15" left="15"/>
+            </padding>
+            <Label fx:id="eventTitleLabel" text="Event Details" textFill="WHITE">
+                <font>
+                    <Font name="System Bold" size="24.0"/>
+                </font>
+            </Label>
+        </HBox>
+    </top>
+
+    <center>
+        <ScrollPane fitToWidth="true" fitToHeight="true">
+            <content>
+                <GridPane hgap="10" vgap="10">
+                    <padding>
+                        <Insets top="20" right="30" bottom="20" left="30"/>
+                    </padding>
+
+                    <Label text="Event Title:" GridPane.rowIndex="0" GridPane.columnIndex="0">
+                        <font><Font name="System Bold" size="14.0"/></font>
+                    </Label>
+                    <Text fx:id="titleText" GridPane.rowIndex="0" GridPane.columnIndex="1" wrappingWidth="500"/>
+
+                    <Label text="Organizer:" GridPane.rowIndex="1" GridPane.columnIndex="0">
+                        <font><Font name="System Bold" size="14.0"/></font>
+                    </Label>
+                    <Text fx:id="organizerText" GridPane.rowIndex="1" GridPane.columnIndex="1" wrappingWidth="500"/>
+
+                    <Label text="Start Date:" GridPane.rowIndex="2" GridPane.columnIndex="0">
+                        <font><Font name="System Bold" size="14.0"/></font>
+                    </Label>
+                    <Text fx:id="startDateText" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+
+                    <Label text="End Date:" GridPane.rowIndex="3" GridPane.columnIndex="0">
+                        <font><Font name="System Bold" size="14.0"/></font>
+                    </Label>
+                    <Text fx:id="endDateText" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
+
+                    <Label text="Max Participants:" GridPane.rowIndex="4" GridPane.columnIndex="0">
+                        <font><Font name="System Bold" size="14.0"/></font>
+                    </Label>
+                    <Text fx:id="maxParticipantsText" GridPane.rowIndex="4" GridPane.columnIndex="1"/>
+                    
+                    <Label text="Emergency Level:" GridPane.rowIndex="5" GridPane.columnIndex="0">
+                        <font><Font name="System Bold" size="14.0"/></font>
+                    </Label>
+                    <Text fx:id="emergencyLevelText" GridPane.rowIndex="5" GridPane.columnIndex="1"/>
+
+                    <Label text="Description:" GridPane.rowIndex="6" GridPane.columnIndex="0" VBox.vgrow="ALWAYS" alignment="TOP_LEFT">
+                        <font><Font name="System Bold" size="14.0"/></font>
+                    </Label>
+                    <TextArea fx:id="descriptionTextArea" editable="false" wrapText="true" prefRowCount="5" GridPane.rowIndex="6" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS"/>
+
+                    <Label text="Required Skills:" GridPane.rowIndex="7" GridPane.columnIndex="0" alignment="TOP_LEFT">
+                        <font><Font name="System Bold" size="14.0"/></font>
+                    </Label>
+                    <ListView fx:id="requiredSkillsListView" prefHeight="80" GridPane.rowIndex="7" GridPane.columnIndex="1"/>
+
+                    <!-- Thông tin tham gia của Volunteer -->
+                    <Label text="Your Participation Status:" GridPane.rowIndex="8" GridPane.columnIndex="0" style="-fx-text-fill: #2980b9;">
+                        <font><Font name="System Bold" size="14.0"/></font>
+                    </Label>
+                    <Text fx:id="myStatusText" GridPane.rowIndex="8" GridPane.columnIndex="1" style="-fx-font-weight: bold;"/>
+                    
+                    <Label text="Hours Participated:" GridPane.rowIndex="9" GridPane.columnIndex="0" style="-fx-text-fill: #2980b9;">
+                        <font><Font name="System Bold" size="14.0"/></font>
+                    </Label>
+                    <Text fx:id="myHoursText" GridPane.rowIndex="9" GridPane.columnIndex="1" style="-fx-font-weight: bold;"/>
+
+                    <Label text="Rating by Organization:" GridPane.rowIndex="10" GridPane.columnIndex="0" style="-fx-text-fill: #2980b9;">
+                        <font><Font name="System Bold" size="14.0"/></font>
+                    </Label>
+                    <Text fx:id="myOrgRatingText" GridPane.rowIndex="10" GridPane.columnIndex="1" style="-fx-font-weight: bold;"/>
+                    
+                    <!-- Nút hành động cho Volunteer -->
+                     <HBox spacing="10" GridPane.rowIndex="11" GridPane.columnIndex="1" alignment="CENTER_LEFT">
+                        <Button fx:id="cancelParticipationButton" text="Cancel Participation" onAction="#handleCancelParticipation" 
+                                style="-fx-background-color: #e74c3c; -fx-text-fill: white;" visible="false"/> 
+                        <!-- Nút này sẽ visible="true" nếu TNV có thể hủy -->
+                    </HBox>
+
+                    <columnConstraints>
+                        <ColumnConstraints hgrow="NEVER" minWidth="150.0"/>
+                        <ColumnConstraints hgrow="ALWAYS"/>
+                    </columnConstraints>
+
+                </GridPane>
+            </content>
+        </ScrollPane>
+    </center>
+
+    <bottom>
+        <HBox alignment="CENTER_RIGHT" style="-fx-background-color: #ecf0f1; -fx-padding: 10;">
+            <Button fx:id="backButton" text="Back to My Events" onAction="#handleBackToList"
+                    style="-fx-background-color: #9b59b6; -fx-text-fill: white;"/>
+        </HBox>
+    </bottom>
+</BorderPane>
