@@ -31,10 +31,8 @@ public class VolunteerOrgHelpRequestListScreenHandler implements Initializable {
     @FXML private TableColumn<HelpRequest, String> titleColumn;
     @FXML private TableColumn<HelpRequest, String> startDateColumn;
     @FXML private TableColumn<HelpRequest, String> emergencyLevelColumn;
-    @FXML private TableColumn<HelpRequest, String> statusColumn;
     @FXML private TableColumn<HelpRequest, Void> actionColumn;
     @FXML private Label statusMessage;
-    @FXML private Label screenTitleLabel;
 
     private VolunteerOrganization organization;
     private Stage stage;
@@ -83,28 +81,18 @@ public class VolunteerOrgHelpRequestListScreenHandler implements Initializable {
         emergencyLevelColumn.setCellValueFactory(cellData ->
             new SimpleStringProperty(cellData.getValue().getEmergencyLevel()));
 
-        statusColumn.setCellValueFactory(cellData ->
-            new SimpleStringProperty(cellData.getValue().getStatus()));
-
+        // cột hành động: nút "Nhận yêu cầu"
         actionColumn.setCellFactory(new Callback<TableColumn<HelpRequest, Void>, TableCell<HelpRequest, Void>>() {
             @Override
             public TableCell<HelpRequest, Void> call(TableColumn<HelpRequest, Void> param) {
                 return new TableCell<HelpRequest, Void>() {
                     private final Button acceptButton = new Button("Nhận yêu cầu");
-                    private final Button satisfyButton = new Button("Xác nhận TG");
-                    private final HBox pane = new HBox(5);
 
                     {
                         acceptButton.setStyle("-fx-background-color: #2ecc71; -fx-text-fill: white;");
                         acceptButton.setOnAction(evt -> {
                             HelpRequest hr = getTableView().getItems().get(getIndex());
                             handleAcceptHelpRequest(hr);
-                        });
-
-                        satisfyButton.setStyle("-fx-background-color: #3498db; -fx-text-fill: white;");
-                        satisfyButton.setOnAction(evt -> {
-                            HelpRequest hr = getTableView().getItems().get(getIndex());
-                            handleSatisfyHelpRequest(hr);
                         });
                     }
 
@@ -114,14 +102,7 @@ public class VolunteerOrgHelpRequestListScreenHandler implements Initializable {
                         if (empty) {
                             setGraphic(null);
                         } else {
-                            HelpRequest hr = getTableView().getItems().get(getIndex());
-                            pane.getChildren().clear();
-                            if ("Approved".equalsIgnoreCase(hr.getStatus())) {
-                                pane.getChildren().add(acceptButton);
-                            } else if ("Closed".equalsIgnoreCase(hr.getStatus())) {
-                                pane.getChildren().add(satisfyButton);
-                            }
-                            setGraphic(pane);
+                            setGraphic(acceptButton);
                         }
                     }
                 };
@@ -138,7 +119,7 @@ public class VolunteerOrgHelpRequestListScreenHandler implements Initializable {
         List<HelpRequest> list = eventController.getApprovedHelpRequests();
         if (list == null || list.isEmpty()) {
             helpRequestData = FXCollections.observableArrayList();
-            statusMessage.setText("Không có yêu cầu trợ giúp nào được tìm thấy.");
+            statusMessage.setText("Không có HelpRequest nào đang ở trạng thái 'approved'.");
         } else {
             helpRequestData = FXCollections.observableArrayList(list);
             statusMessage.setText("");
@@ -165,18 +146,6 @@ public class VolunteerOrgHelpRequestListScreenHandler implements Initializable {
         } catch (IOException e) {
             statusMessage.setText("Error loading registration screen: " + e.getMessage());
             e.printStackTrace();
-        }
-    }
-
-    private void handleSatisfyHelpRequest(HelpRequest helpRequest) {
-        System.out.println("Attempting to mark HelpRequest ID: " + helpRequest.getRequestId() + " as Satisfied.");
-        boolean success = eventController.updateHelpRequestStatus(helpRequest.getRequestId(), "Satisfied");
-
-        if (success) {
-            statusMessage.setText("Yêu cầu ID: " + helpRequest.getRequestId() + " đã được xác nhận trợ giúp thành công.");
-            loadHelpRequests();
-        } else {
-            statusMessage.setText("Lỗi khi xác nhận trợ giúp cho yêu cầu ID: " + helpRequest.getRequestId() + ".");
         }
     }
 
