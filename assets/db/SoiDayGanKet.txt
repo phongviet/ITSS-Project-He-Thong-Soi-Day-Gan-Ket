@@ -110,7 +110,7 @@ CREATE TABLE HelpRequest (
     "emergencyLevel" TEXT NULL,
     "description" TEXT NULL,
     "personInNeedId" TEXT NULL,
-    "status" TEXT NULL DEFAULT 'Pending', -- Possible values: 'Pending', 'Approved', 'Closed', 'Satisfied'
+    "status" TEXT NULL DEFAULT 'Pending',
     "contact" TEXT NULL,
     "address" TEXT NULL,
     FOREIGN KEY (personInNeedId) REFERENCES PersonInNeed(username)
