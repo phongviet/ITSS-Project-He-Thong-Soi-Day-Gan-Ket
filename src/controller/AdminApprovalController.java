@@ -219,7 +219,7 @@ public class AdminApprovalController {
 
                 helpRequest.setEmergencyLevel(resultSet.getString("emergencyLevel"));
                 helpRequest.setDescription(resultSet.getString("description"));
-                helpRequest.setPersonInNeedID(resultSet.getString("personInNeedID"));
+                helpRequest.setPersonInNeedId(resultSet.getString("personInNeedId"));
                 helpRequest.setStatus(resultSet.getString("status"));
 
                 helpRequests.add(helpRequest);
