@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.Spinner?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<BorderPane prefHeight="600" prefWidth="800" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="views.screen.RateEventVolunteersScreenHandler">
+    <top>
+        <VBox alignment="CENTER" style="-fx-background-color: #2c3e50;" spacing="5">
+            <padding>
+                <Insets top="15" right="15" bottom="15" left="15"/>
+            </padding>
+            <Label fx:id="titleLabel" text="Rate Volunteers for Event: [Event Title]" textFill="WHITE">
+                <font>
+                    <Font name="System Bold" size="20.0"/>
+                </font>
+            </Label>
+            <Label fx:id="eventDetailsLabel" text="Event ID: [ID] - Status: [Status]" textFill="WHITE">
+                <font>
+                    <Font size="14.0"/>
+                </font>
+            </Label>
+        </VBox>
+    </top>
+
+    <center>
+        <VBox spacing="10" alignment="TOP_CENTER">
+            <padding>
+                <Insets top="20" right="20" bottom="20" left="20"/>
+            </padding>
+            <Label text="List of Participating Volunteers">
+                <font>
+                    <Font name="System Bold" size="16.0"/>
+                </font>
+            </Label>
+            <TableView fx:id="volunteersTableView" prefHeight="350.0" VBox.vgrow="ALWAYS" fixedCellSize="35">
+                <columns>
+                    <TableColumn fx:id="usernameColumn" prefWidth="150.0" text="Username"/>
+                    <TableColumn fx:id="fullNameColumn" prefWidth="200.0" text="Full Name"/>
+                    <TableColumn fx:id="hoursParticipatedColumn" prefWidth="120.0" text="Hours Participated"/>
+                    <TableColumn fx:id="ratingColumn" prefWidth="150.0" text="Rate (1-10)"/>
+                </columns>
+            </TableView>
+            <Label fx:id="statusMessageLabel" textFill="RED" wrapText="true"/>
+        </VBox>
+    </center>
+
+    <bottom>
+        <HBox alignment="CENTER_RIGHT" spacing="15" style="-fx-background-color: #ecf0f1; -fx-padding: 15;">
+            <Button fx:id="saveRatingsButton" text="Save Ratings" onAction="#handleSaveRatings" style="-fx-background-color: #27ae60; -fx-text-fill: white;" prefWidth="120"/>
+            <Button fx:id="backButton" text="Back to Event List" onAction="#handleBackToEventList" style="-fx-background-color: #3498db; -fx-text-fill: white;" prefWidth="150"/>
+        </HBox>
+    </bottom>
+</BorderPane> 

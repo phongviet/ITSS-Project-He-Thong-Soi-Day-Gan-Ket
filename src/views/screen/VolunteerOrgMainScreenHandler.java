@@ -15,8 +15,6 @@ import java.util.ResourceBundle;
 
 public class VolunteerOrgMainScreenHandler implements Initializable {
     @FXML
-    private Button reviewButton;
-    @FXML
     private Button registerEventButton;
 
     @FXML
@@ -65,25 +63,6 @@ public class VolunteerOrgMainScreenHandler implements Initializable {
             Scene scene = new Scene(root);
             stage.setScene(scene);
             stage.setTitle("Register New Event");
-            stage.show();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-    @FXML
-    public void handleReview() {
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource(
-                "/views/fxml/OrganizationScreen/VolunteerOrgReviewEventListScreen.fxml"));
-            Parent root = loader.load();
-
-            VolunteerOrgReviewEventListScreenHandler controller = loader.getController();
-            controller.setStage(stage);
-            controller.setOrganization(organization);
-
-            Scene scene = new Scene(root);
-            stage.setScene(scene);
-            stage.setTitle("Review Events");
             stage.show();
         } catch (IOException e) {
             e.printStackTrace();

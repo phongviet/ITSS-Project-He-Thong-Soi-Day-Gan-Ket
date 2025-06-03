@@ -17,6 +17,7 @@ public class EventParticipantDetails {
 
     // Thông tin từ EventParticipants (cụ thể cho Volunteer này)
     private String volunteerUsername; // Để xác định Volunteer
+    private String volunteerFullName; // Thêm trường này
     private Integer hoursParticipated;
     private Integer ratingByOrg;
 
@@ -29,7 +30,7 @@ public class EventParticipantDetails {
     }
 
     // Constructor đầy đủ (ví dụ)
-    public EventParticipantDetails(Event event, String volunteerUsername, Integer hoursParticipated, Integer ratingByOrg, String volunteerParticipationStatus) {
+    public EventParticipantDetails(Event event, String volunteerUsername, String volunteerFullName, Integer hoursParticipated, Integer ratingByOrg, String volunteerParticipationStatus) {
         if (event != null) {
             this.eventId = event.getEventId();
             this.title = event.getTitle();
@@ -39,6 +40,7 @@ public class EventParticipantDetails {
             // this.organizerName = ... ; // Cần logic để lấy tên tổ chức
         }
         this.volunteerUsername = volunteerUsername;
+        this.volunteerFullName = volunteerFullName; // Gán giá trị
         this.hoursParticipated = hoursParticipated;
         this.ratingByOrg = ratingByOrg;
         this.volunteerParticipationStatus = volunteerParticipationStatus;
@@ -129,6 +131,15 @@ public class EventParticipantDetails {
 
     public void setVolunteerParticipationStatus(String volunteerParticipationStatus) {
         this.volunteerParticipationStatus = volunteerParticipationStatus;
+    }
+
+    // Getter và Setter cho volunteerFullName
+    public String getVolunteerFullName() {
+        return volunteerFullName;
+    }
+
+    public void setVolunteerFullName(String volunteerFullName) {
+        this.volunteerFullName = volunteerFullName;
     }
 
     // Bạn có thể thêm các phương thức tiện ích khác nếu cần

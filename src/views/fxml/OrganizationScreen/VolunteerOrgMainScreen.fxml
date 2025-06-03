@@ -33,20 +33,37 @@
 
             <!-- Hàng các nút chức năng -->
             <HBox alignment="CENTER" prefHeight="40.0" spacing="20">
-                <Button fx:id="registerEventButton" onAction="#handleRegisterEvent" prefHeight="60" prefWidth="200" style="-fx-background-color: #2ecc71; -fx-text-fill: white;" text="Register an Event" />
-                <Button fx:id="viewEventsButton" onAction="#handleViewEvents" prefHeight="60" prefWidth="200" style="-fx-background-color: #3498db; -fx-text-fill: white;" text="View My Events" />
-
-                <Button fx:id="listHelpRequestButton" onAction="#handleListHelpRequest" prefHeight="60" prefWidth="200" style="-fx-background-color: #f39c12; -fx-text-fill: white;" text="List Help Requests" />
-
-                <Button fx:id="listRegistButton" onAction="#handleListRegist" prefHeight="60" prefWidth="200" style="-fx-background-color: #9b59b6; -fx-text-fill: white;" text="List Regist" />
-                <Button fx:id="reviewButton" onAction="#handleReview" prefHeight="60" prefWidth="200" style="-fx-background-color:rgb(230, 34, 83); -fx-text-fill: white;" text="Review" />
+                <Button fx:id="registerEventButton" onAction="#handleRegisterEvent" prefHeight="60" prefWidth="200" style="-fx-background-color: #2ecc71; -fx-text-fill: white;" text="Register an Event">
+                    <font>
+                        <Font size="14.0" />
+                    </font>
+                </Button>
+                <Button fx:id="viewEventsButton" onAction="#handleViewEvents" prefHeight="60" prefWidth="200" style="-fx-background-color: #3498db; -fx-text-fill: white;" text="View My Events">
+                    <font>
+                        <Font size="14.0" />
+                    </font>
+                </Button>
+                <Button fx:id="listHelpRequestButton" onAction="#handleListHelpRequest" prefHeight="60" prefWidth="200" style="-fx-background-color: #f39c12; -fx-text-fill: white;" text="List Help Requests">
+                    <font>
+                        <Font size="14.0" />
+                    </font>
+                </Button>
+                <Button fx:id="listRegistButton" onAction="#handleListRegist" prefHeight="60" prefWidth="200" style="-fx-background-color: #9b59b6; -fx-text-fill: white;" text="List Regist">
+                    <font>
+                        <Font size="14.0" />
+                    </font>
+                </Button>
             </HBox>
         </VBox>
     </center>
 
     <bottom>
         <HBox alignment="CENTER_RIGHT" style="-fx-background-color: #ecf0f1; -fx-padding: 10;">
-            <Button onAction="#handleLogout" text="Logout" />
+            <Button onAction="#handleLogout" text="Logout">
+                <font>
+                    <Font size="14.0" />
+                </font>
+            </Button>
         </HBox>
     </bottom>
 </BorderPane>
