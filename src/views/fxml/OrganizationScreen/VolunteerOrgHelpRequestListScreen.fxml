@@ -30,14 +30,18 @@
                 <Insets top="20" right="20" bottom="20" left="20"/>
             </padding>
 
-            <Label text="Help Requests đã được Approved" style="-fx-font-size: 18; -fx-font-weight: bold;"/>
+            <Label text="Danh sách Yêu cầu Trợ giúp" style="-fx-font-size: 18; -fx-font-weight: bold;" fx:id="screenTitleLabel"/>
             <TableView fx:id="helpRequestTable" prefHeight="500" prefWidth="900">
                 <columns>
-                    <TableColumn fx:id="titleColumn" text="Tiêu đề" prefWidth="250"/>
-                    <TableColumn fx:id="startDateColumn" text="Ngày bắt đầu" prefWidth="150"/>
-                    <TableColumn fx:id="emergencyLevelColumn" text="Mức khẩn cấp" prefWidth="150"/>
-                    <TableColumn fx:id="actionColumn" text="Hành động" prefWidth="200"/>
+                    <TableColumn fx:id="titleColumn" text="Tiêu đề" prefWidth="200"/>
+                    <TableColumn fx:id="startDateColumn" text="Ngày bắt đầu" prefWidth="120"/>
+                    <TableColumn fx:id="emergencyLevelColumn" text="Mức khẩn cấp" prefWidth="120"/>
+                    <TableColumn fx:id="statusColumn" text="Trạng thái" prefWidth="120"/>
+                    <TableColumn fx:id="actionColumn" text="Hành động" prefWidth="150"/>
                 </columns>
+                <columnResizePolicy>
+                    <TableView fx:constant="CONSTRAINED_RESIZE_POLICY"/>
+                </columnResizePolicy>
             </TableView>
 
             <Label fx:id="statusMessage" textFill="#e74c3c" wrapText="true"/>
