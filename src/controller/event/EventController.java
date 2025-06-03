@@ -1003,7 +1003,7 @@ public class EventController {
      * @param emergencyLevel Chuỗi mức độ khẩn cấp
      * @return Số nguyên đại diện cho độ ưu tiên
      */
-    private int getEmergencyLevelPriority(String emergencyLevel) {
+    public int getEmergencyLevelPriority(String emergencyLevel) {
         if (emergencyLevel == null || emergencyLevel.trim().isEmpty()) {
             return Integer.MAX_VALUE; // Mức ưu tiên thấp nhất nếu không có hoặc rỗng
         }
