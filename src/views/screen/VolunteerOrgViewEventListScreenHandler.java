@@ -41,6 +41,7 @@ public class VolunteerOrgViewEventListScreenHandler implements Initializable {
     private static final String STATUS_CANCELED = "Canceled";
     private static final String STATUS_COMPLETED = "Completed"; // Thường dùng trong DB
     private static final String STATUS_ACTIVE = "Active";
+    private static final String STATUS_APPROVED = "Approved";
 
     @FXML
     private TableView<Event> eventTableView;
@@ -253,23 +254,23 @@ public class VolunteerOrgViewEventListScreenHandler implements Initializable {
             public TableCell<Event, Void> call(TableColumn<Event, Void> param) {
                 return new TableCell<Event, Void>() {
                     private final Button viewDetailsButton = new Button("View Details");
-                    private final Button rateButton = new Button("Đánh giá TNV");
+                    private final Button reportProgressButton = new Button("Báo cáo tiến độ");
                     private final HBox pane = new HBox(5);
 
                     {
                         pane.setAlignment(Pos.CENTER_LEFT);
                         
                         viewDetailsButton.setStyle("-fx-background-color: #3498db; -fx-text-fill: white;");
-                        rateButton.setStyle("-fx-background-color: #27ae60; -fx-text-fill: white;");
+                        reportProgressButton.setStyle("-fx-background-color: #f39c12; -fx-text-fill: white;");
 
                         viewDetailsButton.setOnAction(event -> {
                             Event data = getTableView().getItems().get(getIndex());
                             handleViewEventDetails(data);
                         });
 
-                        rateButton.setOnAction(event -> {
+                        reportProgressButton.setOnAction(event -> {
                             Event data = getTableView().getItems().get(getIndex());
-                            handleRateVolunteers(data);
+                            handleReportProgress(data);
                         });
                     }
 
@@ -281,12 +282,26 @@ public class VolunteerOrgViewEventListScreenHandler implements Initializable {
                         } else {
                             pane.getChildren().clear();
                             Event event = getTableView().getItems().get(getIndex());
-                            String currentStatus = event.getStatus();
+                            String currentStatus = event.getStatus() != null ? event.getStatus().toLowerCase() : "";
 
                             pane.getChildren().add(viewDetailsButton);
 
-                            if (STATUS_DONE.equalsIgnoreCase(currentStatus) || STATUS_COMPLETED.equalsIgnoreCase(currentStatus)) {
-                                pane.getChildren().add(rateButton);
+                            boolean showReportButton = false;
+                            if (STATUS_APPROVED.equalsIgnoreCase(currentStatus) || 
+                                STATUS_COMING_SOON.equalsIgnoreCase(currentStatus) ||
+                                STATUS_ACTIVE.equalsIgnoreCase(currentStatus)) {
+                                showReportButton = true;
+                            } else if (STATUS_DONE.equalsIgnoreCase(currentStatus) || 
+                                       STATUS_COMPLETED.equalsIgnoreCase(currentStatus)) {
+                                // This will call the database for each row, which might impact performance
+                                // for very large lists. Consider optimizing if performance becomes an issue.
+                                if (eventController.eventHasFinalHundredPercentReport(event.getEventId())) {
+                                    showReportButton = true;
+                                }
+                            }
+
+                            if (showReportButton) {
+                                pane.getChildren().add(reportProgressButton);
                             }
                             
                             if (!pane.getChildren().isEmpty()){
@@ -328,21 +343,21 @@ public class VolunteerOrgViewEventListScreenHandler implements Initializable {
         }
     }
 
-    private void handleRateVolunteers(Event event) {
+    private void handleReportProgress(Event event) {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/views/fxml/OrganizationScreen/RateEventVolunteersScreen.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/views/fxml/OrganizationScreen/ProgressReportScreen.fxml"));
             Parent root = loader.load();
-            RateEventVolunteersScreenHandler controller = loader.getController();
+            ProgressReportScreenHandler controller = loader.getController();
             controller.setStage(stage);
             controller.setOrganization(organization);
-            controller.setEventToRate(event);
+            controller.setEventToReportOn(event); 
 
-            Scene scene = new Scene(root, 1024, 768);
+            Scene scene = new Scene(root, 800, 600);
             stage.setScene(scene);
-            stage.setTitle("Rate Volunteers for: " + event.getTitle());
+            stage.setTitle("Report Progress for: " + event.getTitle());
             stage.show();
         } catch (IOException e) {
-            statusMessage.setText("Error loading rating screen: " + e.getMessage());
+            statusMessage.setText("Error loading progress report screen: " + e.getMessage());
             e.printStackTrace();
         }
     }
@@ -439,7 +454,7 @@ public class VolunteerOrgViewEventListScreenHandler implements Initializable {
             controller.setOrganization(organization);
             controller.setEvent(event);  // truyền Event cần hiển thị
 
-            Scene scene = new Scene(root);
+            Scene scene = new Scene(root, 1024, 768);
             stage.setScene(scene);
             stage.setTitle("Event Details");
             stage.show();
