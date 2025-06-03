@@ -324,7 +324,8 @@ public class VolunteerSuggestedEventsScreenHandler implements Initializable {
             statusMessage.setText("Successfully applied to join: " + event.getTitle() + ". Waiting for approval.");
             statusMessage.setStyle("-fx-text-fill: #27ae60;"); // Màu xanh
             registerButton.setDisable(true); // Vô hiệu hóa nút sau khi đăng ký
-            registerButton.setText("Applied");
+            registerButton.setText("Waiting Approval");
+            registerButton.setStyle("-fx-background-color: #f39c12; -fx-text-fill: white;"); // Vàng
         } else {
             statusMessage.setText("Already applied for event: " + event.getTitle());
             statusMessage.setStyle("-fx-text-fill: #e74c3c;"); // Màu đỏ
