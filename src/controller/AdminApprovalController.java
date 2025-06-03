@@ -14,7 +14,7 @@ import java.util.Date;
  */
 public class AdminApprovalController {
 
-    private Admin admin;
+    // Database URL for SQLite
     private static final String DB_URL = "jdbc:sqlite:assets/db/SoiDayGanKet_sqlite.db";
 
     /**
@@ -42,10 +42,10 @@ public class AdminApprovalController {
                 return false;
             }
 
-            // Update event status to Coming Soon in the database
+            // Update event status to Upcoming in the database
             String updateEventQuery = "UPDATE Events SET status = ? WHERE eventId = ?";
             try (PreparedStatement preparedStatement = connection.prepareStatement(updateEventQuery)) {
-                preparedStatement.setString(1, "Coming Soon");
+                preparedStatement.setString(1, "Upcoming");
                 preparedStatement.setInt(2, eventId);
                 int rowsUpdated = preparedStatement.executeUpdate();
 
@@ -232,50 +232,6 @@ public class AdminApprovalController {
     }
 
     /**
-     * Retrieves all pending help requests that need admin approval
-     *
-     * @return List of pending help requests
-     */
-    public List<HelpRequest> getPendingHelpRequests() {
-        List<HelpRequest> pendingRequests = new ArrayList<>();
-
-        try (Connection connection = DriverManager.getConnection(DB_URL);
-             PreparedStatement statement = connection.prepareStatement(
-                     "SELECT * FROM HelpRequest WHERE status = 'Pending' OR status IS NULL OR status = 'chờ phê duyệt'")) {
-
-            ResultSet resultSet = statement.executeQuery();
-            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-
-            while (resultSet.next()) {
-                HelpRequest helpRequest = new HelpRequest();
-
-                helpRequest.setRequestId(resultSet.getInt("requestId"));
-                helpRequest.setTitle(resultSet.getString("title"));
-
-                String startDateStr = resultSet.getString("startDate");
-                if (startDateStr != null && !startDateStr.isEmpty()) {
-                    try {
-                        helpRequest.setStartDate(dateFormat.parse(startDateStr));
-                    } catch (Exception e) {
-                        System.out.println("Error parsing start date: " + e.getMessage());
-                    }
-                }
-
-                helpRequest.setEmergencyLevel(resultSet.getString("emergencyLevel"));
-                helpRequest.setDescription(resultSet.getString("description"));
-                helpRequest.setPersonInNeedID(resultSet.getString("personInNeedID"));
-                helpRequest.setStatus(resultSet.getString("status"));
-
-                pendingRequests.add(helpRequest);
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-
-        return pendingRequests;
-    }
-
-    /**
      * Approves a help request
      *
      * @param helpRequest The help request to approve
@@ -285,7 +241,7 @@ public class AdminApprovalController {
         try (Connection connection = DriverManager.getConnection(DB_URL)) {
             String updateQuery = "UPDATE HelpRequest SET status = ? WHERE requestId = ?";
             try (PreparedStatement preparedStatement = connection.prepareStatement(updateQuery)) {
-                preparedStatement.setString(1, "đã phê duyệt");
+                preparedStatement.setString(1, "Approved");
                 preparedStatement.setInt(2, helpRequest.getRequestId());
                 int rowsUpdated = preparedStatement.executeUpdate();
 
@@ -302,14 +258,13 @@ public class AdminApprovalController {
      * Rejects a help request
      *
      * @param helpRequest The help request to reject
-     * @param reason The reason for rejection
      * @return true if rejection was successful, false otherwise
      */
-    public boolean rejectHelpRequest(HelpRequest helpRequest, String reason) {
+    public boolean rejectHelpRequest(HelpRequest helpRequest) {
         try (Connection connection = DriverManager.getConnection(DB_URL)) {
             String updateQuery = "UPDATE HelpRequest SET status = ? WHERE requestId = ?";
             try (PreparedStatement preparedStatement = connection.prepareStatement(updateQuery)) {
-                preparedStatement.setString(1, "từ chối");
+                preparedStatement.setString(1, "Rejected");
                 preparedStatement.setInt(2, helpRequest.getRequestId());
                 int rowsUpdated = preparedStatement.executeUpdate();
 

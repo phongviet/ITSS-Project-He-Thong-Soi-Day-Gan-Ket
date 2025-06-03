@@ -348,7 +348,7 @@ public class HelpRequestManagementScreenHandler implements Initializable {
     private void handleRejectRequest(HelpRequest request) {
         try {
             // Use AdminApprovalController to reject the request
-            boolean success = adminApprovalController.rejectHelpRequest(request, "Rejected by admin");
+            boolean success = adminApprovalController.rejectHelpRequest(request);
 
             if (success) {
                 // Update the status in our list to "Rejected"
