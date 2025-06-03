@@ -139,7 +139,7 @@ public class HelpRequestManagementScreenHandler implements Initializable {
 
         // Setup requester column
         requesterColumn.setCellValueFactory(cellData ->
-            new SimpleStringProperty(cellData.getValue().getPersonInNeedID()));
+            new SimpleStringProperty(String.valueOf(cellData.getValue().getPersonInNeedId())));
 
         // Setup start date column
         startDateColumn.setCellValueFactory(cellData -> {

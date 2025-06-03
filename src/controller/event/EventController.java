@@ -51,7 +51,7 @@ public class EventController {
                 }
                 hr.setEmergencyLevel(rs.getString("emergencyLevel"));
                 hr.setDescription(rs.getString("description"));
-                hr.setPersonInNeedID(rs.getString("personInNeedID"));
+                hr.setPersonInNeedId(rs.getString("personInNeedId"));
                 hr.setStatus(rs.getString("status"));
                 helpRequests.add(hr);
             }
