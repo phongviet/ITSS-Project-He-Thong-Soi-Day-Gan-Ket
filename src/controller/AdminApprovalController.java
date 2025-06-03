@@ -219,7 +219,7 @@ public class AdminApprovalController {
 
                 helpRequest.setEmergencyLevel(resultSet.getString("emergencyLevel"));
                 helpRequest.setDescription(resultSet.getString("description"));
-                helpRequest.setPersonInNeedID(resultSet.getString("personInNeedID"));
+                helpRequest.setPersonInNeedId(resultSet.getString("personInNeedId"));
                 helpRequest.setStatus(resultSet.getString("status"));
 
                 helpRequests.add(helpRequest);
@@ -253,17 +253,18 @@ public class AdminApprovalController {
                 helpRequest.setTitle(resultSet.getString("title"));
 
                 String startDateStr = resultSet.getString("startDate");
+                Date startDate = null;
                 if (startDateStr != null && !startDateStr.isEmpty()) {
                     try {
-                        helpRequest.setStartDate(dateFormat.parse(startDateStr));
+                        startDate = dateFormat.parse(startDateStr);
                     } catch (Exception e) {
-                        System.out.println("Error parsing start date: " + e.getMessage());
+                        System.out.println("Error parsing start date in getPendingHelpRequests: " + e.getMessage());
                     }
                 }
-
+                helpRequest.setStartDate(startDate);
                 helpRequest.setEmergencyLevel(resultSet.getString("emergencyLevel"));
                 helpRequest.setDescription(resultSet.getString("description"));
-                helpRequest.setPersonInNeedID(resultSet.getString("personInNeedID"));
+                helpRequest.setPersonInNeedId(resultSet.getString("personInNeedId"));
                 helpRequest.setStatus(resultSet.getString("status"));
 
                 pendingRequests.add(helpRequest);
