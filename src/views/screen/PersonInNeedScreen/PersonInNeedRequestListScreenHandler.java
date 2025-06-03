@@ -94,7 +94,8 @@ public class PersonInNeedRequestListScreenHandler {
         actionsColumn.setCellFactory(param -> new TableCell<HelpRequest, Void>() {
             private final Button editButton = new Button("Edit");
             private final Button deleteButton = new Button("Delete");
-            private final HBox pane = new HBox(5);
+            private final Button satisfyButton = new Button("Satisfy");
+            private final HBox pane = new HBox(5); // Container for buttons
 
             {
                 editButton.setStyle("-fx-background-color: #f39c12; -fx-text-fill: white;");
@@ -102,10 +103,17 @@ public class PersonInNeedRequestListScreenHandler {
                     HelpRequest request = getTableView().getItems().get(getIndex());
                     handleEditRequest(request);
                 });
+
                 deleteButton.setStyle("-fx-background-color: #e74c3c; -fx-text-fill: white;");
                 deleteButton.setOnAction(event -> {
                     HelpRequest request = getTableView().getItems().get(getIndex());
                     handleDeleteRequest(request);
+                });
+
+                satisfyButton.setStyle("-fx-background-color: #2ecc71; -fx-text-fill: white;"); // Green color
+                satisfyButton.setOnAction(event -> {
+                    HelpRequest request = getTableView().getItems().get(getIndex());
+                    handleSatisfyRequest(request);
                 });
             }
 
@@ -116,13 +124,20 @@ public class PersonInNeedRequestListScreenHandler {
                     setGraphic(null);
                 } else {
                     HelpRequest request = getTableView().getItems().get(getIndex());
-                    // Only allow edit/delete if status is "Pending" (or similar logic)
+                    pane.getChildren().clear(); // Clear previous buttons
+
                     if ("Pending".equalsIgnoreCase(request.getStatus())) {
-                        pane.getChildren().setAll(editButton, deleteButton);
+                        pane.getChildren().addAll(editButton, deleteButton);
+                    } else if ("Closed".equalsIgnoreCase(request.getStatus())) {
+                        pane.getChildren().add(satisfyButton);
+                    }
+                    // For other statuses (e.g., Approved, Satisfied), no actions shown by default
+                    // or you can add specific labels or disabled buttons if needed.
+
+                    if (!pane.getChildren().isEmpty()) {
                         setGraphic(pane);
                     } else {
-                        // Optionally, show a disabled edit/delete or just view for other statuses
-                        setGraphic(null); 
+                        setGraphic(null);
                     }
                 }
             }
@@ -166,6 +181,26 @@ public class PersonInNeedRequestListScreenHandler {
                 loadUserRequests(); // Refresh list
             } else {
                 statusMessageLabel.setText("Failed to delete request '" + request.getTitle() + "'.");
+                statusMessageLabel.setStyle("-fx-text-fill: red;");
+            }
+        }
+    }
+
+    private void handleSatisfyRequest(HelpRequest request) {
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Xác nhận Trợ giúp");
+        alert.setHeaderText("Xác nhận đã nhận được trợ giúp cho yêu cầu: '" + request.getTitle() + "'?");
+        alert.setContentText("Hành động này sẽ chuyển trạng thái yêu cầu thành 'Đã được trợ giúp'.");
+
+        Optional<ButtonType> result = alert.showAndWait();
+        if (result.isPresent() && result.get() == ButtonType.OK) {
+            boolean success = HelpRequestController.updateHelpRequestStatus(request.getRequestId(), "Satisfied");
+            if (success) {
+                statusMessageLabel.setText("Yêu cầu '" + request.getTitle() + "' đã được xác nhận trợ giúp.");
+                statusMessageLabel.setStyle("-fx-text-fill: green;");
+                loadUserRequests(); // Refresh the list
+            } else {
+                statusMessageLabel.setText("Lỗi khi xác nhận trợ giúp cho yêu cầu '" + request.getTitle() + "'.");
                 statusMessageLabel.setStyle("-fx-text-fill: red;");
             }
         }
