@@ -53,6 +53,11 @@ public class HelpRequestController {
             ResultSet rs = pstmt.executeQuery();
 
             while (rs.next()) {
+                // Debugging: Print the raw status for the specific request ID
+                if (rs.getInt("requestId") == 2) {
+                    System.out.println("DEBUG: For requestId=2, status from DB is: '" + rs.getString("status") + "'");
+                }
+
                 Date startDate = null;
                 String startDateStr = rs.getString("startDate");
                 if (startDateStr != null && !startDateStr.isEmpty()) {
@@ -126,6 +131,24 @@ public class HelpRequestController {
             return rowsAffected > 0;
         } catch (SQLException e) {
             System.out.println("Error marking request as fulfilled: " + e.getMessage());
+            return false;
+        }
+    }
+
+    // 6. Generic method to update the status of a HelpRequest
+    public static boolean updateHelpRequestStatus(int requestId, String newStatus) {
+        String sql = "UPDATE HelpRequest SET status = ? WHERE requestId = ?";
+        try (Connection conn = DriverManager.getConnection(DB_URL);
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, newStatus);
+            pstmt.setInt(2, requestId);
+            int rowsAffected = pstmt.executeUpdate();
+            if (rowsAffected > 0) {
+                System.out.println("HelpRequest ID: " + requestId + " status updated to: " + newStatus);
+            }
+            return rowsAffected > 0;
+        } catch (SQLException e) {
+            System.out.println("Error updating help request status for ID " + requestId + " to " + newStatus + ": " + e.getMessage());
             return false;
         }
     }
