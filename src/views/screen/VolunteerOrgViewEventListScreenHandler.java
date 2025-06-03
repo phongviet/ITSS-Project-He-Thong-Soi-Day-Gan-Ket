@@ -10,9 +10,11 @@ import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.geometry.Pos;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
 import javafx.util.Callback;
 
@@ -21,13 +23,24 @@ import java.net.URL;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.ResourceBundle;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 public class VolunteerOrgViewEventListScreenHandler implements Initializable {
+
+    // Event Status Constants
+    private static final String STATUS_PENDING = "Pending";
+    private static final String STATUS_APPROVED = "Approved";
+    private static final String STATUS_REJECTED = "Rejected";
+    private static final String STATUS_COMING_SOON = "Coming Soon";
+    private static final String STATUS_DONE = "Done"; // Giả sử "Completed" trong DB là "Done" khi hiển thị hoặc xử lý
+    private static final String STATUS_CANCELED = "Canceled";
+    private static final String STATUS_COMPLETED = "Completed"; // Thường dùng trong DB
 
     @FXML
     private TableView<Event> eventTableView;
@@ -170,20 +183,40 @@ public class VolunteerOrgViewEventListScreenHandler implements Initializable {
             return new SimpleStringProperty(status);
         });
 
-        // Setup action column with "View Details" button
+        // Setup action column
         actionsColumn.setCellFactory(new Callback<TableColumn<Event, Void>, TableCell<Event, Void>>() {
             @Override
             public TableCell<Event, Void> call(TableColumn<Event, Void> param) {
                 return new TableCell<Event, Void>() {
-                    private final Button viewButton = new Button("View Details");
+                    private final Button viewDetailsButton = new Button("View Details");
+                    private final Button rateButton = new Button("Đánh giá TNV");
+                    private final ComboBox<String> statusComboBox = new ComboBox<>();
+                    private final HBox pane = new HBox(5);
 
                     {
-                        viewButton.setOnAction(event -> {
+                        pane.setAlignment(Pos.CENTER_LEFT);
+                        
+                        viewDetailsButton.setStyle("-fx-background-color: #3498db; -fx-text-fill: white;");
+                        rateButton.setStyle("-fx-background-color: #27ae60; -fx-text-fill: white;");
+                        statusComboBox.setPrefWidth(130);
+
+                        viewDetailsButton.setOnAction(event -> {
                             Event data = getTableView().getItems().get(getIndex());
                             handleViewEventDetails(data);
                         });
 
-                        viewButton.setStyle("-fx-background-color: #3498db; -fx-text-fill: white;");
+                        rateButton.setOnAction(event -> {
+                            Event data = getTableView().getItems().get(getIndex());
+                            handleRateVolunteers(data);
+                        });
+
+                        statusComboBox.setOnAction(event -> {
+                            Event currentEvent = getTableView().getItems().get(getIndex());
+                            String selectedStatus = statusComboBox.getValue();
+                            if (selectedStatus != null && !selectedStatus.equals(currentEvent.getStatus())) {
+                                handleChangeEventStatus(currentEvent, selectedStatus);
+                            }
+                        });
                     }
 
                     @Override
@@ -192,7 +225,28 @@ public class VolunteerOrgViewEventListScreenHandler implements Initializable {
                         if (empty) {
                             setGraphic(null);
                         } else {
-                            setGraphic(viewButton);
+                            pane.getChildren().clear();
+                            Event event = getTableView().getItems().get(getIndex());
+                            String currentStatus = event.getStatus();
+
+                            pane.getChildren().add(viewDetailsButton);
+
+                            if (STATUS_DONE.equalsIgnoreCase(currentStatus) || STATUS_COMPLETED.equalsIgnoreCase(currentStatus)) {
+                                pane.getChildren().add(rateButton);
+                            }
+
+                            List<String> possibleStatuses = getPossibleStatusTransitions(currentStatus);
+                            if (!possibleStatuses.isEmpty()) {
+                                statusComboBox.setItems(FXCollections.observableArrayList(possibleStatuses));
+                                statusComboBox.setValue(currentStatus);
+                                pane.getChildren().add(statusComboBox);
+                            }
+                            
+                            if (!pane.getChildren().isEmpty()){
+                                setGraphic(pane);
+                            } else {
+                                setGraphic(null);
+                            }
                         }
                     }
                 };
@@ -200,9 +254,53 @@ public class VolunteerOrgViewEventListScreenHandler implements Initializable {
         });
     }
 
+    private List<String> getPossibleStatusTransitions(String currentStatus) {
+        if (currentStatus == null) return Arrays.asList();
+        // Org can change status if Admin has approved it.
+        // Cannot change from Pending (Admin's job), Rejected, Done, Canceled (final states for Org)
+        switch (currentStatus.toLowerCase()) {
+            case "approved":
+                return Arrays.asList(STATUS_APPROVED, STATUS_COMING_SOON, STATUS_CANCELED);
+            case "coming soon":
+                return Arrays.asList(STATUS_COMING_SOON, STATUS_DONE, STATUS_CANCELED);
+            default:
+                return Arrays.asList(); // No transitions for Pending, Rejected, Done, Canceled by Org
+        }
+    }
+
+    private void handleChangeEventStatus(Event event, String newStatus) {
+        if (eventController.updateEventStatus(event.getEventId(), newStatus)) {
+            statusMessage.setText("Event '" + event.getTitle() + "' status updated to " + newStatus);
+            loadEventData(); // Refresh table
+        } else {
+            statusMessage.setText("Failed to update status for event '" + event.getTitle() + "'.");
+            // Optionally revert ComboBox selection or show error dialog
+            loadEventData(); // still refresh to show original state from DB
+        }
+    }
+
+    private void handleRateVolunteers(Event event) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/views/fxml/OrganizationScreen/RateEventVolunteersScreen.fxml"));
+            Parent root = loader.load();
+            RateEventVolunteersScreenHandler controller = loader.getController();
+            controller.setStage(stage);
+            controller.setOrganization(organization);
+            controller.setEventToRate(event);
+
+            Scene scene = new Scene(root, 1024, 768);
+            stage.setScene(scene);
+            stage.setTitle("Rate Volunteers for: " + event.getTitle());
+            stage.show();
+        } catch (IOException e) {
+            statusMessage.setText("Error loading rating screen: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
     private void setupFilters() {
         // Initialize the status filter combo box
-        statusFilterComboBox.setItems(FXCollections.observableArrayList("All", "Pending", "Upcoming", "Completed", "Canceled"));
+        statusFilterComboBox.setItems(FXCollections.observableArrayList("All", STATUS_PENDING, STATUS_APPROVED, STATUS_COMING_SOON, STATUS_COMPLETED, STATUS_CANCELED ));
         statusFilterComboBox.setValue("All");
 
         // Add listeners to the search field and status filter combo box
