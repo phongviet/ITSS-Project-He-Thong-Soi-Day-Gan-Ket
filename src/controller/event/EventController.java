@@ -1048,7 +1048,7 @@ public class EventController {
         String sql = "SELECT e.*, " +
                      "(SELECT COUNT(ep_inner.username) FROM EventParticipants ep_inner WHERE ep_inner.eventId = e.eventId) as currentParticipants " +
                      "FROM Events e " +
-                     "WHERE (e.status = 'Approved' OR e.status = 'Pending' OR e.status = 'Coming Soon') " +
+                     "WHERE (e.status = 'Approved' e.status = 'Upcoming') " +
                      "AND DATE(e.startDate) >= DATE('now') "; // Lấy sự kiện từ hôm nay trở đi
 
         try {
