@@ -187,6 +187,11 @@ public class VolunteerOrgRegisterEventScreenHandler implements Initializable {
                 event.setOrganizer(organization.getUsername());
             }
 
+            // If the event is created from a help request, set the request ID
+            if (helpRequest != null) {
+                event.setRequestId(String.valueOf(helpRequest.getRequestId()));
+            }
+
             // Save event using the controller
             boolean success = eventController.registerEvent(event, organization);
 
