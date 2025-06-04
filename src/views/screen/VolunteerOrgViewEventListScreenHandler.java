@@ -282,20 +282,17 @@ public class VolunteerOrgViewEventListScreenHandler implements Initializable {
                         } else {
                             pane.getChildren().clear();
                             Event event = getTableView().getItems().get(getIndex());
-                            String currentStatus = event.getStatus() != null ? event.getStatus().toLowerCase() : "";
+                            String rawEventStatus = event.getStatus(); // Use raw status for comparison
 
                             pane.getChildren().add(viewDetailsButton);
 
                             boolean showReportButton = false;
-                            if (STATUS_APPROVED.equalsIgnoreCase(currentStatus) || 
-                                STATUS_COMING_SOON.equalsIgnoreCase(currentStatus) ||
-                                STATUS_ACTIVE.equalsIgnoreCase(currentStatus)) {
-                                showReportButton = true;
-                            } else if (STATUS_DONE.equalsIgnoreCase(currentStatus) || 
-                                       STATUS_COMPLETED.equalsIgnoreCase(currentStatus)) {
-                                // This will call the database for each row, which might impact performance
-                                // for very large lists. Consider optimizing if performance becomes an issue.
-                                if (eventController.eventHasFinalHundredPercentReport(event.getEventId())) {
+                            if (rawEventStatus != null) {
+                                if (STATUS_APPROVED.equalsIgnoreCase(rawEventStatus) ||
+                                    STATUS_COMING_SOON.equalsIgnoreCase(rawEventStatus) ||
+                                    STATUS_ACTIVE.equalsIgnoreCase(rawEventStatus) ||
+                                    STATUS_DONE.equalsIgnoreCase(rawEventStatus) ||
+                                    STATUS_COMPLETED.equalsIgnoreCase(rawEventStatus)) {
                                     showReportButton = true;
                                 }
                             }
