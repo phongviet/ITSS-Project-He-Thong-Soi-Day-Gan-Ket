@@ -7,7 +7,7 @@
 <BorderPane xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
             fx:controller="views.screen.VolunteerOrgEventDetailScreenHandler"
-            prefHeight="600" prefWidth="800">
+            prefHeight="768" prefWidth="1024">
     <top>
         <HBox alignment="CENTER" style="-fx-background-color: #3498db;">
             <padding>
@@ -22,44 +22,86 @@
     </top>
 
     <center>
-        <GridPane hgap="10" vgap="10" alignment="TOP_LEFT">
+        <VBox spacing="15" alignment="TOP_CENTER">
             <padding>
                 <Insets top="20" right="20" bottom="20" left="20"/>
             </padding>
-            <Label text="Title:" GridPane.rowIndex="0" GridPane.columnIndex="0"
-                   style="-fx-font-weight: bold;"/>
-            <Label fx:id="titleLabel" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+            <GridPane hgap="10" vgap="10" alignment="TOP_LEFT" maxWidth="Infinity">
+                <columnConstraints>
+                    <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="150.0" />
+                    <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="600.0" />
+                </columnConstraints>
 
-            <Label text="Start Date:" GridPane.rowIndex="1" GridPane.columnIndex="0"
-                   style="-fx-font-weight: bold;"/>
-            <Label fx:id="startDateLabel" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+                <Label text="Title:" GridPane.rowIndex="0" GridPane.columnIndex="0"
+                       style="-fx-font-weight: bold;"/>
+                <Label fx:id="titleLabel" GridPane.rowIndex="0" GridPane.columnIndex="1" wrapText="true"/>
 
-            <Label text="End Date:" GridPane.rowIndex="2" GridPane.columnIndex="0"
-                   style="-fx-font-weight: bold;"/>
-            <Label fx:id="endDateLabel" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+                <Label text="Start Date:" GridPane.rowIndex="1" GridPane.columnIndex="0"
+                       style="-fx-font-weight: bold;"/>
+                <Label fx:id="startDateLabel" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
 
-            <Label text="Status:" GridPane.rowIndex="3" GridPane.columnIndex="0"
-                   style="-fx-font-weight: bold;"/>
-            <Label fx:id="statusLabel" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
+                <Label text="End Date:" GridPane.rowIndex="2" GridPane.columnIndex="0"
+                       style="-fx-font-weight: bold;"/>
+                <Label fx:id="endDateLabel" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
 
-            <Label text="Emergency Level:" GridPane.rowIndex="4" GridPane.columnIndex="0"
-                   style="-fx-font-weight: bold;"/>
-            <Label fx:id="emergencyLevelLabel" GridPane.rowIndex="4" GridPane.columnIndex="1"/>
+                <Label text="Status:" GridPane.rowIndex="3" GridPane.columnIndex="0"
+                       style="-fx-font-weight: bold;"/>
+                <Label fx:id="statusLabel" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
 
-            <Label text="Description:" GridPane.rowIndex="5" GridPane.columnIndex="0"
-                   style="-fx-font-weight: bold;"/>
-            <TextArea fx:id="descriptionArea" GridPane.rowIndex="5" GridPane.columnIndex="1"
-                      wrapText="true" editable="false" prefRowCount="4" prefColumnCount="30"/>
+                <Label text="Emergency Level:" GridPane.rowIndex="4" GridPane.columnIndex="0"
+                       style="-fx-font-weight: bold;"/>
+                <Label fx:id="emergencyLevelLabel" GridPane.rowIndex="4" GridPane.columnIndex="1"/>
 
-            <Label text="Request ID:" GridPane.rowIndex="6" GridPane.columnIndex="0"
-                   style="-fx-font-weight: bold;"/>
-            <Label fx:id="requestIdLabel" GridPane.rowIndex="6" GridPane.columnIndex="1"/>
-        </GridPane>
+                <Label text="Description:" GridPane.rowIndex="5" GridPane.columnIndex="0"
+                       style="-fx-font-weight: bold;"/>
+                <Label fx:id="descriptionLabel" GridPane.rowIndex="5" GridPane.columnIndex="1"
+                       wrapText="true" prefHeight="60.0" alignment="TOP_LEFT"/>
+
+                <Label text="Max Participants:" GridPane.rowIndex="6" GridPane.columnIndex="0"
+                       style="-fx-font-weight: bold;"/>
+                <Label fx:id="eventMaxParticipantsLabel" GridPane.rowIndex="6" GridPane.columnIndex="1"/>
+
+                <Label text="Organizer:" GridPane.rowIndex="7" GridPane.columnIndex="0"
+                       style="-fx-font-weight: bold;"/>
+                <Label fx:id="eventOrganizerLabel" GridPane.rowIndex="7" GridPane.columnIndex="1" wrapText="true"/>
+
+                <Label text="Request ID:" GridPane.rowIndex="8" GridPane.columnIndex="0"
+                       style="-fx-font-weight: bold;"/>
+                <Label fx:id="requestIdLabel" GridPane.rowIndex="8" GridPane.columnIndex="1"/>
+            </GridPane>
+
+            <Label text="Participating Volunteers:" style="-fx-font-size: 16px; -fx-font-weight: bold;">
+                <VBox.margin>
+                    <Insets top="15" bottom="5"/>
+                </VBox.margin>
+            </Label>
+            <TableView fx:id="volunteersTableView" prefHeight="250.0" VBox.vgrow="ALWAYS" editable="true">
+                <columns>
+                    <TableColumn fx:id="volunteerNameColumn" prefWidth="300.0" text="Volunteer Name" editable="false" />
+                    <TableColumn fx:id="hoursColumn" prefWidth="150.0" text="Hours Participated" />
+                    <TableColumn fx:id="ratingColumn" prefWidth="150.0" text="Rating by Org (1-5)" />
+                </columns>
+                <placeholder>
+                    <Label text="No volunteers have participated in this event yet."/>
+                </placeholder>
+            </TableView>
+            <Label fx:id="volunteerStatusMessageLabel" textFill="RED" wrapText="true">
+                <VBox.margin>
+                    <Insets top="5"/>
+                </VBox.margin>
+            </Label>
+            <Button fx:id="saveVolunteerDataButton" text="Save Volunteer Data" onAction="#handleSaveVolunteerData" 
+                    style="-fx-background-color: #27ae60; -fx-text-fill: white;" prefHeight="30">
+                <VBox.margin>
+                    <Insets top="10"/>
+                </VBox.margin>
+            </Button>
+        </VBox>
     </center>
 
     <bottom>
         <HBox alignment="CENTER_RIGHT" style="-fx-background-color: #ecf0f1; -fx-padding: 10;">
-            <Button text="Back" onAction="#handleBack"
+            <Button fx:id="backButton" text="Back" onAction="#handleBack"
                     style="-fx-background-color: #3498db; -fx-text-fill: white;"
                     prefWidth="100" prefHeight="30"/>
         </HBox>

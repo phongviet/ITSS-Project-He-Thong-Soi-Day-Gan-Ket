@@ -26,6 +26,9 @@ public class VolunteerOrgMainScreenHandler implements Initializable {
     @FXML
     private Button listRegistButton;
 
+    @FXML
+    private Button viewStatisticsButton;
+
     private Stage stage;
     private VolunteerOrganization organization;
 
@@ -123,6 +126,26 @@ public class VolunteerOrgMainScreenHandler implements Initializable {
             Scene scene = new Scene(root);
             stage.setScene(scene);
             stage.setTitle("List Regist");
+            stage.show();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @FXML
+    public void handleViewStatistics() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource(
+                "/views/fxml/OrganizationScreen/OrganizationStatisticsScreen.fxml"));
+            Parent root = loader.load();
+
+            OrganizationStatisticsScreenHandler controller = loader.getController();
+            controller.setStage(stage);
+            controller.setOrganization(organization);
+
+            Scene scene = new Scene(root, 1024, 768);
+            stage.setScene(scene);
+            stage.setTitle("Organization Statistics - " + (organization != null ? organization.getOrganizationName() : ""));
             stage.show();
         } catch (IOException e) {
             e.printStackTrace();

@@ -16,6 +16,9 @@ import java.text.ParseException;
 import java.util.Date;
 import java.text.SimpleDateFormat;
 import entity.events.Event;
+import entity.reports.Report;
+import java.sql.Statement;
+import java.sql.Types;
 
 
 public class EventController {
@@ -1196,5 +1199,222 @@ public class EventController {
                 e.printStackTrace();
             }
         }
+    }
+
+    // Method to parse date string, can be a static helper or part of this class
+    private Date parseDate(String dateStr) {
+        if (dateStr == null || dateStr.isEmpty()) {
+            return null;
+        }
+        try {
+            return DATE_FORMAT.parse(dateStr);
+        } catch (ParseException e) {
+            System.err.println("Error parsing date string from database: \"" + dateStr + "\" - " + e.getMessage());
+            return null;
+        }
+    }
+
+    public List<EventParticipantDetails> getEventParticipantDetailsList(int eventId) {
+        List<EventParticipantDetails> participants = new ArrayList<>();
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+
+        String sql = "SELECT " +
+                     "    SU.username AS volunteerUsername, SU.email, SU.phone, SU.address, " +
+                     "    V.fullName AS volunteerFullName, V.cccd, V.dateOfBirth, V.averageRating, V.ratingCount, V.freeHourPerWeek, " +
+                     "    EP.hoursParticipated, EP.ratingByOrg " +
+                     "FROM " +
+                     "    EventParticipants EP " +
+                     "JOIN " +
+                     "    Volunteer V ON EP.username = V.username " +
+                     "JOIN " +
+                     "    SystemUser SU ON V.username = SU.username " +
+                     "WHERE " +
+                     "    EP.eventId = ?;";
+
+        try {
+            conn = DriverManager.getConnection(DB_URL);
+            pstmt = conn.prepareStatement(sql);
+            pstmt.setInt(1, eventId);
+            rs = pstmt.executeQuery();
+
+            while (rs.next()) {
+                EventParticipantDetails details = new EventParticipantDetails();
+                details.setVolunteerUsername(rs.getString("volunteerUsername"));
+                details.setVolunteerFullName(rs.getString("volunteerFullName"));
+                // We can populate more fields in EventParticipantDetails if it's designed to hold them,
+                // or if the Volunteer object is part of it.
+                // For now, sticking to what's directly in EventParticipantDetails from its definition.
+
+                // If EventParticipantDetails needs more Volunteer fields, they are available here:
+                // String email = rs.getString("email");
+                // String phone = rs.getString("phone");
+                // String address = rs.getString("address");
+                // String cccd = rs.getString("cccd");
+                // Date dateOfBirth = parseDate(rs.getString("dateOfBirth"));
+                // double averageRating = rs.getDouble("averageRating");
+                // int ratingCount = rs.getInt("ratingCount");
+                // int freeHourPerWeek = rs.getInt("freeHourPerWeek");
+
+
+                if (rs.getObject("hoursParticipated") != null) {
+                    details.setHoursParticipated(rs.getInt("hoursParticipated"));
+                } else {
+                    details.setHoursParticipated(null); // Or 0, depending on desired default
+                }
+
+                if (rs.getObject("ratingByOrg") != null) {
+                    details.setRatingByOrg(rs.getInt("ratingByOrg"));
+                } else {
+                    details.setRatingByOrg(null); // Or 0
+                }
+                
+                // The EventParticipantDetails class also has event-specific fields (eventId, title, eventStatus etc.)
+                // These are not fetched by this query as it focuses on participants.
+                // They might need to be set separately if this DTO is used in a context requiring them.
+                // For displaying a list of volunteers for *this* event, we primarily need volunteer info.
+
+                participants.add(details);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace(); // Consider more robust logging
+        } finally {
+            try {
+                if (rs != null) rs.close();
+                if (pstmt != null) pstmt.close();
+                if (conn != null) conn.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+        return participants;
+    }
+
+    public boolean saveProgressReport(Report report, boolean isFinal) {
+        Connection conn = null;
+        PreparedStatement pstmtReport = null;
+        PreparedStatement pstmtFinalReport = null;
+        ResultSet generatedKeys = null;
+        boolean success = false;
+
+        String insertReportSQL = "INSERT INTO Report (eventId, reportDate, progress, note) VALUES (?, ?, ?, ?)";
+        String insertFinalReportSQL = "INSERT INTO FinalReport (reportId) VALUES (?)";
+
+        try {
+            conn = DriverManager.getConnection(DB_URL);
+            conn.setAutoCommit(false); // Start transaction
+
+            // Insert into Report table
+            pstmtReport = conn.prepareStatement(insertReportSQL, Statement.RETURN_GENERATED_KEYS);
+            pstmtReport.setInt(1, report.getEventId());
+            
+            if (report.getReportDate() != null) {
+                pstmtReport.setString(2, DATE_FORMAT.format(report.getReportDate())); // Assuming DATE_FORMAT is yyyy-MM-dd for DB
+            } else {
+                pstmtReport.setNull(2, Types.VARCHAR); // Or Types.DATE if your DB driver/schema prefers
+            }
+            
+            if (report.getProgress() != null) {
+                pstmtReport.setInt(3, report.getProgress());
+            } else {
+                pstmtReport.setNull(3, Types.INTEGER);
+            }
+            pstmtReport.setString(4, report.getNote());
+
+            int affectedRows = pstmtReport.executeUpdate();
+
+            if (affectedRows > 0) {
+                if (isFinal) {
+                    generatedKeys = pstmtReport.getGeneratedKeys();
+                    if (generatedKeys.next()) {
+                        int reportId = generatedKeys.getInt(1);
+                        // Now insert into FinalReport table
+                        pstmtFinalReport = conn.prepareStatement(insertFinalReportSQL);
+                        pstmtFinalReport.setInt(1, reportId);
+                        pstmtFinalReport.executeUpdate();
+                        success = true;
+                    } else {
+                        throw new SQLException("Failed to retrieve generated reportId for FinalReport.");
+                    }
+                } else {
+                    success = true; // Report saved, not a final one
+                }
+            }
+
+            if (success) {
+                conn.commit(); // Commit transaction
+            } else {
+                conn.rollback(); // Rollback if any part failed that should lead to success=false
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            if (conn != null) {
+                try {
+                    conn.rollback(); // Rollback on error
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+            }
+            success = false;
+        } finally {
+            try {
+                if (generatedKeys != null) generatedKeys.close();
+                if (pstmtReport != null) pstmtReport.close();
+                if (pstmtFinalReport != null) pstmtFinalReport.close();
+                if (conn != null) {
+                    conn.setAutoCommit(true); // Reset auto-commit
+                    conn.close();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+        return success;
+    }
+
+    public boolean eventHasFinalHundredPercentReport(int eventId) {
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        String sql = "SELECT COUNT(*) FROM Report r " +
+                     "JOIN FinalReport fr ON r.reportId = fr.reportId " +
+                     "WHERE r.eventId = ? AND r.progress = 100";
+
+        try {
+            conn = DriverManager.getConnection(DB_URL);
+            pstmt = conn.prepareStatement(sql);
+            pstmt.setInt(1, eventId);
+            rs = pstmt.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1) > 0;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace(); // Consider logging this error more formally
+        } finally {
+            try {
+                if (rs != null) rs.close();
+                if (pstmt != null) pstmt.close();
+                if (conn != null) conn.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Retrieves the total number of events created by a specific organization.
+     *
+     * @param organizerId The ID (username) of the organization.
+     * @return The total count of events for that organization.
+     */
+    public int getTotalEventCountByOrganizer(String organizerId) {
+        List<Event> events = getEventsByOrganizerId(organizerId); // Reuse existing method
+        if (events != null) {
+            return events.size();
+        }
+        return 0; // Return 0 if the list is null (though getEventsByOrganizerId initializes an ArrayList)
     }
 }

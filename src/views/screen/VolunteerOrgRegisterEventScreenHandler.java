@@ -194,9 +194,9 @@ public class VolunteerOrgRegisterEventScreenHandler implements Initializable {
                 statusMessage.setText("Event registered successfully!");
 
                 // Nếu đến từ HelpRequest, cập nhật trạng thái HelpRequest thành "closed"
-                if (helpRequest != null) {
-                    eventController.updateHelpRequestStatus(helpRequest.getRequestId(), "Closed");
-                }
+                // if (helpRequest != null) {
+                //     eventController.updateHelpRequestStatus(helpRequest.getRequestId(), "Closed");
+                // }
 
                 // Thực hiện quay về dashboard
                 handleBack();
