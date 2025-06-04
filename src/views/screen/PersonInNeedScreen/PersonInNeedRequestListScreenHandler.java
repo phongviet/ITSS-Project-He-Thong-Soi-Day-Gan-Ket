@@ -8,6 +8,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.geometry.Pos;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
@@ -30,6 +31,7 @@ public class PersonInNeedRequestListScreenHandler {
     @FXML private TableColumn<HelpRequest, String> startDateColumn;
     @FXML private TableColumn<HelpRequest, String> emergencyColumn;
     @FXML private TableColumn<HelpRequest, Void> actionsColumn;
+    @FXML private TableColumn<HelpRequest, Void> markSatisfiedColumn;
     @FXML private Label statusMessageLabel;
     @FXML private Button backToDashboardButton; // Added fx:id in FXML
 
@@ -70,6 +72,7 @@ public class PersonInNeedRequestListScreenHandler {
         });
         emergencyColumn.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getEmergencyLevel()));
         setupActionsColumn();
+        setupMarkSatisfiedColumn();
         statusMessageLabel.setText("");
     }
 
@@ -94,9 +97,10 @@ public class PersonInNeedRequestListScreenHandler {
         actionsColumn.setCellFactory(param -> new TableCell<HelpRequest, Void>() {
             private final Button editButton = new Button("Edit");
             private final Button deleteButton = new Button("Delete");
-            private final HBox pane = new HBox(5);
+            private final HBox pane = new HBox(5, editButton, deleteButton);
 
             {
+                pane.setAlignment(Pos.CENTER);
                 editButton.setStyle("-fx-background-color: #f39c12; -fx-text-fill: white;");
                 editButton.setOnAction(event -> {
                     HelpRequest request = getTableView().getItems().get(getIndex());
@@ -112,17 +116,65 @@ public class PersonInNeedRequestListScreenHandler {
             @Override
             protected void updateItem(Void item, boolean empty) {
                 super.updateItem(item, empty);
-                if (empty) {
+                if (empty || getIndex() < 0 || getIndex() >= getTableView().getItems().size()) {
                     setGraphic(null);
                 } else {
                     HelpRequest request = getTableView().getItems().get(getIndex());
                     // Only allow edit/delete if status is "Pending" (or similar logic)
-                    if ("Pending".equalsIgnoreCase(request.getStatus())) {
-                        pane.getChildren().setAll(editButton, deleteButton);
+                    if (request != null && "Pending".equalsIgnoreCase(request.getStatus())) {
                         setGraphic(pane);
                     } else {
-                        // Optionally, show a disabled edit/delete or just view for other statuses
                         setGraphic(null); 
+                    }
+                }
+            }
+        });
+    }
+
+    private void setupMarkSatisfiedColumn() {
+        markSatisfiedColumn.setCellFactory(param -> new TableCell<HelpRequest, Void>() {
+            private final Button markSatisfiedButton = new Button("Đánh dấu Đã hoàn thành (Fulfilled)");
+            private final HBox pane = new HBox(markSatisfiedButton);
+
+            {
+                pane.setAlignment(Pos.CENTER);
+                markSatisfiedButton.setStyle("-fx-background-color: #28a745; -fx-text-fill: white;"); // Green button
+                markSatisfiedButton.setOnAction(event -> {
+                    HelpRequest request = getTableView().getItems().get(getIndex());
+                    if (request != null) {
+                        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+                        alert.setTitle("Xác nhận");
+                        alert.setHeaderText("Đánh dấu yêu cầu là \"Đã hoàn thành (Fulfilled)\"?");
+                        alert.setContentText("Bạn có chắc chắn muốn đánh dấu yêu cầu \"" + request.getTitle() + "\" là \"Đã hoàn thành (Fulfilled)\" không?");
+                        
+                        Optional<ButtonType> result = alert.showAndWait();
+                        if (result.isPresent() && result.get() == ButtonType.OK) {
+                            boolean success = HelpRequestController.markAsFulfilled(request.getRequestId());
+                            if (success) {
+                                statusMessageLabel.setText("Yêu cầu \"" + request.getTitle() + "\" đã được đánh dấu là Đã hoàn thành (Fulfilled).");
+                                statusMessageLabel.setStyle("-fx-text-fill: green;");
+                                loadUserRequests(); // Refresh the list
+                            } else {
+                                statusMessageLabel.setText("Lỗi: Không thể cập nhật trạng thái cho yêu cầu \"" + request.getTitle() + "\".");
+                                statusMessageLabel.setStyle("-fx-text-fill: red;");
+                            }
+                        }
+                    }
+                });
+            }
+
+            @Override
+            protected void updateItem(Void item, boolean empty) {
+                super.updateItem(item, empty);
+                // Check getIndex bounds to prevent IndexOutOfBoundsException
+                if (empty || getIndex() < 0 || getIndex() >= getTableView().getItems().size()) {
+                    setGraphic(null);
+                } else {
+                    HelpRequest request = getTableView().getItems().get(getIndex());
+                    if (request != null && "Closed".equalsIgnoreCase(request.getStatus())) {
+                        setGraphic(pane);
+                    } else {
+                        setGraphic(null);
                     }
                 }
             }
@@ -138,8 +190,6 @@ public class PersonInNeedRequestListScreenHandler {
             controller.setStage(stage);
             controller.setCurrentUser(currentUser);
             controller.populateForEdit(request);
-            // statusMessageLabel.setText("Editing: " + request.getTitle() + ". Populate form (Not implemented). ");
-            // System.out.println("Attempting to edit request ID: " + request.getRequestId()); // For debug
 
             Scene scene = new Scene(root);
             stage.setScene(scene);
@@ -196,26 +246,23 @@ public class PersonInNeedRequestListScreenHandler {
     
     @FXML
     private void handleBackToDashboard() {
-        if (currentUser == null || stage == null) { // Added stage check
+        if (currentUser == null || stage == null) { 
             statusMessageLabel.setText("Cannot go to dashboard: User or Stage not identified.");
             statusMessageLabel.setStyle("-fx-text-fill: red;");
             return;
         }
         try {
-            // Load the main dashboard FXML
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/views/fxml/PersonInNeedScreen/PersonInNeedMainScreen.fxml")); 
             Parent newRoot = loader.load();
             
-            // Get the controller for the main dashboard
             views.screen.PersonInNeedMainScreenHandler controller = loader.getController();
-            controller.setStage(stage); // Pass the current stage
-            controller.setPersonInNeed(currentUser); // Pass the current user
+            controller.setStage(stage); 
+            controller.setPersonInNeed(currentUser); 
             
             Scene currentScene = stage.getScene();
             if (currentScene != null) {
                 currentScene.setRoot(newRoot);
             } else {
-                // Fallback, though ideally currentScene should not be null here
                 stage.setScene(new Scene(newRoot)); 
             }
             stage.setTitle(currentUser.getName() + "'s Dashboard");
