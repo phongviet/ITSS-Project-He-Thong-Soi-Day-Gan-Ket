@@ -196,7 +196,7 @@ VALUES
 INSERT INTO Events (eventId, title, maxParticipantNumber, startDate, endDate, emergencyLevel, description, organizer, requestId, status)
 VALUES
 (1, 'Dạy học cho trẻ em vùng cao', 10, '2025-06-15', '2025-06-20', 'Bình thường', 'Chương trình dạy học miễn phí cho trẻ em vùng cao Tây Bắc', 'tochuc', NULL, 'Done'),
-(2, 'Chăm sóc người già neo đơn', 5, '2025-06-25', '2025-06-28', 'Khẩn cấp', 'Chăm sóc và hỗ trợ người già neo đơn tại Hà Nội', 'org2', '1', 'Coming Soon'),
+(2, 'Chăm sóc người già neo đơn', 5, '2025-06-25', '2025-06-28', 'Khẩn cấp', 'Chăm sóc và hỗ trợ người già neo đơn tại Hà Nội', 'org2', '1', 'Upcoming'),
 (3, 'Quyên góp sách vở cho trẻ em', 15, '2025-07-10', '2025-07-15', 'Bình thường', 'Quyên góp sách vở và đồ dùng học tập cho trẻ em nghèo', 'tochuc', NULL, 'Pending');
 
 -- Sample data for EventParticipants

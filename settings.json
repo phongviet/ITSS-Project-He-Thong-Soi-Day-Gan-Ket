@@ -1,0 +1,16 @@
+{
+	"java.project.referencedLibraries": [
+		"lib/**/*.jar",
+		"C:\\Program Files\\openjfx-24.0.1_windows-x64_bin-sdk\\javafx-sdk-24.0.1\\lib",
+		"C:\\Program Files\\SQLite\\sqlite-jdbc-3.49.1.0.jar"
+	],
+	"java.configuration.runtimes": [
+		{
+			"name": "JavaSE-23",
+			"path": "C:/Program Files/Java/jdk-23",
+			"default": true
+		}
+	],
+	"java.jdt.ls.vmargs": "-XX:+UseParallelGC -XX:GCTimeRatio=4 -XX:AdaptiveSizePolicyWeight=90 -Dsun.zip.disableMemoryMapping=true -Xmx1G -Xms100m",
+	"java.debug.settings.vmArgs": "--module-path D:/Projects/Java/javafx-sdk-17.0.13/lib --add-modules javafx.controls,javafx.fxml,javafx.media"
+}
