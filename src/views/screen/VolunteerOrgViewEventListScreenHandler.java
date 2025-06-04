@@ -321,6 +321,7 @@ public class VolunteerOrgViewEventListScreenHandler implements Initializable {
         // Org can change status if Admin has approved it.
         // Cannot change from Pending (Admin's job), Rejected, Done, Canceled (final states for Org)
         switch (currentStatus.toLowerCase()) {
+            case "upcoming":
             case "coming soon":
                 // Org can mark as Active or Cancel. Cannot mark as Done directly from Coming Soon.
                 return Arrays.asList(STATUS_COMING_SOON, STATUS_ACTIVE, STATUS_CANCELED);
