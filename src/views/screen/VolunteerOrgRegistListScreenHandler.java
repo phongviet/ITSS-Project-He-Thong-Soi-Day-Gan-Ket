@@ -75,8 +75,8 @@ public class VolunteerOrgRegistListScreenHandler implements Initializable {
             @Override
             public TableCell<Notification, Void> call(TableColumn<Notification, Void> param) {
                 return new TableCell<Notification, Void>() {
-                    private final Button acceptButton = new Button("Đồng ý");
-                    private final Button rejectButton = new Button("Từ chối");
+                    private final Button acceptButton = new Button("Accept");
+                    private final Button rejectButton = new Button("Reject");
 
                     {
                         acceptButton.setStyle("-fx-background-color: #2ecc71; -fx-text-fill: white;");
@@ -109,14 +109,14 @@ public class VolunteerOrgRegistListScreenHandler implements Initializable {
 
     private void loadPendingNotifications() {
         if (organization == null) {
-            statusMessage.setText("Organization chưa set.");
+            statusMessage.setText("Organization not set yet.");
             return;
         }
 
         List<Notification> list = eventController.getPendingNotificationsByOrganizer(organization.getUsername());
         if (list == null || list.isEmpty()) {
             notificationData = FXCollections.observableArrayList();
-            statusMessage.setText("Không có đăng ký nào đang chờ xử lý.");
+            statusMessage.setText("There are no pending registrations.");
         } else {
             notificationData = FXCollections.observableArrayList(list);
             statusMessage.setText("");
@@ -128,9 +128,9 @@ public class VolunteerOrgRegistListScreenHandler implements Initializable {
         boolean ok = eventController.updateNotificationStatus(no.getNotificationId(), newStatus);
         if (ok) {
             notificationData.remove(no);
-            statusMessage.setText("Đã cập nhật status cho đăng ký " + no.getNotificationId() + " → " + newStatus);
+            statusMessage.setText("Status updated for registration" + no.getNotificationId() + " → " + newStatus);
         } else {
-            statusMessage.setText("Không thể cập nhật status cho đăng ký " + no.getNotificationId());
+            statusMessage.setText("Unable to update status for registration " + no.getNotificationId());
         }
     }
 

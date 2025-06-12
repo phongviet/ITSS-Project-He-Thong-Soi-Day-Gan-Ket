@@ -11,24 +11,24 @@ class TestEventController {
     @Test
     void getEmergencyLevelPriority_ValidLevels_ShouldReturnCorrectPriority() {
         // Kiểm tra các giá trị emergencyLevel hợp lệ và phổ biến
-        assertEquals(1, eventController.getEmergencyLevelPriority("khẩn cấp"), "Khẩn cấp should be priority 1");
-        assertEquals(1, eventController.getEmergencyLevelPriority("KHẨN CẤP"), "Case insensitivity for Khẩn cấp");
+        assertEquals(1, eventController.getEmergencyLevelPriority("Urgent"), "Urgent should be priority 1");
+        assertEquals(1, eventController.getEmergencyLevelPriority("Urgent"), "Case insensitivity for Urgent");
 
-        assertEquals(2, eventController.getEmergencyLevelPriority("cao"), "Cao should be priority 2");
+        assertEquals(2, eventController.getEmergencyLevelPriority("High"), "Cao should be priority 2");
         //assertEquals(2, eventController.getEmergencyLevelPriority("High"), "High should be priority 2");
 
 
-        assertEquals(3, eventController.getEmergencyLevelPriority("bình thường"), "Bình thường should be priority 3");
+        assertEquals(3, eventController.getEmergencyLevelPriority("Normal"), "Normal should be priority 3");
         //assertEquals(3, eventController.getEmergencyLevelPriority("Normal"), "Normal should be priority 3");
 
-        assertEquals(4, eventController.getEmergencyLevelPriority("thấp"), "Thấp should be priority 4");
+        assertEquals(4, eventController.getEmergencyLevelPriority("Low"), "Low should be priority 4");
         //assertEquals(4, eventController.getEmergencyLevelPriority("Low"), "Low should be priority 4");
     }
 
     @Test
     void getEmergencyLevelPriority_UnknownLevel_ShouldReturnLowestPriority() {
         // Kiểm tra giá trị không xác định
-        assertEquals(5, eventController.getEmergencyLevelPriority("không rõ"), "Unknown level should return lowest priority");
+        assertEquals(5, eventController.getEmergencyLevelPriority("Unknown"), "Unknown level should return lowest priority");
     }
 
     @Test

@@ -133,7 +133,7 @@ public class PersonInNeedRequestListScreenHandler {
 
     private void setupMarkSatisfiedColumn() {
         markSatisfiedColumn.setCellFactory(param -> new TableCell<HelpRequest, Void>() {
-            private final Button markSatisfiedButton = new Button("Đánh dấu Đã hoàn thành (Fulfilled)");
+            private final Button markSatisfiedButton = new Button("Mark Satisfied");
             private final HBox pane = new HBox(markSatisfiedButton);
 
             {
@@ -143,19 +143,19 @@ public class PersonInNeedRequestListScreenHandler {
                     HelpRequest request = getTableView().getItems().get(getIndex());
                     if (request != null) {
                         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-                        alert.setTitle("Xác nhận");
-                        alert.setHeaderText("Đánh dấu yêu cầu là \"Đã hoàn thành (Fulfilled)\"?");
-                        alert.setContentText("Bạn có chắc chắn muốn đánh dấu yêu cầu \"" + request.getTitle() + "\" là \"Đã hoàn thành (Fulfilled)\" không?");
+                        alert.setTitle("Confirmm");
+                        alert.setHeaderText("Mark the request as \"Satisfied\"?");
+                        alert.setContentText("Are you sure you want to mark the request \"" + request.getTitle() + "\" as \"Satisfied\"?");
                         
                         Optional<ButtonType> result = alert.showAndWait();
                         if (result.isPresent() && result.get() == ButtonType.OK) {
                             boolean success = HelpRequestController.markAsFulfilled(request.getRequestId());
                             if (success) {
-                                statusMessageLabel.setText("Yêu cầu \"" + request.getTitle() + "\" đã được đánh dấu là Đã hoàn thành (Fulfilled).");
+                                statusMessageLabel.setText("The request \"" + request.getTitle() + "\" has been marked as Satisfied.");
                                 statusMessageLabel.setStyle("-fx-text-fill: green;");
                                 loadUserRequests(); // Refresh the list
                             } else {
-                                statusMessageLabel.setText("Lỗi: Không thể cập nhật trạng thái cho yêu cầu \"" + request.getTitle() + "\".");
+                                statusMessageLabel.setText("Error: Unable to update status for request \"" + request.getTitle() + "\".");
                                 statusMessageLabel.setStyle("-fx-text-fill: red;");
                             }
                         }

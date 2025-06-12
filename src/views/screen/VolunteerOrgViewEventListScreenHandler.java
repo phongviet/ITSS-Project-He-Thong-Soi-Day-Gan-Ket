@@ -254,7 +254,7 @@ public class VolunteerOrgViewEventListScreenHandler implements Initializable {
             public TableCell<Event, Void> call(TableColumn<Event, Void> param) {
                 return new TableCell<Event, Void>() {
                     private final Button viewDetailsButton = new Button("View Details");
-                    private final Button reportProgressButton = new Button("Báo cáo tiến độ");
+                    private final Button reportProgressButton = new Button("Progress report");
                     private final HBox pane = new HBox(5);
 
                     {

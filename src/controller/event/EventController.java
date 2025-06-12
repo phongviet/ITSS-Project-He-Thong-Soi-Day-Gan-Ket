@@ -49,7 +49,7 @@ public class EventController {
                         Date d = DATE_FORMAT.parse(startDateStr);
                         hr.setStartDate(d);
                     } catch (ParseException ex) {
-                        System.err.println("Không thể parse startDate: " + startDateStr);
+                        System.err.println("Can't parse startDate: " + startDateStr);
                     }
                 }
                 hr.setEmergencyLevel(rs.getString("emergencyLevel"));
@@ -379,7 +379,7 @@ public class EventController {
                             // Parse từ chuỗi định dạng YYYY-MM-DD
                             event.setStartDate(DATE_FORMAT.parse(startDateStr));
                         } catch (Exception ex) {
-                            System.err.println("Không thể chuyển đổi ngày bắt đầu: " + startDateStr);
+                            System.err.println("Cannot convert start date: " + startDateStr);
                         }
                     }
 
@@ -388,11 +388,11 @@ public class EventController {
                             // Parse từ chuỗi định dạng YYYY-MM-DD
                             event.setEndDate(DATE_FORMAT.parse(endDateStr));
                         } catch (Exception ex) {
-                            System.err.println("Không thể chuyển đổi ngày kết thúc: " + endDateStr);
+                            System.err.println("Unable to convert end date: " + endDateStr);
                         }
                     }
                 } catch (SQLException e) {
-                    System.err.println("Lỗi khi đọc ngày tháng: " + e.getMessage());
+                    System.err.println("Error reading date:" + e.getMessage());
                 }
 
                 event.setEmergencyLevel(rs.getString("emergencyLevel"));
@@ -697,7 +697,7 @@ public class EventController {
                             // Parse từ chuỗi định dạng YYYY-MM-DD
                             event.setStartDate(DATE_FORMAT.parse(startDateStr));
                         } catch (Exception ex) {
-                            System.err.println("Không thể chuyển đổi ngày bắt đầu: " + startDateStr);
+                            System.err.println("Cannot convert start date: " + startDateStr);
                         }
                     }
 
@@ -706,11 +706,11 @@ public class EventController {
                             // Parse từ chuỗi định dạng YYYY-MM-DD
                             event.setEndDate(DATE_FORMAT.parse(endDateStr));
                         } catch (Exception ex) {
-                            System.err.println("Không thể chuyển đổi ngày kết thúc: " + endDateStr);
+                            System.err.println("Unable to convert end date: " + endDateStr);
                         }
                     }
                 } catch (SQLException e) {
-                    System.err.println("Lỗi khi đọc ngày tháng: " + e.getMessage());
+                    System.err.println("Error reading date: " + e.getMessage());
                 }
 
                 event.setEmergencyLevel(rs.getString("emergencyLevel"));
@@ -1019,13 +1019,13 @@ public class EventController {
             return Integer.MAX_VALUE; // Mức ưu tiên thấp nhất nếu không có hoặc rỗng
         }
         switch (emergencyLevel.trim().toLowerCase()) {
-            case "khẩn cấp":        // Hoặc "Urgent", "Critical", etc.
+            case "urgent":        // Hoặc "Urgent", "Critical", etc.
                 return 1;
-            case "cao":             // Hoặc "High"
+            case "high":             // Hoặc "High"
                 return 2;
-            case "bình thường":     // Hoặc "Normal", "Medium"
+            case "normal":     // Hoặc "Normal", "Medium"
                 return 3;
-            case "thấp":            // Hoặc "Low"
+            case "low":            // Hoặc "Low"
                 return 4;
             default:
                 System.out.println("Unknown emergency level for priority: " + emergencyLevel);
