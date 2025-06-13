@@ -173,17 +173,14 @@ public class VolunteerOrgEventDetailScreenHandler implements Initializable {
         StringBuilder errors = new StringBuilder();
 
         for (EventParticipantDetails participant : participantDetailsList) {
-            boolean detailUpdated = false;
-
             Integer rating = participant.getRatingByOrg();
-            if (rating != null && (rating < 1 || rating > 5)) {
-                errors.append("Invalid rating for ").append(participant.getVolunteerFullName()).append(" (must be 1-5). Data not saved.\n");
+            if (rating != null && (rating < 1 || rating > 10)) {
+                errors.append("Invalid rating for ").append(participant.getVolunteerFullName()).append(" (must be 1-10). Data not saved.\n");
                 failCount++;
                 continue; 
             }
 
             if (eventController.updateEventParticipantDetails(event.getEventId(), participant.getVolunteerUsername(), participant.getHoursParticipated(), rating)) {
-                detailUpdated = true;
                 if (rating != null) { 
                     eventController.updateVolunteerRating(participant.getVolunteerUsername(), rating);
                 }

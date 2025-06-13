@@ -6,26 +6,27 @@ import java.util.Date; // Re-adding Date import
  * HelpRequest entity class representing the HelpRequest table in the database
  */
 public class HelpRequest {
-    private int requestId; // Changed from id to requestId
+    private int requestId;
     private String title;
     private String description;
     private String contact;
-    private String personInNeedId; // Kept as int
-    private Date startDate;     // Added back
-    private String emergencyLevel; // Added back
-    private String status;         // Added back, replaces isFulfilled
+    private String personInNeedUsername;
+    private Date startDate;
+    private String emergencyLevel;
+    private String status;
+    private String address;
 
     public HelpRequest() {
     }
 
     // Updated constructor
     public HelpRequest(int requestId, String title, String description, String contact,
-                      String personInNeedId, Date startDate, String emergencyLevel, String status) {
+                       String personInNeedUsername, Date startDate, String emergencyLevel, String status) {
         this.requestId = requestId;
         this.title = title;
         this.description = description;
         this.contact = contact;
-        this.personInNeedId = personInNeedId;
+        this.personInNeedUsername = personInNeedUsername;
         this.startDate = startDate;
         this.emergencyLevel = emergencyLevel;
         this.status = status;
@@ -63,12 +64,12 @@ public class HelpRequest {
         this.contact = contact;
     }
 
-    public String getPersonInNeedId() {
-        return personInNeedId;
+    public String getPersonInNeedUsername() {
+        return personInNeedUsername;
     }
 
-    public void setPersonInNeedId(String personInNeedId) {
-        this.personInNeedId = personInNeedId;
+    public void setPersonInNeedUsername(String personInNeedUsername) {
+        this.personInNeedUsername = personInNeedUsername;
     }
 
     public Date getStartDate() { // Added back
@@ -93,5 +94,13 @@ public class HelpRequest {
 
     public void setStatus(String status) { // Added back (replaces isFulfilled setter)
         this.status = status;
+    }
+
+    public String getAddress() {
+        return address;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
     }
 }

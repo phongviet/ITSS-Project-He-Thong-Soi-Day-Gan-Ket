@@ -27,8 +27,11 @@ public class PersonInNeedCreateRequestScreenHandler {
     private Stage stage;
     private PersonInNeed currentUser;
     private HelpRequest requestToEdit = null;
+    private final HelpRequestController helpRequestController;
 
-    public PersonInNeedCreateRequestScreenHandler() {}
+    public PersonInNeedCreateRequestScreenHandler() {
+        this.helpRequestController = new HelpRequestController();
+    }
 
     public void setStage(Stage stage) {
         this.stage = stage;
@@ -100,13 +103,13 @@ public class PersonInNeedCreateRequestScreenHandler {
         helpRequestData.setEmergencyLevel(emergencyLevelComboBox.getValue());
 
         if (requestToEdit != null) {
-            success = HelpRequestController.updateHelpRequest(helpRequestData);
+            success = helpRequestController.updateHelpRequest(helpRequestData);
             successMessage = "Help request updated successfully!";
             failureMessage = "Failed to update help request. Please try again.";
         } else {
-            helpRequestData.setPersonInNeedId(currentUser.getUsername());
+            helpRequestData.setPersonInNeedUsername(currentUser.getUsername());
             helpRequestData.setStatus("Pending");
-            success = HelpRequestController.createHelpRequest(helpRequestData);
+            success = helpRequestController.createHelpRequest(helpRequestData);
             successMessage = "Help request submitted successfully!";
             failureMessage = "Failed to submit help request. Please try again.";
         }

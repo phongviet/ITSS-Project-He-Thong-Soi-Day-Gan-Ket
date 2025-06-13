@@ -22,14 +22,11 @@ import java.io.IOException;
 import java.net.URL;
 import java.time.LocalDate;
 import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.List;
 import java.util.ResourceBundle;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 public class VolunteerOrgViewEventListScreenHandler implements Initializable {
 
@@ -76,7 +73,6 @@ public class VolunteerOrgViewEventListScreenHandler implements Initializable {
     private Stage stage;
     private VolunteerOrganization organization;
     private EventController eventController;
-    private DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     // Store the original unfiltered data
     private ObservableList<Event> allEventsList;

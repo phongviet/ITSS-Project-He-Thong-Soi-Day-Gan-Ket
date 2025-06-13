@@ -1,5 +1,9 @@
 package controller.event;
 
+import dao.HelpRequestDAO;
+import dao.NotificationDAO;
+import dao.ReportDAO;
+import dao.UserDAO;
 import entity.events.*;
 import entity.users.VolunteerOrganization;
 import entity.users.Volunteer;
@@ -7,94 +11,45 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Date;
-import java.util.Calendar;
 import java.text.SimpleDateFormat;
 import java.util.Collections;
 import java.util.Comparator;
 import entity.requests.HelpRequest;
 import java.text.ParseException;
-import java.util.Date;
-import java.text.SimpleDateFormat;
 import entity.events.Event;
 import entity.reports.Report;
 import java.sql.Statement;
 import java.sql.Types;
+import utils.AppConstants;
 
 
 public class EventController {
 
     private static final String DB_URL = "jdbc:sqlite:assets/db/SoiDayGanKet_sqlite.db";
     private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
+    
+    private HelpRequestDAO helpRequestDAO;
+    private UserDAO userDAO;
+    private NotificationDAO notificationDAO;
+    private ReportDAO reportDAO;
+
+    public EventController() {
+        this.helpRequestDAO = new HelpRequestDAO();
+        this.userDAO = new UserDAO();
+        this.notificationDAO = new NotificationDAO();
+        this.reportDAO = new ReportDAO();
+    }
 
     public List<HelpRequest> getApprovedHelpRequests() {
-        List<HelpRequest> helpRequests = new ArrayList<>();
-        Connection conn = null;
-        PreparedStatement pstmt = null;
-        ResultSet rs = null;
-
-        try {
-            conn = DriverManager.getConnection(DB_URL);
-            String sql = "SELECT * FROM HelpRequest WHERE status = ?";
-            pstmt = conn.prepareStatement(sql);
-            pstmt.setString(1, "Approved");
-            rs = pstmt.executeQuery();
-
-            while (rs.next()) {
-                HelpRequest hr = new HelpRequest();
-                hr.setRequestId(rs.getInt("requestId"));
-                hr.setTitle(rs.getString("title"));
-                String startDateStr = rs.getString("startDate");
-                if (startDateStr != null && !startDateStr.isEmpty()) {
-                    try {
-                        Date d = DATE_FORMAT.parse(startDateStr);
-                        hr.setStartDate(d);
-                    } catch (ParseException ex) {
-                        System.err.println("Can't parse startDate: " + startDateStr);
-                    }
-                }
-                hr.setEmergencyLevel(rs.getString("emergencyLevel"));
-                hr.setDescription(rs.getString("description"));
-                hr.setPersonInNeedId(rs.getString("personInNeedId"));
-                hr.setStatus(rs.getString("status"));
-                helpRequests.add(hr);
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        } finally {
-            try {
-                if (rs != null) rs.close();
-                if (pstmt != null) pstmt.close();
-                if (conn != null) conn.close();
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-        }
-
-        return helpRequests;
+        return helpRequestDAO.getApprovedHelpRequests();
     }
     public boolean updateHelpRequestStatus(int requestId, String newStatus) {
-        Connection conn = null;
-        PreparedStatement pstmt = null;
-        try {
-            conn = DriverManager.getConnection(DB_URL);
-            String sql = "UPDATE HelpRequest SET status = ? WHERE requestId = ?";
-            pstmt = conn.prepareStatement(sql);
-            pstmt.setString(1, newStatus);
-            pstmt.setInt(2, requestId);
-            int affectedRows = pstmt.executeUpdate();
-            return affectedRows > 0;
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return false;
-        } finally {
-            try {
-                if (pstmt != null) pstmt.close();
-                if (conn != null) conn.close();
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-        }
+        return helpRequestDAO.updateHelpRequestStatus(requestId, newStatus);
     }
+    
+    // This method is complex, joining multiple tables. For now, it's left in EventController
+    // as it orchestrates data from Events, Notifications, and Volunteers.
+    // A future refactor could move this to a dedicated service layer or a specialized DAO method.
     public List<EventParticipantDetails> getParticipantDetailsForEvent(int eventId) {
         List<EventParticipantDetails> result = new ArrayList<>();
         Connection conn = null;
@@ -111,12 +66,13 @@ public class EventController {
             + "JOIN EventParticipants ep ON e.eventId = ep.eventId AND ep.username = n.username "
             + "JOIN Volunteer v ON ep.username = v.username " // Join with Volunteer table
             + "WHERE e.eventId = ? "
-            + "  AND n.acceptStatus = 'Registered'"; // Assuming 'Registered' means they participated
+            + "  AND n.acceptStatus = ?"; // Assuming 'Registered' means they participated
 
         try {
             conn = DriverManager.getConnection(DB_URL);
             pstmt = conn.prepareStatement(sql);
             pstmt.setInt(1, eventId);
+            pstmt.setString(2, AppConstants.NOTIF_REGISTERED);
             rs = pstmt.executeQuery();
 
             while (rs.next()) {
@@ -175,43 +131,7 @@ public class EventController {
      */
     public boolean updateEventParticipantDetails(int eventId, String volunteerUsername,
                                                  Integer hoursParticipated, Integer ratingByOrg) {
-        Connection conn = null;
-        PreparedStatement pstmt = null;
-        try {
-            conn = DriverManager.getConnection(DB_URL);
-
-            String sql = "UPDATE EventParticipants "
-                       + "SET hoursParticipated = ?, ratingByOrg = ? "
-                       + "WHERE eventId = ? AND username = ?";
-            pstmt = conn.prepareStatement(sql);
-
-            // Nếu hoursParticipated = null => setNull
-            if (hoursParticipated != null) {
-                pstmt.setInt(1, hoursParticipated);
-            } else {
-                pstmt.setNull(1, Types.INTEGER);
-            }
-            if (ratingByOrg != null) {
-                pstmt.setInt(2, ratingByOrg);
-            } else {
-                pstmt.setNull(2, Types.INTEGER);
-            }
-            pstmt.setInt(3, eventId);
-            pstmt.setString(4, volunteerUsername);
-
-            int affected = pstmt.executeUpdate();
-            return affected > 0;
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return false;
-        } finally {
-            try {
-                if (pstmt != null) pstmt.close();
-                if (conn != null)  conn.close();
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-        }
+        return userDAO.updateEventParticipantDetails(eventId, volunteerUsername, hoursParticipated, ratingByOrg);
     }
     public boolean registerEvent(Event event, VolunteerOrganization organization) {
         Connection conn = null;
@@ -224,7 +144,7 @@ public class EventController {
             conn.setAutoCommit(false);
 
             // Set the initial status to "pending"
-            event.setStatus("Pending");
+            event.setStatus(AppConstants.EVENT_PENDING);
 
             // Format dates for SQLite
             String startDateStr = null;
@@ -483,53 +403,7 @@ public class EventController {
      * @return true nếu thành công
      */
     public boolean updateVolunteerRating(String volunteerUsername, int newScore) {
-        Connection conn = null;
-        PreparedStatement pstmt = null;
-        try {
-            conn = DriverManager.getConnection(DB_URL);
-
-            // Truy xuất dữ liệu cũ
-            String selectSql = "SELECT averageRating, ratingCount FROM Volunteer WHERE username = ?";
-            pstmt = conn.prepareStatement(selectSql);
-            pstmt.setString(1, volunteerUsername);
-            ResultSet rs = pstmt.executeQuery();
-            if (!rs.next()) {
-                rs.close();
-                pstmt.close();
-                return false; // không tìm thấy volunteer
-            }
-            double oldAvg = rs.getDouble("averageRating");
-            int oldCount  = rs.getInt("ratingCount");
-            rs.close();
-            pstmt.close();
-
-            int newCount = oldCount + 1;
-            double newAvg;
-            if (oldCount == 0) {
-                newAvg = newScore;
-            } else {
-                newAvg = (oldAvg * oldCount + newScore) / newCount;
-            }
-
-            // Cập nhật vào DB
-            String updateSql = "UPDATE Volunteer SET averageRating = ?, ratingCount = ? WHERE username = ?";
-            pstmt = conn.prepareStatement(updateSql);
-            pstmt.setDouble(1, newAvg);
-            pstmt.setInt(2, newCount);
-            pstmt.setString(3, volunteerUsername);
-            int affected = pstmt.executeUpdate();
-            return affected > 0;
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return false;
-        } finally {
-            try {
-                if (pstmt != null) pstmt.close();
-                if (conn != null)  conn.close();
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-        }
+        return userDAO.updateVolunteerRating(volunteerUsername, newScore);
     }
 
     /**
@@ -559,42 +433,7 @@ public class EventController {
      * @return List of volunteers participating in the event
      */
     public List<Volunteer> getEventParticipants(int eventId) {
-        List<Volunteer> participants = new ArrayList<>();
-        Connection conn = null;
-        PreparedStatement pstmt = null;
-        ResultSet rs = null;
-
-        try {
-            conn = DriverManager.getConnection(DB_URL);
-            // Join EventParticipants with Volunteers to get volunteer details
-            String sql = "SELECT v.* FROM EventParticipants ep " +
-                         "JOIN Volunteer v ON ep.username = v.username " +
-                         "WHERE ep.eventId = ?";
-            pstmt = conn.prepareStatement(sql);
-            pstmt.setInt(1, eventId);
-            rs = pstmt.executeQuery();
-
-            while (rs.next()) {
-                Volunteer volunteer = new Volunteer();
-                volunteer.setUsername(rs.getString("username"));
-                volunteer.setFullName(rs.getString("fullName"));
-                // Set other properties as needed
-
-                participants.add(volunteer);
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        } finally {
-            try {
-                if (rs != null) rs.close();
-                if (pstmt != null) pstmt.close();
-                if (conn != null) conn.close();
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-        }
-
-        return participants;
+        return userDAO.getEventParticipants(eventId);
     }
 
     /**
@@ -937,47 +776,11 @@ public class EventController {
        return event;
    }
     public List<entity.notifications.Notification> getPendingNotificationsByOrganizer(String organizerUsername) {
-        List<entity.notifications.Notification> result = new ArrayList<>();
-        String sql = "SELECT n.notificationId, n.eventId, n.username, n.acceptStatus, e.title " +
-                    "FROM Notification n " +
-                    "JOIN Events e ON n.eventId = e.eventId " +
-                    "WHERE e.organizer = ? AND n.acceptStatus = ?";
-        try (Connection conn = DriverManager.getConnection(DB_URL);
-            PreparedStatement pstmt = conn.prepareStatement(sql)) {
-
-            pstmt.setString(1, organizerUsername);
-            pstmt.setString(2, "Pending");
-            try (ResultSet rs = pstmt.executeQuery()) {
-                while (rs.next()) {
-                    entity.notifications.Notification no = new entity.notifications.Notification();
-                    no.setNotificationId(rs.getInt("notificationId"));
-                    no.setEventId(rs.getInt("eventId"));
-                    no.setUsername(rs.getString("username"));
-                    no.setAcceptStatus(rs.getString("acceptStatus"));
-                    // Giả sử Notification class có thêm field eventTitle và setter tương ứng
-                    no.setEventTitle(rs.getString("title"));
-                    result.add(no);
-                }
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return result;
+        return notificationDAO.getPendingNotificationsByOrganizer(organizerUsername);
     }
 
     public boolean updateNotificationStatus(int notificationId, String newStatus) {
-        String sql = "UPDATE Notification SET acceptStatus = ? WHERE notificationId = ?";
-        try (Connection conn = DriverManager.getConnection(DB_URL);
-            PreparedStatement pstmt = conn.prepareStatement(sql)) {
-
-            pstmt.setString(1, newStatus);
-            pstmt.setInt(2, notificationId);
-            int affected = pstmt.executeUpdate();
-            return affected > 0;
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return false;
-        }
+        return notificationDAO.updateNotificationStatus(notificationId, newStatus);
     }
 
    
@@ -1041,19 +844,17 @@ public class EventController {
      * @return List các Event
      */
     public List<Event> getAllOpenAndAvailableEvents() {
-        List<Event> openEvents = new ArrayList<>();
+        List<Event> events = new ArrayList<>();
         Connection conn = null;
         PreparedStatement pstmt = null;
         ResultSet rs = null;
-        String sql = "SELECT e.*, " +
-                     "(SELECT COUNT(ep_inner.username) FROM EventParticipants ep_inner WHERE ep_inner.eventId = e.eventId) as currentParticipants " +
-                     "FROM Events e " +
-                     "WHERE (e.status = 'Approved' OR e.status = 'Upcoming')" +
-                     "AND DATE(e.startDate) >= DATE('now') "; // Lấy sự kiện từ hôm nay trở đi
+        String sql = "SELECT *, (SELECT COUNT(*) FROM EventParticipants ep WHERE ep.eventId = e.eventId) as currentParticipants FROM Events e WHERE status = ? OR status = ?";
 
         try {
             conn = DriverManager.getConnection(DB_URL);
             pstmt = conn.prepareStatement(sql);
+            pstmt.setString(1, AppConstants.EVENT_APPROVED);
+            pstmt.setString(2, AppConstants.EVENT_UPCOMING);
             rs = pstmt.executeQuery();
 
             while (rs.next()) {
@@ -1086,7 +887,7 @@ public class EventController {
 
                     loadEventSkills(conn, event); // Load kỹ năng yêu cầu cho sự kiện này
 
-                    openEvents.add(event);
+                    events.add(event);
                 }
             }
         } catch (SQLException e) {
@@ -1096,7 +897,7 @@ public class EventController {
             // Sử dụng hàm closeResources đã có
             closeResources(conn, pstmt, rs);
         }
-        return openEvents;
+        return events;
     }
 
     /**
@@ -1201,19 +1002,6 @@ public class EventController {
         }
     }
 
-    // Method to parse date string, can be a static helper or part of this class
-    private Date parseDate(String dateStr) {
-        if (dateStr == null || dateStr.isEmpty()) {
-            return null;
-        }
-        try {
-            return DATE_FORMAT.parse(dateStr);
-        } catch (ParseException e) {
-            System.err.println("Error parsing date string from database: \"" + dateStr + "\" - " + e.getMessage());
-            return null;
-        }
-    }
-
     public List<EventParticipantDetails> getEventParticipantDetailsList(int eventId) {
         List<EventParticipantDetails> participants = new ArrayList<>();
         Connection conn = null;
@@ -1292,116 +1080,11 @@ public class EventController {
     }
 
     public boolean saveProgressReport(Report report, boolean isFinal) {
-        Connection conn = null;
-        PreparedStatement pstmtReport = null;
-        PreparedStatement pstmtFinalReport = null;
-        ResultSet generatedKeys = null;
-        boolean success = false;
-
-        String insertReportSQL = "INSERT INTO Report (eventId, reportDate, progress, note) VALUES (?, ?, ?, ?)";
-        String insertFinalReportSQL = "INSERT INTO FinalReport (reportId) VALUES (?)";
-
-        try {
-            conn = DriverManager.getConnection(DB_URL);
-            conn.setAutoCommit(false); // Start transaction
-
-            // Insert into Report table
-            pstmtReport = conn.prepareStatement(insertReportSQL, Statement.RETURN_GENERATED_KEYS);
-            pstmtReport.setInt(1, report.getEventId());
-            
-            if (report.getReportDate() != null) {
-                pstmtReport.setString(2, DATE_FORMAT.format(report.getReportDate())); // Assuming DATE_FORMAT is yyyy-MM-dd for DB
-            } else {
-                pstmtReport.setNull(2, Types.VARCHAR); // Or Types.DATE if your DB driver/schema prefers
-            }
-            
-            if (report.getProgress() != null) {
-                pstmtReport.setInt(3, report.getProgress());
-            } else {
-                pstmtReport.setNull(3, Types.INTEGER);
-            }
-            pstmtReport.setString(4, report.getNote());
-
-            int affectedRows = pstmtReport.executeUpdate();
-
-            if (affectedRows > 0) {
-                if (isFinal) {
-                    generatedKeys = pstmtReport.getGeneratedKeys();
-                    if (generatedKeys.next()) {
-                        int reportId = generatedKeys.getInt(1);
-                        // Now insert into FinalReport table
-                        pstmtFinalReport = conn.prepareStatement(insertFinalReportSQL);
-                        pstmtFinalReport.setInt(1, reportId);
-                        pstmtFinalReport.executeUpdate();
-                        success = true;
-                    } else {
-                        throw new SQLException("Failed to retrieve generated reportId for FinalReport.");
-                    }
-                } else {
-                    success = true; // Report saved, not a final one
-                }
-            }
-
-            if (success) {
-                conn.commit(); // Commit transaction
-            } else {
-                conn.rollback(); // Rollback if any part failed that should lead to success=false
-            }
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-            if (conn != null) {
-                try {
-                    conn.rollback(); // Rollback on error
-                } catch (SQLException ex) {
-                    ex.printStackTrace();
-                }
-            }
-            success = false;
-        } finally {
-            try {
-                if (generatedKeys != null) generatedKeys.close();
-                if (pstmtReport != null) pstmtReport.close();
-                if (pstmtFinalReport != null) pstmtFinalReport.close();
-                if (conn != null) {
-                    conn.setAutoCommit(true); // Reset auto-commit
-                    conn.close();
-                }
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-        }
-        return success;
+        return reportDAO.saveProgressReport(report, isFinal);
     }
 
     public boolean eventHasFinalHundredPercentReport(int eventId) {
-        Connection conn = null;
-        PreparedStatement pstmt = null;
-        ResultSet rs = null;
-        String sql = "SELECT COUNT(*) FROM Report r " +
-                     "JOIN FinalReport fr ON r.reportId = fr.reportId " +
-                     "WHERE r.eventId = ? AND r.progress = 100";
-
-        try {
-            conn = DriverManager.getConnection(DB_URL);
-            pstmt = conn.prepareStatement(sql);
-            pstmt.setInt(1, eventId);
-            rs = pstmt.executeQuery();
-            if (rs.next()) {
-                return rs.getInt(1) > 0;
-            }
-        } catch (SQLException e) {
-            e.printStackTrace(); // Consider logging this error more formally
-        } finally {
-            try {
-                if (rs != null) rs.close();
-                if (pstmt != null) pstmt.close();
-                if (conn != null) conn.close();
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-        }
-        return false;
+        return reportDAO.eventHasFinalHundredPercentReport(eventId);
     }
 
     /**

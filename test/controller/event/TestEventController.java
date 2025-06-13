@@ -1,8 +1,7 @@
 package controller.event; // Đảm bảo package khớp với vị trí file
 
 import org.junit.jupiter.api.Test; // JUnit 5
-import static org.junit.jupiter.api.Assertions.*;
-import controller.event.EventController; 
+import static org.junit.jupiter.api.Assertions.*; 
 
 class TestEventController {
 

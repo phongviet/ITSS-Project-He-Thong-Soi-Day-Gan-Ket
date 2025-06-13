@@ -19,7 +19,6 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.TextFieldTableCell; // For editing hours
 import javafx.stage.Stage;
-import javafx.util.Callback;
 import javafx.util.converter.IntegerStringConverter;
 
 import java.io.IOException;

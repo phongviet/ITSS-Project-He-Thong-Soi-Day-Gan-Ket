@@ -51,6 +51,7 @@ public class Notification {
     public void setAcceptStatus(String acceptStatus) {
         this.acceptStatus = acceptStatus;
     }
+
     public String getEventTitle() {
         return eventTitle;
     }

@@ -171,8 +171,8 @@ VALUES
 -- Sample data for VolunteerOrganization
 INSERT INTO VolunteerOrganization (username, organizationName, licenseNumber, field, representative, sponsor, info)
 VALUES
-('tochuc', 'Tổ chức thiện nguyện Vì Cộng Đồng', 'ORG123456', 'Giáo dục', 'Hoàng Văn E', 'Công ty ABC', 'Tổ chức hỗ trợ giáo dục cho trẻ em vùng sâu vùng xa'),
-('org2', 'Quỹ từ thiện Ánh Dương', 'ORG654321', 'Y tế', 'Đỗ Thị F', 'Tập đoàn XYZ', 'Tổ chức hỗ trợ y tế cho người nghèo');
+('tochuc', 'Tổ chức thiện nguyện Vì Cộng Đồng', 'ORG123456', 'Education', 'Hoàng Văn E', 'Công ty ABC', 'Tổ chức hỗ trợ giáo dục cho trẻ em vùng sâu vùng xa'),
+('org2', 'Quỹ từ thiện Ánh Dương', 'ORG654321', 'Health', 'Đỗ Thị F', 'Tập đoàn XYZ', 'Tổ chức hỗ trợ y tế cho người nghèo');
 
 -- Sample data for Skills
 INSERT INTO Skills (skillId, skill)
@@ -195,9 +195,11 @@ VALUES
 -- Sample data for Events
 INSERT INTO Events (eventId, title, maxParticipantNumber, startDate, endDate, emergencyLevel, description, organizer, requestId, status)
 VALUES
-(1, 'Dạy học cho trẻ em vùng cao', 10, '2025-06-15', '2025-06-20', 'Bình thường', 'Chương trình dạy học miễn phí cho trẻ em vùng cao Tây Bắc', 'tochuc', NULL, 'Done'),
-(2, 'Chăm sóc người già neo đơn', 5, '2025-06-25', '2025-06-28', 'Khẩn cấp', 'Chăm sóc và hỗ trợ người già neo đơn tại Hà Nội', 'org2', '1', 'Upcoming'),
-(3, 'Quyên góp sách vở cho trẻ em', 15, '2025-07-10', '2025-07-15', 'Bình thường', 'Quyên góp sách vở và đồ dùng học tập cho trẻ em nghèo', 'tochuc', NULL, 'Pending');
+(1, 'Dạy học cho trẻ em vùng cao', 10, '2025-06-15', '2025-06-20', 'Normal', 'Chương trình dạy học miễn phí cho trẻ em vùng cao Tây Bắc', 'tochuc', NULL, 'Done'),
+(2, 'Chăm sóc người già neo đơn', 5, '2025-06-25', '2025-06-28', 'Urgent', 'Chăm sóc và hỗ trợ người già neo đơn tại Hà Nội', 'org2', '1', 'Upcoming'),
+(3, 'Quyên góp sách vở cho trẻ em', 15, '2025-07-10', '2025-07-15', 'Normal', 'Quyên góp sách vở và đồ dùng học tập cho trẻ em nghèo', 'tochuc', NULL, 'Pending'),
+(4, 'Hiến máu nhân đạo', 50, '2025-08-01', '2025-08-01', 'High', 'Chương trình hiến máu cứu người', 'org2', NULL, 'Approved'),
+(5, 'Dọn dẹp bãi biển', 20, '2025-07-20', '2025-07-20', 'Low', 'Dọn dẹp rác thải tại bãi biển ABC', 'tochuc', NULL, 'Cancelled');
 
 -- Sample data for EventParticipants
 INSERT INTO EventParticipants (eventId, username, hoursParticipated, ratingByOrg)
@@ -210,14 +212,19 @@ INSERT INTO Notification (notificationId, eventId, username, acceptStatus)
 VALUES
 (1, 1, 'tnv', 'Registered'),
 (2, 1, 'volunteer2', 'Registered'),
-(3, 2, 'volunteer1', 'Pending'),
-(4, 3, 'volunteer2', 'Canceled');
+(3, 2, 'tnv', 'Pending'),
+(4, 3, 'volunteer2', 'Cancelled'),
+(5, 4, 'tnv', 'Pending'),
+(6, 5, 'volunteer2', 'Registered');
 
 -- Sample data for HelpRequest
 INSERT INTO HelpRequest (requestId, title, startDate, emergencyLevel, description, personInNeedId, status, contact, address)
 VALUES
-(1, 'Cần hỗ trợ chăm sóc người già', '2025-06-10', 'Khẩn cấp', 'Cần tình nguyện viên hỗ trợ chăm sóc người già tại gia đình', 'person1', 'Approved', '0987654321', 'Hà Nội'),
-(2, 'Cần hỗ trợ dạy kèm cho trẻ', '2025-06-20', 'Bình thường', 'Cần tình nguyện viên dạy kèm tiếng Anh cho trẻ em', 'person2', 'Pending', '0987654322', 'Hồ Chí Minh');
+(1, 'Cần hỗ trợ chăm sóc người già', '2025-06-10', 'Urgent', 'Cần tình nguyện viên hỗ trợ chăm sóc người già tại gia đình', 'nguoicantrogiup', 'Approved', '0987654321', 'Hà Nội'),
+(2, 'Cần hỗ trợ dạy kèm cho trẻ', '2025-06-20', 'Normal', 'Cần tình nguyện viên dạy kèm tiếng Anh cho trẻ em', 'person2', 'Pending', '0987654322', 'Hồ Chí Minh'),
+(3, 'Cần sửa chữa nhà cửa', '2025-07-01', 'High', 'Cần đội sửa chữa nhà cho người có hoàn cảnh khó khăn', 'nguoicantrogiup', 'Rejected', '0987654323', 'Đà Nẵng'),
+(4, 'Cần hỗ trợ mua thuốc', '2025-07-05', 'Urgent', 'Cần người đi mua thuốc giúp người già neo đơn', 'person2', 'Satisfied', '0987654324', 'Huế'),
+(5, 'Cần người tâm sự', '2025-07-10', 'Low', 'Cần người trò chuyện cùng người trầm cảm', 'nguoicantrogiup', 'Closed', '0987654323', 'Đà Nẵng');
 
 -- Sample data for Report
 INSERT INTO Report (reportId, eventId, reportDate, progress, note)
@@ -234,4 +241,6 @@ INSERT INTO EventSkills (eventID, skillId)
 VALUES
 (1, 3),
 (2, 2),
-(3, 1);
+(3, 1),
+(4, 2),
+(5, 1);
