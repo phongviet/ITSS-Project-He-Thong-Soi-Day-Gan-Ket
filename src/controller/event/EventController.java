@@ -14,7 +14,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import entity.requests.HelpRequest;
 import entity.reports.Report;
-import utils.AppConstants;
 
 public class EventController {
 

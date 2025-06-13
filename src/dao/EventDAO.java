@@ -1,7 +1,6 @@
 package dao;
 
 import entity.events.Event;
-import entity.users.Volunteer;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -13,11 +12,9 @@ import java.util.Map;
 import java.util.HashMap;
 import java.text.SimpleDateFormat;
 import java.text.ParseException;
-import java.util.Date;
 import utils.AppConstants;
 import entity.events.EventParticipantDetails;
 import entity.users.VolunteerOrganization;
-import java.sql.Types;
 import java.util.ArrayList;
 
 /**
@@ -210,22 +207,6 @@ public class EventDAO {
             pstmt.setString(1, status);
             pstmt.setInt(2, eventId);
             return pstmt.executeUpdate() > 0;
-        }
-    }
-
-    /**
-     * A utility method to close database resources safely.
-     * @param conn The database connection
-     * @param stmt The statement
-     * @param rs The result set
-     */
-    private void closeResources(Connection conn, Statement stmt, ResultSet rs) {
-        try {
-            if (rs != null) rs.close();
-            if (stmt != null) stmt.close();
-            if (conn != null) conn.close();
-        } catch (SQLException e) {
-            e.printStackTrace();
         }
     }
 

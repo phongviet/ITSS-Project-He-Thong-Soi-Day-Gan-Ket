@@ -2,7 +2,6 @@ package controller;
 
 import dao.EventDAO;
 import dao.HelpRequestDAO;
-import entity.events.Event;
 import entity.requests.HelpRequest;
 import java.util.List;
 import utils.AppConstants;

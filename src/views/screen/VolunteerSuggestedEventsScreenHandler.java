@@ -1,7 +1,6 @@
 package views.screen;
 
 import controller.event.EventController;
-import javafx.scene.paint.Color;
 import controller.notification.NotificationController; // CẦN CONTROLLER MỚI
 import controller.verification.VerificationController; // Để lấy tên tổ chức
 import entity.events.Event;
@@ -23,7 +22,6 @@ import javafx.stage.Stage;
 
 import java.io.IOException;
 import java.net.URL;
-import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;

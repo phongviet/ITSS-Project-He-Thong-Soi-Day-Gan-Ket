@@ -7,7 +7,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.List;
 import java.text.SimpleDateFormat;
 
 /**
@@ -95,19 +94,4 @@ public class ReportDAO {
         return false;
     }
 
-    /**
-     * A utility method to close database resources safely.
-     * @param conn The database connection
-     * @param stmt The statement
-     * @param rs The result set
-     */
-    private void closeResources(Connection conn, Statement stmt, ResultSet rs) {
-        try {
-            if (rs != null) rs.close();
-            if (stmt != null) stmt.close();
-            if (conn != null) conn.close();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
-} 
+}
