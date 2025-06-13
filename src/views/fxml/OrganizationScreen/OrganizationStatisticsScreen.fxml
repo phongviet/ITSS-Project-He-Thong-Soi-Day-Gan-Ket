@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<BorderPane prefHeight="768" prefWidth="1024" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1"
+fx:controller="views.screen.OrganizationStatisticsScreenHandler">
+    <top>
+        <HBox alignment="CENTER" style="-fx-background-color: #2980b9;">
+            <padding>
+                <Insets bottom="15" left="15" right="15" top="15" />
+            </padding>
+            <Label text="Organization Overview" textFill="WHITE">
+                <font>
+                    <Font name="System Bold" size="24.0" />
+                </font>
+            </Label>
+        </HBox>
+    </top>
+
+    <center>
+        <ScrollPane fitToWidth="true" pannable="true">
+            <content>
+                <VBox alignment="CENTER" spacing="20" prefHeight="400">
+                    <padding>
+                        <Insets bottom="20" left="20" right="20" top="20" />
+                    </padding>
+
+                    <!-- SYMBOLIC STATISTIC SECTION -->
+                    <VBox spacing="10" alignment="CENTER">
+                        <Label text="Key Highlight" style="-fx-font-size: 22; -fx-font-weight: bold;" />
+                        <Separator prefWidth="200"/>
+                        <VBox alignment="CENTER" style="-fx-background-color: #f39c12; -fx-background-radius: 15;" prefWidth="300" prefHeight="200">
+                            <padding>
+                                <Insets top="20" right="20" bottom="20" left="20" />
+                            </padding>
+                            <Label text="Total Events Organized" textFill="WHITE" textAlignment="CENTER" wrapText="true">
+                                <font>
+                                    <Font name="System Bold" size="20.0" />
+                                </font>
+                            </Label>
+                            <Label fx:id="totalEventsLabel" text="0" textFill="WHITE">
+                                <font>
+                                    <Font name="System Bold" size="72.0" />
+                                </font>
+                                <VBox.margin>
+                                    <Insets top="10" />
+                                </VBox.margin>
+                            </Label>
+                        </VBox>
+                    </VBox>
+                </VBox>
+            </content>
+        </ScrollPane>
+    </center>
+
+    <bottom>
+        <HBox alignment="CENTER_RIGHT" spacing="10" style="-fx-background-color: #ecf0f1; -fx-padding: 10;">
+            <Button fx:id="backButton" text="Back to Dashboard" onAction="#handleBackToDashboard" />
+        </HBox>
+    </bottom>
+</BorderPane> 

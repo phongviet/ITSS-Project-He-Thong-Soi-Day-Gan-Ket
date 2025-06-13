@@ -182,29 +182,6 @@ public class EventManagementScreenHandler implements Initializable {
 
             // Use the status field from the Event class
             String status = event.getStatus();
-
-            // If status is null or empty, fall back to date-based calculation
-            if (status == null || status.isEmpty()) {
-                if (event.getStartDate() != null && event.getEndDate() != null) {
-                    LocalDate startDate = event.getStartDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
-                    LocalDate endDate = event.getEndDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
-                    LocalDate today = LocalDate.now();
-
-                    if (startDate.isAfter(today)) {
-                        status = "Upcoming";
-                    } else if (endDate.isBefore(today)) {
-                        status = "Completed";
-                    } else {
-                        status = "Active";
-                    }
-                } else {
-                    status = "Pending";
-                }
-            } else {
-                // Capitalize first letter for display purposes
-                status = status.substring(0, 1).toUpperCase() + status.substring(1).toLowerCase();
-            }
-
             return new SimpleStringProperty(status);
         });
 
@@ -247,24 +224,7 @@ public class EventManagementScreenHandler implements Initializable {
 
             // Get the event status, handling null cases
             String eventStatus = event.getStatus();
-            if (eventStatus == null || eventStatus.isEmpty()) {
-                // For events with no status, determine based on dates
-                if (event.getStartDate() != null && event.getEndDate() != null) {
-                    LocalDate startDate = event.getStartDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
-                    LocalDate endDate = event.getEndDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
-                    LocalDate today = LocalDate.now();
-
-                    if (startDate.isAfter(today)) {
-                        eventStatus = "Upcoming";
-                    } else if (endDate.isBefore(today)) {
-                        eventStatus = "Completed";
-                    } else {
-                        eventStatus = "Active";
-                    }
-                } else {
-                    eventStatus = "Pending";
-                }
-            }
+        
 
             // Compare the filter value with the event status (case insensitive)
             return currentStatusFilter.equalsIgnoreCase(eventStatus);
@@ -373,14 +333,14 @@ public class EventManagementScreenHandler implements Initializable {
             boolean success = adminApprovalController.approveEvent(event.getEventId());
 
             if (success) {
-                // Update the status in our list to "Coming Soon"
-                event.setStatus("Coming Soon");
+                // Update the status in our list to "Upcoming"
+                event.setStatus("Upcoming");
 
                 // Refresh the table
                 eventTableView.refresh();
 
                 // Show success message
-                statusMessage.setText("Event '" + event.getTitle() + "' has been processed and set to Coming Soon.");
+                statusMessage.setText("Event '" + event.getTitle() + "' has been processed and set to Upcoming.");
             } else {
                 statusMessage.setText("Failed to process event.");
             }

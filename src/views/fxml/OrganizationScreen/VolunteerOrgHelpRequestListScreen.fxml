@@ -30,7 +30,7 @@
                 <Insets top="20" right="20" bottom="20" left="20"/>
             </padding>
 
-            <Label text="Help Requests đã được Approved" style="-fx-font-size: 18; -fx-font-weight: bold;"/>
+            <Label text="Help Requests Approved" style="-fx-font-size: 18; -fx-font-weight: bold;"/>
             <TableView fx:id="helpRequestTable" prefHeight="500" prefWidth="900">
                 <columns>
                     <TableColumn fx:id="titleColumn" text="Tiêu đề" prefWidth="250"/>

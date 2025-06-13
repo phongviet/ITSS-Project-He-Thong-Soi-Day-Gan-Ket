@@ -86,7 +86,7 @@ public class VolunteerOrgHelpRequestListScreenHandler implements Initializable {
             @Override
             public TableCell<HelpRequest, Void> call(TableColumn<HelpRequest, Void> param) {
                 return new TableCell<HelpRequest, Void>() {
-                    private final Button acceptButton = new Button("Nhận yêu cầu");
+                    private final Button acceptButton = new Button("Accept");
 
                     {
                         acceptButton.setStyle("-fx-background-color: #2ecc71; -fx-text-fill: white;");
@@ -112,14 +112,14 @@ public class VolunteerOrgHelpRequestListScreenHandler implements Initializable {
 
     private void loadHelpRequests() {
         if (organization == null) {
-            statusMessage.setText("Organization chưa được set.");
+            statusMessage.setText("Organization not set yet.");
             return;
         }
 
         List<HelpRequest> list = eventController.getApprovedHelpRequests();
         if (list == null || list.isEmpty()) {
             helpRequestData = FXCollections.observableArrayList();
-            statusMessage.setText("Không có HelpRequest nào đang ở trạng thái 'approved'.");
+            statusMessage.setText("There are no HelpRequests in 'Approved' status.");
         } else {
             helpRequestData = FXCollections.observableArrayList(list);
             statusMessage.setText("");

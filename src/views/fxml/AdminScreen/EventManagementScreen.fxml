@@ -53,8 +53,8 @@
                                 <String fx:value="Pending" />
                                 <String fx:value="Approved" />
                                 <String fx:value="Rejected" />
-                                <String fx:value="Coming Soon" />
-                                <String fx:value="Completed" />
+                                <String fx:value="Upcoming" />
+                                <String fx:value="Done" />
                                 <String fx:value="Canceled" />
                             </FXCollections>
                         </items>

@@ -132,7 +132,7 @@ public class VolunteerSuggestedEventsScreenHandler implements Initializable {
                     
                     // Mặc định cho phép đăng ký nếu sự kiện còn "đăng ký được"
                     boolean canEventBeRegistered = "Approved".equalsIgnoreCase(currentEvent.getStatus()) ||
-                                                 "Coming Soon".equalsIgnoreCase(currentEvent.getStatus()) ||
+                                                 "Upcoming".equalsIgnoreCase(currentEvent.getStatus()) ||
                                                  "Pending".equalsIgnoreCase(currentEvent.getStatus()); // Trạng thái sự kiện cho phép đăng ký
                     
                     registerButton.setDisable(!canEventBeRegistered); // Vô hiệu hóa nếu sự kiện không cho đăng ký

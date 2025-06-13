@@ -87,6 +87,7 @@ class TestEventController {
  // --- Các test cho getEmergencyLevelPriority (giữ nguyên từ code của bạn) ---
     @Test
     void getEmergencyLevelPriority_ValidLevels_ShouldReturnCorrectPriority() {
+
         assertEquals(1, eventController.getEmergencyLevelPriority("khẩn cấp"), "Khẩn cấp should be priority 1");
         assertEquals(1, eventController.getEmergencyLevelPriority("KHẨN CẤP"), "Case insensitivity for Khẩn cấp");
      
@@ -96,11 +97,18 @@ class TestEventController {
         // assertEquals(3, eventController.getEmergencyLevelPriority("Normal"), "Normal should be priority 3");
         assertEquals(4, eventController.getEmergencyLevelPriority("thấp"), "Thấp should be priority 4");
         // assertEquals(4, eventController.getEmergencyLevelPriority("Low"), "Low should be priority 4");
+
+
     }
 
     @Test
     void getEmergencyLevelPriority_UnknownLevel_ShouldReturnLowestPriority() {
+
         assertEquals(5, eventController.getEmergencyLevelPriority("không rõ"), "Unknown level should return lowest priority");
+
+        // Kiểm tra giá trị không xác định
+        assertEquals(5, eventController.getEmergencyLevelPriority("Unknown"), "Unknown level should return lowest priority");
+
     }
 
     @Test

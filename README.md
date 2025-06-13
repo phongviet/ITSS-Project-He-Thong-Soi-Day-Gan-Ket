@@ -10,10 +10,9 @@ View bảng trong console cho đẹp
 echo .header on>.sqliterc & echo .mode column>>.sqliterc & move .sqliterc %USERPROFILE%
 ```
 
-Cài SQLite-jdbc mới nhất: https://github.com/xerial/sqlite-jdbc/releases
+Cài SQLite-jdbc 3.49.1.0: https://github.com/xerial/sqlite-jdbc/releases
 (Tự tìm hiểu cách cài)
 
-https://www.youtube.com/watch?v=dQw4w9WgXcQ
 
 ### Java
 

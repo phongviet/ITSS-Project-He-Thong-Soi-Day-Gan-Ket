@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<VBox xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="views.screen.PersonInNeedScreen.PersonInNeedCreateRequestScreenHandler"
+      spacing="10" alignment="CENTER" style="-fx-padding: 20;">
+
+    <Label text="Create New Help Request" style="-fx-font-size: 18px; -fx-font-weight: bold;"/>
+
+    <GridPane hgap="10" vgap="10">
+        <padding>
+            <Insets top="20" right="20" bottom="20" left="20"/>
+        </padding>
+
+        <Label text="Title:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+        <TextField fx:id="titleField" GridPane.rowIndex="0" GridPane.columnIndex="1" prefWidth="300"/>
+
+        <Label text="Description:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+        <TextArea fx:id="descriptionArea" GridPane.rowIndex="1" GridPane.columnIndex="1" prefWidth="300" prefHeight="100" wrapText="true"/>
+
+        <Label text="Contact Information:" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+        <TextField fx:id="contactField" GridPane.rowIndex="2" GridPane.columnIndex="1" prefWidth="300"/>
+        
+        <Label text="Start Date (Optional):" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
+        <DatePicker fx:id="startDatePicker" GridPane.rowIndex="4" GridPane.columnIndex="1" prefWidth="300"/>
+        
+        <Label text="Emergency Level:" GridPane.rowIndex="5" GridPane.columnIndex="0"/>
+        <ComboBox fx:id="emergencyLevelComboBox" GridPane.rowIndex="5" GridPane.columnIndex="1" prefWidth="300"/>
+
+    </GridPane>
+
+    <HBox spacing="10" alignment="CENTER" style="-fx-padding: 10;">
+        <Button text="Submit Request" onAction="#handleSubmitRequest" style="-fx-background-color: #27ae60; -fx-text-fill: white;"/>
+        <Button text="View My Requests" onAction="#handleViewMyRequests" style="-fx-background-color: #3498db; -fx-text-fill: white;"/>
+        <Button fx:id="backToDashboardButton" text="Back to Dashboard" onAction="#handleBackToDashboard" style="-fx-background-color: #f39c12; -fx-text-fill: white;"/>
+    </HBox>
+
+    <Label fx:id="statusMessageLabel" style="-fx-text-fill: green; -fx-padding: 5px;"/>
+</VBox> 

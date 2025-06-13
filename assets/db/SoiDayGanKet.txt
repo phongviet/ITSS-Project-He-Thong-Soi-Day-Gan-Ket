@@ -104,14 +104,16 @@ CREATE TABLE Notification (
 );
 
 CREATE TABLE HelpRequest (
-    "requestId" INTEGER NOT NULL PRIMARY KEY,
+    "requestId" INTEGER PRIMARY KEY AUTOINCREMENT,
     "title" TEXT NULL,
     "startDate" DATE NULL,
     "emergencyLevel" TEXT NULL,
     "description" TEXT NULL,
-    "personInNeedID" TEXT NULL,
+    "personInNeedId" TEXT NULL,
     "status" TEXT NULL DEFAULT 'Pending',
-    FOREIGN KEY (personInNeedID) REFERENCES PersonInNeed(username)
+    "contact" TEXT NULL,
+    "address" TEXT NULL,
+    FOREIGN KEY (personInNeedId) REFERENCES PersonInNeed(username)
 );
 
 CREATE TABLE Report (
@@ -194,7 +196,7 @@ VALUES
 INSERT INTO Events (eventId, title, maxParticipantNumber, startDate, endDate, emergencyLevel, description, organizer, requestId, status)
 VALUES
 (1, 'Dạy học cho trẻ em vùng cao', 10, '2025-06-15', '2025-06-20', 'Bình thường', 'Chương trình dạy học miễn phí cho trẻ em vùng cao Tây Bắc', 'tochuc', NULL, 'Done'),
-(2, 'Chăm sóc người già neo đơn', 5, '2025-06-25', '2025-06-28', 'Khẩn cấp', 'Chăm sóc và hỗ trợ người già neo đơn tại Hà Nội', 'org2', '1', 'Coming Soon'),
+(2, 'Chăm sóc người già neo đơn', 5, '2025-06-25', '2025-06-28', 'Khẩn cấp', 'Chăm sóc và hỗ trợ người già neo đơn tại Hà Nội', 'org2', '1', 'Upcoming'),
 (3, 'Quyên góp sách vở cho trẻ em', 15, '2025-07-10', '2025-07-15', 'Bình thường', 'Quyên góp sách vở và đồ dùng học tập cho trẻ em nghèo', 'tochuc', NULL, 'Pending');
 
 -- Sample data for EventParticipants
@@ -212,10 +214,10 @@ VALUES
 (4, 3, 'volunteer2', 'Canceled');
 
 -- Sample data for HelpRequest
-INSERT INTO HelpRequest (requestId, title, startDate, emergencyLevel, description, personInNeedID, status)
+INSERT INTO HelpRequest (requestId, title, startDate, emergencyLevel, description, personInNeedId, status, contact, address)
 VALUES
-(1, 'Cần hỗ trợ chăm sóc người già', '2025-06-10', 'Khẩn cấp', 'Cần tình nguyện viên hỗ trợ chăm sóc người già tại gia đình', 'person1', 'Approved'),
-(2, 'Cần hỗ trợ dạy kèm cho trẻ', '2025-06-20', 'Bình thường', 'Cần tình nguyện viên dạy kèm tiếng Anh cho trẻ em', 'person2', 'Pending');
+(1, 'Cần hỗ trợ chăm sóc người già', '2025-06-10', 'Khẩn cấp', 'Cần tình nguyện viên hỗ trợ chăm sóc người già tại gia đình', 'person1', 'Approved', '0987654321', 'Hà Nội'),
+(2, 'Cần hỗ trợ dạy kèm cho trẻ', '2025-06-20', 'Bình thường', 'Cần tình nguyện viên dạy kèm tiếng Anh cho trẻ em', 'person2', 'Pending', '0987654322', 'Hồ Chí Minh');
 
 -- Sample data for Report
 INSERT INTO Report (reportId, eventId, reportDate, progress, note)

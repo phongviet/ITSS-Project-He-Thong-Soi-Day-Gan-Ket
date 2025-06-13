@@ -53,6 +53,11 @@
                         <Font size="14.0" />
                     </font>
                 </Button>
+                <Button fx:id="viewStatisticsButton" onAction="#handleViewStatistics" prefHeight="60" prefWidth="200" style="-fx-background-color: #1abc9c; -fx-text-fill: white;" text="View Statistics">
+                    <font>
+                        <Font size="14.0" />
+                    </font>
+                </Button>
             </HBox>
         </VBox>
     </center>

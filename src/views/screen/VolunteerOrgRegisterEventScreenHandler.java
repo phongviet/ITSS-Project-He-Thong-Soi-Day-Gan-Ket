@@ -187,6 +187,11 @@ public class VolunteerOrgRegisterEventScreenHandler implements Initializable {
                 event.setOrganizer(organization.getUsername());
             }
 
+            // If the event is created from a help request, set the request ID
+            if (helpRequest != null) {
+                event.setRequestId(String.valueOf(helpRequest.getRequestId()));
+            }
+
             // Save event using the controller
             boolean success = eventController.registerEvent(event, organization);
 
@@ -194,9 +199,9 @@ public class VolunteerOrgRegisterEventScreenHandler implements Initializable {
                 statusMessage.setText("Event registered successfully!");
 
                 // Nếu đến từ HelpRequest, cập nhật trạng thái HelpRequest thành "closed"
-                if (helpRequest != null) {
-                    eventController.updateHelpRequestStatus(helpRequest.getRequestId(), "Closed");
-                }
+                // if (helpRequest != null) {
+                //     eventController.updateHelpRequestStatus(helpRequest.getRequestId(), "Closed");
+                // }
 
                 // Thực hiện quay về dashboard
                 handleBack();

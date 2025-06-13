@@ -139,7 +139,7 @@ public class HelpRequestManagementScreenHandler implements Initializable {
 
         // Setup requester column
         requesterColumn.setCellValueFactory(cellData ->
-            new SimpleStringProperty(cellData.getValue().getPersonInNeedID()));
+            new SimpleStringProperty(String.valueOf(cellData.getValue().getPersonInNeedId())));
 
         // Setup start date column
         startDateColumn.setCellValueFactory(cellData -> {
@@ -348,7 +348,7 @@ public class HelpRequestManagementScreenHandler implements Initializable {
     private void handleRejectRequest(HelpRequest request) {
         try {
             // Use AdminApprovalController to reject the request
-            boolean success = adminApprovalController.rejectHelpRequest(request, "Rejected by admin");
+            boolean success = adminApprovalController.rejectHelpRequest(request);
 
             if (success) {
                 // Update the status in our list to "Rejected"
