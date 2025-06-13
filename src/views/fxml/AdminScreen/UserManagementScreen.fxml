@@ -77,8 +77,8 @@
     </center>
 
     <bottom>
-        <HBox alignment="CENTER" spacing="10" style="-fx-background-color: #ecf0f1; -fx-padding: 10;">
-            <Button fx:id="backButton" onAction="#handleBackToDashboard" prefHeight="30" prefWidth="150" style="-fx-background-color: #3498db; -fx-text-fill: white;" text="Back to Dashboard" />
+        <HBox alignment="CENTER_RIGHT" style="-fx-background-color: #ecf0f1; -fx-padding: 10;">
+            <Button fx:id="backButton" text="Back to Dashboard" onAction="#handleBackToDashboard"/>
         </HBox>
     </bottom>
 </BorderPane>
