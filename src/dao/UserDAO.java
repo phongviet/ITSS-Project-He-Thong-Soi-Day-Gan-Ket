@@ -19,6 +19,10 @@ import java.util.Map;
 import java.util.HashMap;
 import java.sql.Types;
 import entity.events.EventParticipantDetails;
+import utils.AppConstants;
+import java.text.SimpleDateFormat;
+import java.text.ParseException;
+import entity.events.Event;
 
 /**
  * UserDAO class handles all database operations related to users.
@@ -643,5 +647,68 @@ public class UserDAO {
             e.printStackTrace();
             return false;
         }
+    }
+
+    public List<EventParticipantDetails> getEventParticipationDetailsForVolunteer(String volunteerUsername) {
+        List<EventParticipantDetails> participationDetailsList = new ArrayList<>();
+        String sql = "SELECT e.*, ep.hoursParticipated, ep.ratingByOrg FROM Events e LEFT JOIN EventParticipants ep ON e.eventId = ep.eventId AND ep.username = ? JOIN Notification n ON e.eventId = n.eventId AND n.username = ? WHERE n.acceptStatus = 'Registered' OR n.acceptStatus = 'Attended' OR e.status = 'Done'";
+        String volunteerFullName = getVolunteer(volunteerUsername) != null ? getVolunteer(volunteerUsername).getFullName() : "N/A";
+
+        try (Connection conn = DriverManager.getConnection(DB_URL);
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, volunteerUsername);
+            pstmt.setString(2, volunteerUsername);
+            ResultSet rs = pstmt.executeQuery();
+
+            while (rs.next()) {
+                Event event = new Event();
+                event.setEventId(rs.getInt("eventId"));
+                event.setTitle(rs.getString("title"));
+                try {
+                    String startDateStr = rs.getString("startDate");
+                    if (startDateStr != null) event.setStartDate(new SimpleDateFormat("yyyy-MM-dd").parse(startDateStr));
+                    String endDateStr = rs.getString("endDate");
+                    if (endDateStr != null) event.setEndDate(new SimpleDateFormat("yyyy-MM-dd").parse(endDateStr));
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
+                event.setStatus(rs.getString("status"));
+                event.setOrganizer(rs.getString("organizer"));
+
+                Integer hoursParticipated = rs.getObject("hoursParticipated") != null ? rs.getInt("hoursParticipated") : null;
+                Integer ratingByOrg = rs.getObject("ratingByOrg") != null ? rs.getInt("ratingByOrg") : null;
+                String volunteerParticipationStatus = getVolunteerEventParticipationStatus(conn, volunteerUsername, event.getEventId());
+
+                EventParticipantDetails details = new EventParticipantDetails(event, volunteerUsername, volunteerFullName, hoursParticipated, ratingByOrg, volunteerParticipationStatus);
+                details.setOrganizerName(getOrganizerNameById(conn, event.getOrganizer()));
+                participationDetailsList.add(details);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return participationDetailsList;
+    }
+
+    private String getVolunteerEventParticipationStatus(Connection conn, String volunteerUsername, int eventId) throws SQLException {
+        String sqlNotif = "SELECT acceptStatus FROM Notification WHERE username = ? AND eventId = ? ORDER BY notificationId DESC LIMIT 1";
+        try (PreparedStatement pstmtNotif = conn.prepareStatement(sqlNotif)) {
+            pstmtNotif.setString(1, volunteerUsername);
+            pstmtNotif.setInt(2, eventId);
+            try (ResultSet rsNotif = pstmtNotif.executeQuery()) {
+                if (rsNotif.next()) return rsNotif.getString("acceptStatus");
+            }
+        }
+        return "Registered"; // Default status
+    }
+    
+    private String getOrganizerNameById(Connection conn, String organizerUsername) throws SQLException {
+        String sqlOrg = "SELECT organizationName FROM VolunteerOrganization WHERE username = ?";
+        try (PreparedStatement pstmtOrg = conn.prepareStatement(sqlOrg)) {
+            pstmtOrg.setString(1, organizerUsername);
+            try (ResultSet rsOrg = pstmtOrg.executeQuery()) {
+                if (rsOrg.next()) return rsOrg.getString("organizationName");
+            }
+        }
+        return "Unknown Organization";
     }
 } 
