@@ -62,8 +62,9 @@ fx:controller="views.screen.OrganizationStatisticsScreenHandler">
     </center>
 
     <bottom>
-        <HBox alignment="CENTER_RIGHT" spacing="10" style="-fx-background-color: #ecf0f1; -fx-padding: 10;">
+        <HBox alignment="CENTER_RIGHT" style="-fx-background-color: #ecf0f1; -fx-padding: 10;">
             <Button fx:id="backButton" text="Back to Dashboard" onAction="#handleBackToDashboard" />
         </HBox>
     </bottom>
-</BorderPane> 
+</BorderPane>
+

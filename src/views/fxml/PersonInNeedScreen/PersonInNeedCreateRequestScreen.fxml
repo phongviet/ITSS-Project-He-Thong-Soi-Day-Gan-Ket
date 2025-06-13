@@ -39,4 +39,4 @@
     </HBox>
 
     <Label fx:id="statusMessageLabel" style="-fx-text-fill: green; -fx-padding: 5px;"/>
-</VBox> 
+</VBox>

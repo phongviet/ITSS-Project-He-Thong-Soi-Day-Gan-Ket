@@ -64,11 +64,7 @@
 
     <bottom>
         <HBox alignment="CENTER_RIGHT" style="-fx-background-color: #ecf0f1; -fx-padding: 10;">
-            <Button onAction="#handleLogout" text="Logout">
-                <font>
-                    <Font size="14.0" />
-                </font>
-            </Button>
+            <Button onAction="#handleLogout" text="Logout" />
         </HBox>
     </bottom>
 </BorderPane>
