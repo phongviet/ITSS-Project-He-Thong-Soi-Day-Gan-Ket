@@ -52,8 +52,8 @@ public class EventController {
         return eventDAO.getEventsByOrganizerId(organizerId);
     }
 
-    public boolean updateVolunteerRating(String volunteerUsername, int newScore) {
-        return userDAO.updateVolunteerRating(volunteerUsername, newScore);
+    public boolean recalculateVolunteerAverageRating(String volunteerUsername) {
+        return userDAO.recalculateVolunteerAverageRating(volunteerUsername);
     }
 
     public List<Volunteer> getEventParticipants(int eventId) {
@@ -61,7 +61,7 @@ public class EventController {
     }
 
     public List<Event> getAllEvents() {
-        return eventDAO.getAllOpenAndAvailableEvents();
+        return eventDAO.getAllEvents();
     }
     
     public List<EventParticipantDetails> getEventParticipationDetailsForVolunteer(String volunteerUsername) {
@@ -77,7 +77,7 @@ public class EventController {
     }
 
     public boolean updateNotificationStatus(int notificationId, String newStatus) {
-        return notificationDAO.updateNotificationStatus(notificationId, newStatus);
+        return notificationDAO.processRegistrationAndUpdateParticipant(notificationId, newStatus);
     }
     
     public int getEmergencyLevelPriority(String emergencyLevel) {
@@ -96,10 +96,6 @@ public class EventController {
         };
     }
 
-    public List<Event> getAllOpenAndAvailableEvents() {
-        return eventDAO.getAllOpenAndAvailableEvents();
-    }
-    
     public List<Event> getSuggestedEventsForVolunteer(Volunteer volunteer) {
         if (volunteer == null || volunteer.getUsername() == null) {
             System.err.println("getSuggestedEventsForVolunteer: Volunteer object or username is null.");
@@ -111,7 +107,7 @@ public class EventController {
             return new ArrayList<>();
         }
 
-        List<Event> allOpenEvents = this.getAllOpenAndAvailableEvents();
+        List<Event> allOpenEvents = eventDAO.getAllOpenAndAvailableEvents();
         List<SuggestedEventWrapper> suggestedEventsWithScore = new ArrayList<>();
 
         for (Event event : allOpenEvents) {

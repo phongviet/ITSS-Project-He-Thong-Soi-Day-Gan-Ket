@@ -399,4 +399,36 @@ public class EventDAO {
         }
         return participants;
     }
+
+    public List<Event> getAllEvents() {
+        List<Event> events = new ArrayList<>();
+        String sql = "SELECT * FROM Events";
+        try (Connection conn = DriverManager.getConnection(DB_URL);
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            ResultSet rs = pstmt.executeQuery();
+            while (rs.next()) {
+                Event event = new Event();
+                int eventId = rs.getInt("eventId");
+                event.setEventId(eventId);
+                event.setTitle(rs.getString("title"));
+                event.setMaxParticipantNumber(rs.getInt("maxParticipantNumber"));
+                 try {
+                    String startDateStr = rs.getString("startDate");
+                    if(startDateStr != null) event.setStartDate(new SimpleDateFormat("yyyy-MM-dd").parse(startDateStr));
+                    String endDateStr = rs.getString("endDate");
+                    if(endDateStr != null) event.setEndDate(new SimpleDateFormat("yyyy-MM-dd").parse(endDateStr));
+                } catch (ParseException e) { e.printStackTrace(); }
+                event.setEmergencyLevel(rs.getString("emergencyLevel"));
+                event.setDescription(rs.getString("description"));
+                event.setOrganizer(rs.getString("organizer"));
+                event.setRequestId(rs.getString("RequestId"));
+                event.setStatus(rs.getString("status"));
+                loadEventSkills(conn, event);
+                events.add(event);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return events;
+    }
 } 

@@ -146,85 +146,106 @@ VALUES ('admin', '123', 'admin@system.com', '0123456789', 'System Administration
 INSERT INTO Admin (username)
 VALUES ('admin');
 
--- Sample data for SystemUser
-INSERT INTO SystemUser (username, password, email, phone, address)
-VALUES
-('tnv', '123', 'volunteer1@example.com', '0987654321', 'Hà Nội'),
-('volunteer2', '123456', 'volunteer2@example.com', '0987654322', 'Hồ Chí Minh'),
-('nguoicantrogiup', '123', 'person1@example.com', '0987654323', 'Đà Nẵng'),
-('person2', '123456', 'person2@example.com', '0987654324', 'Huế'),
-('tochuc', '123', 'org1@example.com', '0987654325', 'Hà Nội'),
-('org2', '123456', 'org2@example.com', '0987654326', 'Hồ Chí Minh');
+-- =================================================================
+-- ========================== SAMPLE DATA ==========================
+-- =================================================================
 
--- Sample data for Volunteer
-INSERT INTO Volunteer (username, fullName, cccd, dateOfBirth, averageRating, ratingCount, freeHourPerWeek)
-VALUES
-('tnv', 'Nguyễn Văn A', '030201012345', '1990-01-15', 4.5, 10, 20),
-('volunteer2', 'Trần Thị B', '030201012346', '1995-05-20', 4.8, 15, 15);
+-- 1. SystemUser entries
+INSERT INTO SystemUser (username, password, email, phone, address) VALUES
+('tnv1', '123', 'volunteer1@example.com', '0911111111', '123 Volunteer St, Hanoi'),
+('tnv2', '123', 'volunteer2@example.com', '0922222222', '456 Volunteer Ave, HCMC'),
+('nguoicanhotro1', '123', 'person1@example.com', '0933333333', '789 Needy Rd, Da Nang'),
+('nguoicanhotro2', '123', 'person2@example.com', '0944444444', '101 Support Ln, Hue'),
+('tochuc1', '123', 'org1@example.com', '0955555555', '202 Charity Blvd, Hanoi'),
+('tochuc2', '123', 'org2@example.com', '0966666666', '303 Kindness Sq, HCMC');
 
--- Sample data for PersonInNeed
-INSERT INTO PersonInNeed (username, fullName, cccd, dateOfBirth)
-VALUES
-('nguoicantrogiup', 'Lê Văn C', '030201012347', '1980-08-10'),
-('person2', 'Phạm Thị D', '030201012348', '1985-12-25');
+-- 2. PersonInNeed entries
+INSERT INTO PersonInNeed (username, fullName, cccd, dateOfBirth) VALUES
+('nguoicanhotro1', 'Lê Văn Cần', '012345678901', '1955-08-10'),
+('nguoicanhotro2', 'Phạm Thị Khó', '012345678902', '1960-12-25');
 
--- Sample data for VolunteerOrganization
-INSERT INTO VolunteerOrganization (username, organizationName, licenseNumber, field, representative, sponsor, info)
-VALUES
-('tochuc', 'Tổ chức thiện nguyện Vì Cộng Đồng', 'ORG123456', 'Education', 'Hoàng Văn E', 'Công ty ABC', 'Tổ chức hỗ trợ giáo dục cho trẻ em vùng sâu vùng xa'),
-('org2', 'Quỹ từ thiện Ánh Dương', 'ORG654321', 'Health', 'Đỗ Thị F', 'Tập đoàn XYZ', 'Tổ chức hỗ trợ y tế cho người nghèo');
+-- 3. Volunteer entries (with initial ratings)
+INSERT INTO Volunteer (username, fullName, cccd, dateOfBirth, averageRating, ratingCount, freeHourPerWeek) VALUES
+('tnv1', 'Nguyễn Thiện Nguyện', '012345678903', '1990-01-15', 8.0, 1, 20),
+('tnv2', 'Trần Tốt Bụng', '012345678904', '1995-05-20', 9.0, 1, 15);
 
--- Sample data for Skills
-INSERT INTO Skills (skillId, skill)
-VALUES
-(1, 'Communication'),
-(2, 'First Aid'),
-(3, 'Education'),
-(4, 'Cooking'),
-(5, 'Driving'),
-(6, 'Fundraising');
+-- 4. VolunteerOrganization entries
+INSERT INTO VolunteerOrganization (username, organizationName, licenseNumber, field, representative, sponsor, info) VALUES
+('tochuc1', 'Vì Cộng Đồng', 'ORG-VCD-01', 'Education', 'Hoàng Văn E', 'Công ty ABC', 'Tổ chức hỗ trợ giáo dục cho trẻ em vùng sâu vùng xa.'),
+('tochuc2', 'Ánh Dương', 'ORG-AD-02', 'Healthcare', 'Đỗ Thị F', 'Tập đoàn XYZ', 'Tổ chức hỗ trợ y tế cho người nghèo và người già neo đơn.');
 
--- Sample data for VolunteerSkills
-INSERT INTO VolunteerSkills (username, skillId)
-VALUES
-('tnv', 1),
-('tnv', 2),
-('volunteer2', 3),
-('volunteer2', 4);
+-- 5. Skills library (in English to match UI)
+INSERT INTO Skills (skillId, skill) VALUES
+(1, 'Communication'), (2, 'First Aid'), (3, 'Education'), (4, 'Cooking'), (5, 'Driving'), (6, 'Fundraising');
 
--- Sample data for Events
-INSERT INTO Events (eventId, title, maxParticipantNumber, startDate, endDate, emergencyLevel, description, organizer, requestId, status)
-VALUES
-(1, 'Dạy học cho trẻ em vùng cao', 10, '2025-06-15', '2025-06-20', 'Normal', 'Chương trình dạy học miễn phí cho trẻ em vùng cao Tây Bắc', 'tochuc', NULL, 'Done'),
-(2, 'Chăm sóc người già neo đơn', 5, '2025-06-25', '2025-06-28', 'Urgent', 'Chăm sóc và hỗ trợ người già neo đơn tại Hà Nội', 'org2', '1', 'Upcoming'),
-(3, 'Quyên góp sách vở cho trẻ em', 15, '2025-07-10', '2025-07-15', 'Normal', 'Quyên góp sách vở và đồ dùng học tập cho trẻ em nghèo', 'tochuc', NULL, 'Pending'),
-(4, 'Hiến máu nhân đạo', 50, '2025-08-01', '2025-08-01', 'High', 'Chương trình hiến máu cứu người', 'org2', NULL, 'Approved'),
-(5, 'Dọn dẹp bãi biển', 20, '2025-07-20', '2025-07-20', 'Low', 'Dọn dẹp rác thải tại bãi biển ABC', 'tochuc', NULL, 'Cancelled');
+-- 6. VolunteerSkills linking
+INSERT INTO VolunteerSkills (username, skillId) VALUES
+('tnv1', 1), ('tnv1', 2), ('tnv1', 5),
+('tnv2', 3), ('tnv2', 4), ('tnv2', 1);
 
--- Sample data for EventParticipants
-INSERT INTO EventParticipants (eventId, username, hoursParticipated, ratingByOrg)
-VALUES
-(1, 'volunteer2', 15, 4),
-(3, 'tnv', NULL, NULL);
+-- 7. HelpRequest entries (logical statuses based on Admin approvals)
+-- Request #1: Closed, because its linked Event #1 is already Done.
+-- Request #2: Approved, Admin approved the request, it's now open for Orgs to create events. No org has created an event for it yet.
+-- Request #3: Closed, because an Org created Event #6 for it, and the Admin has approved that event.
+-- Request #4: Rejected, Admin rejected the initial request.
+-- Request #5: Pending, PIN created it, but Admin has not approved the request itself yet.
+INSERT INTO HelpRequest (requestId, title, startDate, emergencyLevel, description, personInNeedId, status, contact, address) VALUES
+(1, 'Cần hỗ trợ chăm sóc người già tại nhà', '2025-06-10', 'Urgent', 'Cần tình nguyện viên ghé thăm và chăm sóc y tế cơ bản cho người già neo đơn.', 'nguoicanhotro1', 'Closed', '0933333333', '789 Needy Rd, Da Nang'),
+(2, 'Cần dạy kèm tiếng Anh cho trẻ em khó khăn', '2025-06-20', 'Normal', 'Cần tình nguyện viên dạy kèm tiếng Anh online hoặc trực tiếp cho nhóm 5 trẻ em.', 'nguoicanhotro2', 'Approved', '0944444444', '101 Support Ln, Hue'),
+(3, 'Cần sửa chữa lại mái nhà dột', '2025-07-01', 'High', 'Mái nhà đã xuống cấp, cần một đội sửa chữa giúp đỡ.', 'nguoicanhotro1', 'Closed', '0933333333', '789 Needy Rd, Da Nang'),
+(4, 'Cần hỗ trợ mua thuốc định kỳ', '2025-07-05', 'Urgent', 'Do đi lại khó khăn, cần người đi mua thuốc giúp hàng tuần.', 'nguoicanhotro2', 'Rejected', '0944444444', '101 Support Ln, Hue'),
+(5, 'Cần tình nguyện viên đọc sách cho người khiếm thị', '2025-09-01', 'Low', 'Cần người có giọng đọc tốt, đọc sách ghi âm lại cho người khiếm thị.', 'nguoicanhotro1', 'Pending', '0933333333', '789 Needy Rd, Da Nang');
 
--- Sample data for Notification
-INSERT INTO Notification (notificationId, eventId, username, acceptStatus)
-VALUES
-(1, 1, 'tnv', 'Registered'),
-(2, 1, 'volunteer2', 'Registered'),
-(3, 2, 'tnv', 'Pending'),
-(4, 3, 'volunteer2', 'Cancelled'),
-(5, 4, 'tnv', 'Pending'),
-(6, 5, 'volunteer2', 'Registered');
+-- 8. Events entries
+-- Event 1: Linked to Request #1, Done.
+-- Event 2: Standalone event, Upcoming.
+-- Event 3: Standalone event, Pending Admin approval.
+-- Event 4: Standalone event, Cancelled.
+-- Event 5: Org created this for Request #2, but it's still Pending Admin approval. So Request #2 is NOT closed yet.
+-- Event 6: Org created this for Request #3, and Admin approved it. So Request #3 is now Closed.
+INSERT INTO Events (eventId, title, maxParticipantNumber, startDate, endDate, emergencyLevel, description, organizer, requestId, status) VALUES
+(1, 'Chăm sóc sức khỏe người già', 5, '2025-06-25', '2025-06-28', 'Urgent', 'Chăm sóc và hỗ trợ y tế cho người già theo yêu cầu #1.', 'tochuc2', 1, 'Done'),
+(2, 'Hiến máu nhân đạo Mùa Hè Xanh', 50, '2025-08-01', '2025-08-01', 'High', 'Chương trình hiến máu cứu người tại trung tâm thành phố.', 'tochuc2', NULL, 'Upcoming'),
+(3, 'Quyên góp sách vở cho năm học mới', 20, '2025-07-10', '2025-07-15', 'Normal', 'Quyên góp và phân loại sách vở, đồ dùng học tập cho trẻ em nghèo.', 'tochuc1', NULL, 'Pending'),
+(4, 'Dọn dẹp bãi biển Cửa Đại', 30, '2025-07-20', '2025-07-20', 'Low', 'Dọn dẹp rác thải tại bãi biển Cửa Đại để bảo vệ môi trường.', 'tochuc1', NULL, 'Cancelled'),
+(5, 'Dạy kèm tiếng Anh tình nguyện', 5, '2025-08-05', '2025-08-25', 'Normal', 'Dạy kèm tiếng Anh cho trẻ em khó khăn theo yêu cầu #2.', 'tochuc1', 2, 'Pending'),
+(6, 'Sửa chữa nhà cửa giúp dân', 10, '2025-07-15', '2025-07-17', 'High', 'Sửa lại mái nhà cho hộ dân theo yêu cầu #3', 'tochuc2', 3, 'Upcoming');
 
--- Sample data for HelpRequest
-INSERT INTO HelpRequest (requestId, title, startDate, emergencyLevel, description, personInNeedId, status, contact, address)
-VALUES
-(1, 'Cần hỗ trợ chăm sóc người già', '2025-06-10', 'Urgent', 'Cần tình nguyện viên hỗ trợ chăm sóc người già tại gia đình', 'nguoicantrogiup', 'Approved', '0987654321', 'Hà Nội'),
-(2, 'Cần hỗ trợ dạy kèm cho trẻ', '2025-06-20', 'Normal', 'Cần tình nguyện viên dạy kèm tiếng Anh cho trẻ em', 'person2', 'Pending', '0987654322', 'Hồ Chí Minh'),
-(3, 'Cần sửa chữa nhà cửa', '2025-07-01', 'High', 'Cần đội sửa chữa nhà cho người có hoàn cảnh khó khăn', 'nguoicantrogiup', 'Rejected', '0987654323', 'Đà Nẵng'),
-(4, 'Cần hỗ trợ mua thuốc', '2025-07-05', 'Urgent', 'Cần người đi mua thuốc giúp người già neo đơn', 'person2', 'Satisfied', '0987654324', 'Huế'),
-(5, 'Cần người tâm sự', '2025-07-10', 'Low', 'Cần người trò chuyện cùng người trầm cảm', 'nguoicantrogiup', 'Closed', '0987654323', 'Đà Nẵng');
+-- 9. EventSkills linking
+INSERT INTO EventSkills (eventID, skillId) VALUES
+(1, 1), (1, 2), -- Event 1 needs Communication and First Aid
+(2, 2), -- Event 2 needs First Aid
+(3, 1), -- Event 3 needs Communication
+(4, 1), -- Event 4 needs Communication
+(5, 3), -- Event 5 needs Education
+(6, 5); -- Event 6 needs Driving
+
+-- 10. EventParticipants entries (consistent with event status)
+-- Volunteer tnv1 participated in the 'Done' event 1.
+-- Volunteer tnv2 also participated in the 'Done' event 1.
+-- Volunteer tnv1 is registered for the 'Upcoming' event 2.
+INSERT INTO EventParticipants (eventId, username, hoursParticipated, ratingByOrg) VALUES
+(1, 'tnv1', 16, 8),
+(1, 'tnv2', 16, 9),
+(2, 'tnv1', NULL, NULL);
+
+-- 11. Notification entries (consistent with EventParticipants)
+-- Notifications for event 1 are 'Registered' because the volunteers are in the participants list.
+-- Notification for tnv1 for event 2 is 'Registered'.
+-- Notification for tnv2 for event 2 is still 'Pending' as an example of a pending request.
+-- Notification for tnv1 for event 3 (a pending event) is 'Pending'.
+-- Notification for tnv1 for event 4 (a cancelled event) is 'Cancelled'.
+-- Notification for tnv2 (who has teaching skill) for event 5 (a pending event) is 'Pending'.
+-- Notification for tnv1 (who has driving skill) for event 6 (an upcoming event) is 'Registered'.
+INSERT INTO Notification (notificationId, eventId, username, acceptStatus) VALUES
+(1, 1, 'tnv1', 'Registered'),
+(2, 1, 'tnv2', 'Registered'),
+(3, 2, 'tnv1', 'Registered'),
+(4, 2, 'tnv2', 'Pending'),
+(5, 3, 'tnv1', 'Pending'),
+(6, 4, 'tnv1', 'Cancelled'),
+(7, 5, 'tnv2', 'Pending'),
+(8, 6, 'tnv1', 'Registered');
 
 -- Sample data for Report
 INSERT INTO Report (reportId, eventId, reportDate, progress, note)
@@ -235,12 +256,3 @@ VALUES
 -- Sample data for FinalReport
 INSERT INTO FinalReport (reportId)
 VALUES (2);
-
--- Sample data for EventSkills
-INSERT INTO EventSkills (eventID, skillId)
-VALUES
-(1, 3),
-(2, 2),
-(3, 1),
-(4, 2),
-(5, 1);

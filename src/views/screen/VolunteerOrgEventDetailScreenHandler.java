@@ -88,8 +88,8 @@ public class VolunteerOrgEventDetailScreenHandler implements Initializable {
             (TableColumn.CellEditEvent<EventParticipantDetails, Integer> t) -> {
                 EventParticipantDetails participant = t.getTableView().getItems().get(t.getTablePosition().getRow());
                 Integer newValue = t.getNewValue();
-                if (newValue != null && (newValue < 1 || newValue > 5)) {
-                    if(volunteerStatusMessageLabel != null) volunteerStatusMessageLabel.setText("Rating for " + participant.getVolunteerFullName() + " must be between 1 and 5.");
+                if (newValue != null && (newValue < 1 || newValue > 10)) {
+                    if(volunteerStatusMessageLabel != null) volunteerStatusMessageLabel.setText("Rating for " + participant.getVolunteerFullName() + " must be between 1 and 10.");
                     participant.setRatingByOrg(t.getOldValue()); 
                     volunteersTableView.refresh(); 
                 } else {
@@ -180,9 +180,11 @@ public class VolunteerOrgEventDetailScreenHandler implements Initializable {
                 continue; 
             }
 
-            if (eventController.updateEventParticipantDetails(event.getEventId(), participant.getVolunteerUsername(), participant.getHoursParticipated(), rating)) {
+            boolean detailsUpdated = eventController.updateEventParticipantDetails(event.getEventId(), participant.getVolunteerUsername(), participant.getHoursParticipated(), rating);
+
+            if(detailsUpdated) {
                 if (rating != null) { 
-                    eventController.updateVolunteerRating(participant.getVolunteerUsername(), rating);
+                    eventController.recalculateVolunteerAverageRating(participant.getVolunteerUsername());
                 }
                 successCount++;
             } else {
@@ -196,7 +198,7 @@ public class VolunteerOrgEventDetailScreenHandler implements Initializable {
         } else {
             if(volunteerStatusMessageLabel != null) volunteerStatusMessageLabel.setText("All volunteer data saved successfully for " + successCount + " participants!");
         }
-        loadVolunteers(); 
+        loadVolunteers();
     }
 
     @FXML

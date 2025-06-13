@@ -121,7 +121,7 @@ public class VolunteerViewMyEventsScreenHandler implements Initializable {
 
         ratingByOrgColumn.setCellValueFactory(cellData -> {
             Integer rating = cellData.getValue().getRatingByOrg();
-            return new SimpleStringProperty(rating != null && rating > 0 ? rating.toString() + "/5" : "N/A");
+            return new SimpleStringProperty(rating != null && rating > 0 ? rating.toString() : "N/A");
         });
 
         actionsColumn.setCellFactory(param -> new TableCell<EventParticipantDetails, Void>() {

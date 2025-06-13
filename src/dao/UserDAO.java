@@ -606,42 +606,88 @@ public class UserDAO {
         return participants;
     }
 
-    public boolean updateVolunteerRating(String volunteerUsername, int newScore) {
-        String selectSql = "SELECT averageRating, ratingCount FROM Volunteer WHERE username = ?";
+    /**
+     * Recalculates the average rating and rating count for a volunteer based on all their ratings
+     * in the EventParticipants table and updates the Volunteer table. This is done in a transaction.
+     * @param volunteerUsername The username of the volunteer to update.
+     * @return true if the recalculation and update were successful, false otherwise.
+     */
+    public boolean recalculateVolunteerAverageRating(String volunteerUsername) {
+        String selectSql = "SELECT AVG(ratingByOrg), COUNT(ratingByOrg) FROM EventParticipants WHERE username = ? AND ratingByOrg IS NOT NULL";
         String updateSql = "UPDATE Volunteer SET averageRating = ?, ratingCount = ? WHERE username = ?";
         
-        try (Connection conn = DriverManager.getConnection(DB_URL);
-             PreparedStatement selectPstmt = conn.prepareStatement(selectSql)) {
-            selectPstmt.setString(1, volunteerUsername);
-            try (ResultSet rs = selectPstmt.executeQuery()) {
-                if (rs.next()) {
-                    double oldAvg = rs.getDouble("averageRating");
-                    int oldCount = rs.getInt("ratingCount");
-                    int newCount = oldCount + 1;
-                    double newAvg = (oldCount == 0) ? newScore : (oldAvg * oldCount + newScore) / newCount;
+        Connection conn = null;
+        try {
+            conn = DriverManager.getConnection(DB_URL);
+            conn.setAutoCommit(false);
 
-                    try (PreparedStatement updatePstmt = conn.prepareStatement(updateSql)) {
-                        updatePstmt.setDouble(1, newAvg);
-                        updatePstmt.setInt(2, newCount);
-                        updatePstmt.setString(3, volunteerUsername);
-                        return updatePstmt.executeUpdate() > 0;
+            double newAvg = 0.0;
+            int newCount = 0;
+
+            // Step 1: Calculate new average and count from EventParticipants
+            try (PreparedStatement selectPstmt = conn.prepareStatement(selectSql)) {
+                selectPstmt.setString(1, volunteerUsername);
+                try (ResultSet rs = selectPstmt.executeQuery()) {
+                    if (rs.next()) {
+                        newAvg = rs.getDouble(1);
+                        newCount = rs.getInt(2);
                     }
+                    // If no ratings found, newAvg and newCount will remain 0, which is correct.
                 }
             }
+            
+            // Step 2: Update the Volunteer table
+            try (PreparedStatement updatePstmt = conn.prepareStatement(updateSql)) {
+                updatePstmt.setDouble(1, newAvg);
+                updatePstmt.setInt(2, newCount);
+                updatePstmt.setString(3, volunteerUsername);
+                
+                updatePstmt.executeUpdate();
+                conn.commit();
+                return true;
+            }
+
         } catch (SQLException e) {
+            if (conn != null) {
+                try {
+                    conn.rollback();
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+            }
             e.printStackTrace();
+            return false;
+        } finally {
+            if (conn != null) {
+                try {
+                    conn.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
         }
-        return false;
     }
     
     public boolean updateEventParticipantDetails(int eventId, String volunteerUsername, Integer hours, Integer rating) {
         String sql = "UPDATE EventParticipants SET hoursParticipated = ?, ratingByOrg = ? WHERE eventId = ? AND username = ?";
         try (Connection conn = DriverManager.getConnection(DB_URL);
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            if (hours != null) pstmt.setInt(1, hours); else pstmt.setNull(1, Types.INTEGER);
-            if (rating != null) pstmt.setInt(2, rating); else pstmt.setNull(2, Types.INTEGER);
+
+            if (hours != null) {
+                pstmt.setInt(1, hours);
+            } else {
+                pstmt.setNull(1, Types.INTEGER);
+            }
+
+            if (rating != null) {
+                pstmt.setInt(2, rating);
+            } else {
+                pstmt.setNull(2, Types.INTEGER);
+            }
+
             pstmt.setInt(3, eventId);
             pstmt.setString(4, volunteerUsername);
+
             return pstmt.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();
@@ -651,13 +697,21 @@ public class UserDAO {
 
     public List<EventParticipantDetails> getEventParticipationDetailsForVolunteer(String volunteerUsername) {
         List<EventParticipantDetails> participationDetailsList = new ArrayList<>();
-        String sql = "SELECT e.*, ep.hoursParticipated, ep.ratingByOrg FROM Events e LEFT JOIN EventParticipants ep ON e.eventId = ep.eventId AND ep.username = ? JOIN Notification n ON e.eventId = n.eventId AND n.username = ? WHERE n.acceptStatus = 'Registered' OR n.acceptStatus = 'Attended' OR e.status = 'Done'";
-        String volunteerFullName = getVolunteer(volunteerUsername) != null ? getVolunteer(volunteerUsername).getFullName() : "N/A";
+        String sql = "SELECT e.*, ep.hoursParticipated, ep.ratingByOrg " +
+                     "FROM EventParticipants ep " +
+                     "JOIN Events e ON ep.eventId = e.eventId " +
+                     "WHERE ep.username = ?";
+
+        String volunteerFullName = "N/A";
+        Volunteer volunteer = getVolunteer(volunteerUsername);
+        if (volunteer != null) {
+            volunteerFullName = volunteer.getFullName();
+        }
 
         try (Connection conn = DriverManager.getConnection(DB_URL);
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            
             pstmt.setString(1, volunteerUsername);
-            pstmt.setString(2, volunteerUsername);
             ResultSet rs = pstmt.executeQuery();
 
             while (rs.next()) {
@@ -677,7 +731,11 @@ public class UserDAO {
 
                 Integer hoursParticipated = rs.getObject("hoursParticipated") != null ? rs.getInt("hoursParticipated") : null;
                 Integer ratingByOrg = rs.getObject("ratingByOrg") != null ? rs.getInt("ratingByOrg") : null;
-                String volunteerParticipationStatus = getVolunteerEventParticipationStatus(conn, volunteerUsername, event.getEventId());
+                
+                String volunteerParticipationStatus = "Registered"; 
+                if (event.getStatus().equals(AppConstants.EVENT_DONE)) {
+                    volunteerParticipationStatus = "Done";
+                }
 
                 EventParticipantDetails details = new EventParticipantDetails(event, volunteerUsername, volunteerFullName, hoursParticipated, ratingByOrg, volunteerParticipationStatus);
                 details.setOrganizerName(getOrganizerNameById(conn, event.getOrganizer()));
@@ -689,18 +747,6 @@ public class UserDAO {
         return participationDetailsList;
     }
 
-    private String getVolunteerEventParticipationStatus(Connection conn, String volunteerUsername, int eventId) throws SQLException {
-        String sqlNotif = "SELECT acceptStatus FROM Notification WHERE username = ? AND eventId = ? ORDER BY notificationId DESC LIMIT 1";
-        try (PreparedStatement pstmtNotif = conn.prepareStatement(sqlNotif)) {
-            pstmtNotif.setString(1, volunteerUsername);
-            pstmtNotif.setInt(2, eventId);
-            try (ResultSet rsNotif = pstmtNotif.executeQuery()) {
-                if (rsNotif.next()) return rsNotif.getString("acceptStatus");
-            }
-        }
-        return "Registered"; // Default status
-    }
-    
     private String getOrganizerNameById(Connection conn, String organizerUsername) throws SQLException {
         String sqlOrg = "SELECT organizationName FROM VolunteerOrganization WHERE username = ?";
         try (PreparedStatement pstmtOrg = conn.prepareStatement(sqlOrg)) {

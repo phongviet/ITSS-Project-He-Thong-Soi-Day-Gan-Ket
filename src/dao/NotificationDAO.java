@@ -128,17 +128,82 @@ public class NotificationDAO {
         return result;
     }
 
-    public boolean updateNotificationStatus(int notificationId, String newStatus) {
-        String sql = "UPDATE Notification SET acceptStatus = ? WHERE notificationId = ?";
-        try (Connection conn = DriverManager.getConnection(DB_URL);
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+    /**
+     * Processes a registration notification. It updates the notification status and, if the new status
+     * is 'Registered', it adds the volunteer to the EventParticipants table within a single transaction.
+     * @param notificationId The ID of the notification to process.
+     * @param newStatus The new status (e.g., "Registered", "Rejected").
+     * @return true if the operation was successful, false otherwise.
+     */
+    public boolean processRegistrationAndUpdateParticipant(int notificationId, String newStatus) {
+        String updateNotificationSql = "UPDATE Notification SET acceptStatus = ? WHERE notificationId = ?";
+        String getNotificationDetailsSql = "SELECT eventId, username FROM Notification WHERE notificationId = ?";
+        String insertParticipantSql = "INSERT INTO EventParticipants (eventId, username) VALUES (?, ?)";
 
-            pstmt.setString(1, newStatus);
-            pstmt.setInt(2, notificationId);
-            return pstmt.executeUpdate() > 0;
+        Connection conn = null;
+        try {
+            conn = DriverManager.getConnection(DB_URL);
+            conn.setAutoCommit(false);
+
+            // Step 1: Update notification status
+            try (PreparedStatement pstmtUpdate = conn.prepareStatement(updateNotificationSql)) {
+                pstmtUpdate.setString(1, newStatus);
+                pstmtUpdate.setInt(2, notificationId);
+                int affectedRows = pstmtUpdate.executeUpdate();
+                if (affectedRows == 0) {
+                    throw new SQLException("Updating notification failed, no rows affected.");
+                }
+            }
+
+            // Step 2: If approved ('Registered'), add to EventParticipants
+            if (AppConstants.NOTIF_REGISTERED.equals(newStatus)) {
+                int eventId = -1;
+                String username = null;
+
+                // Get eventId and username from the notification
+                try (PreparedStatement pstmtSelect = conn.prepareStatement(getNotificationDetailsSql)) {
+                    pstmtSelect.setInt(1, notificationId);
+                    try (ResultSet rs = pstmtSelect.executeQuery()) {
+                        if (rs.next()) {
+                            eventId = rs.getInt("eventId");
+                            username = rs.getString("username");
+                        } else {
+                            throw new SQLException("Could not find notification details for ID: " + notificationId);
+                        }
+                    }
+                }
+
+                // Insert into EventParticipants
+                if (eventId != -1 && username != null) {
+                    try (PreparedStatement pstmtInsert = conn.prepareStatement(insertParticipantSql)) {
+                        pstmtInsert.setInt(1, eventId);
+                        pstmtInsert.setString(2, username);
+                        pstmtInsert.executeUpdate();
+                    }
+                }
+            }
+
+            conn.commit();
+            return true;
+
         } catch (SQLException e) {
             e.printStackTrace();
+            if (conn != null) {
+                try {
+                    conn.rollback();
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+            }
             return false;
+        } finally {
+            if (conn != null) {
+                try {
+                    conn.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
         }
     }
 
