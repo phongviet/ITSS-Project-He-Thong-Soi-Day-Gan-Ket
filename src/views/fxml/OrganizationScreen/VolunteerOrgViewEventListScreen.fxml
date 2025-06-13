@@ -63,10 +63,10 @@
             <!-- Event list table -->
             <TableView fx:id="eventTableView" VBox.vgrow="ALWAYS">
                 <columns>
-                    <TableColumn fx:id="titleColumn" prefWidth="250" text="Event Title" />
+                    <TableColumn fx:id="titleColumn" prefWidth="220.0" text="Event Title" />
                     <TableColumn fx:id="startDateColumn" prefWidth="120" text="Start Date" />
                     <TableColumn fx:id="endDateColumn" prefWidth="120" text="End Date" />
-                    <TableColumn fx:id="statusColumn" prefWidth="100" text="Status" />
+                    <TableColumn fx:id="statusColumn" prefWidth="180.0" text="Status" />
                     <TableColumn fx:id="actionsColumn" prefWidth="200.0" text="Actions" />
                 </columns>
             </TableView>
@@ -78,7 +78,7 @@
 
     <bottom>
         <HBox alignment="CENTER_RIGHT" style="-fx-background-color: #ecf0f1; -fx-padding: 10;">
-            <Button text="Back to Dashboard" onAction="#handleBackToDashboard"/>
+            <Button onAction="#handleBackToDashboard" text="Back to Dashboard" />
         </HBox>
     </bottom>
 </BorderPane>
