@@ -17,6 +17,7 @@ import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
 import javafx.util.Callback;
+import utils.AppConstants;
 
 import java.io.IOException;
 import java.net.URL;
@@ -29,16 +30,6 @@ import java.util.ResourceBundle;
 import java.util.function.Predicate;
 
 public class VolunteerOrgViewEventListScreenHandler implements Initializable {
-
-    // Event Status Constants
-    private static final String STATUS_PENDING = "Pending";
-    private static final String STATUS_REJECTED = "Rejected";
-    private static final String STATUS_COMING_SOON = "Coming Soon";
-    private static final String STATUS_DONE = "Done"; // Giả sử "Completed" trong DB là "Done" khi hiển thị hoặc xử lý
-    private static final String STATUS_CANCELED = "Canceled";
-    private static final String STATUS_COMPLETED = "Completed"; // Thường dùng trong DB
-    private static final String STATUS_ACTIVE = "Active";
-    private static final String STATUS_APPROVED = "Approved";
 
     @FXML
     private TableView<Event> eventTableView;
@@ -164,14 +155,14 @@ public class VolunteerOrgViewEventListScreenHandler implements Initializable {
                     LocalDate today = LocalDate.now();
 
                     if (startDate.isAfter(today)) {
-                        status = STATUS_COMING_SOON; // Use constant
+                        status = AppConstants.EVENT_UPCOMING;
                     } else if (endDate.isBefore(today)) {
-                        status = STATUS_COMPLETED; // Use constant
+                        status = AppConstants.EVENT_DONE; 
                     } else {
-                        status = STATUS_ACTIVE; // Use constant
+                        status = "Active"; // This is a display-only status
                     }
                 } else {
-                    status = STATUS_PENDING; // Use constant
+                    status = AppConstants.EVENT_PENDING;
                 }
             }
             return new SimpleStringProperty(status);
@@ -284,11 +275,9 @@ public class VolunteerOrgViewEventListScreenHandler implements Initializable {
 
                             boolean showReportButton = false;
                             if (rawEventStatus != null) {
-                                if (STATUS_APPROVED.equalsIgnoreCase(rawEventStatus) ||
-                                    STATUS_COMING_SOON.equalsIgnoreCase(rawEventStatus) ||
-                                    STATUS_ACTIVE.equalsIgnoreCase(rawEventStatus) ||
-                                    STATUS_DONE.equalsIgnoreCase(rawEventStatus) ||
-                                    STATUS_COMPLETED.equalsIgnoreCase(rawEventStatus)) {
+                                if (AppConstants.EVENT_APPROVED.equalsIgnoreCase(rawEventStatus) ||
+                                    AppConstants.EVENT_UPCOMING.equalsIgnoreCase(rawEventStatus) ||
+                                    AppConstants.EVENT_DONE.equalsIgnoreCase(rawEventStatus)) {
                                     showReportButton = true;
                                 }
                             }
@@ -315,12 +304,11 @@ public class VolunteerOrgViewEventListScreenHandler implements Initializable {
         // Cannot change from Pending (Admin's job), Rejected, Done, Canceled (final states for Org)
         switch (currentStatus.toLowerCase()) {
             case "upcoming":
-            case "coming soon":
                 // Org can mark as Active or Cancel. Cannot mark as Done directly from Coming Soon.
-                return Arrays.asList(STATUS_COMING_SOON, STATUS_ACTIVE, STATUS_CANCELED);
+                return Arrays.asList(AppConstants.EVENT_UPCOMING, "Active", AppConstants.EVENT_CANCELLED);
             case "active":
                 // Org can mark as Done or Cancel.
-                return Arrays.asList(STATUS_ACTIVE, STATUS_DONE, STATUS_CANCELED);
+                return Arrays.asList("Active", AppConstants.EVENT_DONE, AppConstants.EVENT_CANCELLED);
             default:
                 return Arrays.asList(); // No transitions for Pending, Rejected, Done, Canceled by Org
         }
@@ -358,7 +346,7 @@ public class VolunteerOrgViewEventListScreenHandler implements Initializable {
 
     private void setupFilters() {
         // Initialize the status filter combo box
-        statusFilterComboBox.setItems(FXCollections.observableArrayList("All", STATUS_PENDING, STATUS_REJECTED, STATUS_COMING_SOON, STATUS_ACTIVE, STATUS_COMPLETED, STATUS_CANCELED ));
+        statusFilterComboBox.setItems(FXCollections.observableArrayList("All", AppConstants.EVENT_PENDING, AppConstants.EVENT_REJECTED, AppConstants.EVENT_UPCOMING, "Active", AppConstants.EVENT_DONE, AppConstants.EVENT_CANCELLED ));
         statusFilterComboBox.setValue("All");
 
         // Add listeners to the search field and status filter combo box
@@ -397,14 +385,14 @@ public class VolunteerOrgViewEventListScreenHandler implements Initializable {
                     LocalDate today = LocalDate.now();
 
                     if (startDate.isAfter(today)) {
-                        eventStatus = "Upcoming";
+                        eventStatus = AppConstants.EVENT_UPCOMING;
                     } else if (endDate.isBefore(today)) {
-                        eventStatus = "Completed";
+                        eventStatus = AppConstants.EVENT_DONE;
                     } else {
                         eventStatus = "Active";
                     }
                 } else {
-                    eventStatus = "Pending";
+                    eventStatus = AppConstants.EVENT_PENDING;
                 }
             }
 
