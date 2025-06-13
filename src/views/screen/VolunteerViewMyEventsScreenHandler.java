@@ -3,7 +3,6 @@ package views.screen;
 import controller.event.EventController;
 import entity.events.EventParticipantDetails; // SỬ DỤNG LỚP MỚI
 import entity.users.Volunteer;
-import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -15,8 +14,6 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.stage.Stage;
-import javafx.util.Callback;
-
 import java.io.IOException;
 import java.net.URL;
 import java.text.SimpleDateFormat;
@@ -124,7 +121,7 @@ public class VolunteerViewMyEventsScreenHandler implements Initializable {
 
         ratingByOrgColumn.setCellValueFactory(cellData -> {
             Integer rating = cellData.getValue().getRatingByOrg();
-            return new SimpleStringProperty(rating != null && rating > 0 ? rating.toString() + "/5" : "N/A");
+            return new SimpleStringProperty(rating != null && rating > 0 ? rating.toString() : "N/A");
         });
 
         actionsColumn.setCellFactory(param -> new TableCell<EventParticipantDetails, Void>() {

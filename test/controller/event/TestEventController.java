@@ -8,6 +8,8 @@ import entity.users.VolunteerOrganization;
 import entity.users.PersonInNeed;
 import entity.requests.HelpRequest; // Giả sử bạn có entity này
 
+import org.junit.jupiter.api.Test; // JUnit 5
+import static org.junit.jupiter.api.Assertions.*; 
 import org.junit.jupiter.api.*;
 import java.sql.Connection;
 import java.sql.DriverManager;

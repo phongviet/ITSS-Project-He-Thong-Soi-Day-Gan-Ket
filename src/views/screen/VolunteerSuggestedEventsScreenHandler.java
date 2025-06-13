@@ -137,38 +137,31 @@ public class VolunteerSuggestedEventsScreenHandler implements Initializable {
                     
                     registerButton.setDisable(!canEventBeRegistered); // Vô hiệu hóa nếu sự kiện không cho đăng ký
 
-                    try {
-                        String notificationStatus = notificationController.getVolunteerNotificationStatusForEvent(
-                                volunteer.getUsername(), currentEvent.getEventId());
+                    String notificationStatus = notificationController.getVolunteerNotificationStatusForEvent(
+                            volunteer.getUsername(), currentEvent.getEventId());
 
-                        if (notificationStatus != null) {
-                            if ("Pending".equalsIgnoreCase(notificationStatus)) {
-                                registerButton.setText("Waiting Approval");
-                                registerButton.setStyle("-fx-background-color: #f39c12; -fx-text-fill: white;"); // Vàng
-                                registerButton.setDisable(true); // Đã gửi yêu cầu, không cho bấm nữa
-                            } else if ("Approved".equalsIgnoreCase(notificationStatus) || "Registered".equalsIgnoreCase(notificationStatus)) {
-                                registerButton.setText("Approved");
-                                registerButton.setStyle("-fx-background-color: #2ecc71; -fx-text-fill: white;"); // Xanh lá
-                                registerButton.setDisable(true); // Đã được duyệt, không cho bấm nữa
-                            } else { // Ví dụ: Rejected, Canceled, hoặc trạng thái khác
-                                // Nếu bị rejected/canceled, có thể cho đăng ký lại hoặc không tùy logic
-                                registerButton.setText("Register");
-                                registerButton.setStyle("-fx-background-color: #3498db; -fx-text-fill: white;"); // Xanh dương
-                                // registerButton.setDisable(!canEventBeRegistered); // Giữ nguyên logic disable dựa trên trạng thái sự kiện
-                            }
-                        } else {
-                            // Chưa có notification nào -> chưa đăng ký
+                    if (notificationStatus != null) {
+                        if ("Pending".equalsIgnoreCase(notificationStatus)) {
+                            registerButton.setText("Waiting Approval");
+                            registerButton.setStyle("-fx-background-color: #f39c12; -fx-text-fill: white;"); // Vàng
+                            registerButton.setDisable(true); // Đã gửi yêu cầu, không cho bấm nữa
+                        } else if ("Approved".equalsIgnoreCase(notificationStatus) || "Registered".equalsIgnoreCase(notificationStatus)) {
+                            registerButton.setText("Approved");
+                            registerButton.setStyle("-fx-background-color: #2ecc71; -fx-text-fill: white;"); // Xanh lá
+                            registerButton.setDisable(true); // Đã được duyệt, không cho bấm nữa
+                        } else { // Ví dụ: Rejected, Canceled, hoặc trạng thái khác
+                            // Nếu bị rejected/canceled, có thể cho đăng ký lại hoặc không tùy logic
                             registerButton.setText("Register");
                             registerButton.setStyle("-fx-background-color: #3498db; -fx-text-fill: white;"); // Xanh dương
                             // registerButton.setDisable(!canEventBeRegistered); // Giữ nguyên logic disable dựa trên trạng thái sự kiện
                         }
-                    } catch (SQLException e) {
-                        System.err.println("Error checking notification status in cell factory: " + e.getMessage());
-                        registerButton.setText("Register"); // Trạng thái mặc định nếu lỗi
-                        registerButton.setStyle("-fx-background-color: #3498db; -fx-text-fill: white;");
-                        // registerButton.setDisable(!canEventBeRegistered);
+                    } else {
+                        // Chưa có notification nào -> chưa đăng ký
+                        registerButton.setText("Register");
+                        registerButton.setStyle("-fx-background-color: #3498db; -fx-text-fill: white;"); // Xanh dương
+                        // registerButton.setDisable(!canEventBeRegistered); // Giữ nguyên logic disable dựa trên trạng thái sự kiện
                     }
-                    
+
                     // Action cho nút registerButton
                     registerButton.setOnAction(actionEvent -> {
                          Event eventToRegister = getTableView().getItems().get(getIndex());
@@ -215,23 +208,18 @@ public class VolunteerSuggestedEventsScreenHandler implements Initializable {
 
             boolean registrationStatusMatch = true;
             if (!"All Events".equals(currentRegistrationStatusFilter)) {
-                try {
-                    String actualStatus = notificationController.getVolunteerNotificationStatusForEvent(
-                            volunteer.getUsername(), event.getEventId());
+                String actualStatus = notificationController.getVolunteerNotificationStatusForEvent(
+                        volunteer.getUsername(), event.getEventId());
 
-                    if ("Not Registered".equals(currentRegistrationStatusFilter)) {
-                        registrationStatusMatch = (actualStatus == null);
-                    } else if ("Waiting for Approval".equals(currentRegistrationStatusFilter)) {
-                        registrationStatusMatch = "Pending".equalsIgnoreCase(actualStatus);
-                    } else if ("Approved".equals(currentRegistrationStatusFilter)) {
-                        registrationStatusMatch = "Approved".equalsIgnoreCase(actualStatus) ||
-                                                 "Registered".equalsIgnoreCase(actualStatus); // Coi Registered là Approved
-                    }
-                    // Bạn có thể thêm các trường hợp khác như "Rejected", "Canceled" nếu có trong ComboBox
-                } catch (SQLException e) {
-                    System.err.println("Error applying registration status filter for event " + event.getEventId() + ": " + e.getMessage());
-                    registrationStatusMatch = false; // Nếu lỗi thì coi như không khớp để tránh hiển thị sai
+                if ("Not Registered".equals(currentRegistrationStatusFilter)) {
+                    registrationStatusMatch = (actualStatus == null);
+                } else if ("Waiting for Approval".equals(currentRegistrationStatusFilter)) {
+                    registrationStatusMatch = "Pending".equalsIgnoreCase(actualStatus);
+                } else if ("Approved".equals(currentRegistrationStatusFilter)) {
+                    registrationStatusMatch = "Approved".equalsIgnoreCase(actualStatus) ||
+                                             "Registered".equalsIgnoreCase(actualStatus); // Coi Registered là Approved
                 }
+                // Bạn có thể thêm các trường hợp khác như "Rejected", "Canceled" nếu có trong ComboBox
             }
             return titleMatch && registrationStatusMatch;
         };

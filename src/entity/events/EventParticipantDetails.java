@@ -1,8 +1,6 @@
 package entity.events; // Hoặc một package DTO thích hợp như dto.event
 
-import entity.users.Volunteer; // Giả sử bạn muốn giữ tham chiếu đến Volunteer
 import java.util.Date;
-import java.util.List; // Nếu bạn muốn hiển thị cả skill của Event
 
 public class EventParticipantDetails {
 

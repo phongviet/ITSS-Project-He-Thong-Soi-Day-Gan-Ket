@@ -7,7 +7,6 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
@@ -20,8 +19,6 @@ import javafx.util.Callback;
 
 import java.io.IOException;
 import java.net.URL;
-import java.time.LocalDate;
-import java.time.ZoneId;
 import java.util.Calendar;
 import java.util.List;
 import java.util.ResourceBundle;
@@ -139,7 +136,7 @@ public class HelpRequestManagementScreenHandler implements Initializable {
 
         // Setup requester column
         requesterColumn.setCellValueFactory(cellData ->
-            new SimpleStringProperty(String.valueOf(cellData.getValue().getPersonInNeedId())));
+            new SimpleStringProperty(String.valueOf(cellData.getValue().getPersonInNeedUsername())));
 
         // Setup start date column
         startDateColumn.setCellValueFactory(cellData -> {

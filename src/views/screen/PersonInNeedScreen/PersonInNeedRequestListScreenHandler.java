@@ -14,11 +14,8 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
-import javafx.util.Callback;
-
 import java.io.IOException;
 import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -38,9 +35,10 @@ public class PersonInNeedRequestListScreenHandler {
     private Stage stage;
     private PersonInNeed currentUser;
     private final SimpleDateFormat tableDateFormat = new SimpleDateFormat("yyyy-MM-dd");
+    private final HelpRequestController helpRequestController;
 
     public PersonInNeedRequestListScreenHandler() {
-        // Default constructor for FXML loading
+        this.helpRequestController = new HelpRequestController();
     }
 
     public void setStage(Stage stage) {
@@ -83,7 +81,7 @@ public class PersonInNeedRequestListScreenHandler {
             requestsTableView.setItems(FXCollections.emptyObservableList());
             return;
         }
-        List<HelpRequest> userRequests = HelpRequestController.getHelpRequestsByUserId(currentUser.getUsername());
+        List<HelpRequest> userRequests = helpRequestController.getHelpRequestsByUsername(currentUser.getUsername());
         ObservableList<HelpRequest> observableRequests = FXCollections.observableArrayList(userRequests);
         requestsTableView.setItems(observableRequests);
         if (userRequests.isEmpty()) {
@@ -149,7 +147,7 @@ public class PersonInNeedRequestListScreenHandler {
                         
                         Optional<ButtonType> result = alert.showAndWait();
                         if (result.isPresent() && result.get() == ButtonType.OK) {
-                            boolean success = HelpRequestController.markAsFulfilled(request.getRequestId());
+                            boolean success = helpRequestController.markAsSatisfied(request.getRequestId());
                             if (success) {
                                 statusMessageLabel.setText("The request \"" + request.getTitle() + "\" has been marked as Satisfied.");
                                 statusMessageLabel.setStyle("-fx-text-fill: green;");
@@ -209,7 +207,7 @@ public class PersonInNeedRequestListScreenHandler {
 
         Optional<ButtonType> result = alert.showAndWait();
         if (result.isPresent() && result.get() == ButtonType.OK) {
-            boolean success = HelpRequestController.deleteHelpRequest(request.getRequestId());
+            boolean success = helpRequestController.deleteHelpRequest(request.getRequestId());
             if (success) {
                 statusMessageLabel.setText("Request '" + request.getTitle() + "' deleted successfully.");
                 statusMessageLabel.setStyle("-fx-text-fill: green;");

@@ -53,15 +53,7 @@ public class OrganizationStatisticsScreenHandler implements Initializable {
         }
 
         String organizerId = organization.getUsername();
-
-        // TODO: Replace with actual call to eventController.getTotalEventCountByOrganizer(organizerId)
-        // int totalEvents = eventController.getTotalEventCountByOrganizer(organizerId);
-        // totalEventsLabel.setText(String.valueOf(totalEvents));
         
-        // Using a placeholder value for now
-        // totalEventsLabel.setText("7"); // Example: Display 7 total events
-
-        // Actual call to EventController
         try {
             int totalEvents = eventController.getTotalEventCountByOrganizer(organizerId);
             totalEventsLabel.setText(String.valueOf(totalEvents));

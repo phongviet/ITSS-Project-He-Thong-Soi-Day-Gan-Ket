@@ -2,7 +2,6 @@ package entity.events;
 
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 
 public class Event {
     private int eventId;
