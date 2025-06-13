@@ -22,6 +22,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Arrays;
+import entity.users.Volunteer;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -322,12 +323,12 @@ class TestEventController {
     void getAllOpenAndAvailableEvents_FiltersByStatus() throws SQLException, ParseException {
         // Sử dụng organizer đã được chèn trong @BeforeEach hoặc chèn mới nếu cần
         insertEvent(connForHelpers, "Approved Event", getFutureDateString(5), "Bình thường", "Approved", 10, "org1");
-        insertEvent(connForHelpers, "Pending Event", getFutureDateString(6), "Cao", "Pending", 10, "org1");
+        insertEvent(connForHelpers, "Pending Event", getFutureDateString(6), "Cao", "Upcoming", 10, "org1");
         // ... các event khác ...
         List<Event> events = eventController.getAllOpenAndAvailableEvents();
         // ... assertions ...
-        assertEquals(2, events.size(), "Should only return 'Approved' or 'Pending' future events that are open. Check schema for 'Coming Soon'"); 
-        // Lưu ý: getAllOpenAndAvailableEvents có thể chỉ lấy 'Approved', 'Pending', 'Coming Soon'
+        assertEquals(2, events.size(), "Should only return 'Approved' or 'Upcoming' future events that are open. "); 
+        // Lưu ý: getAllOpenAndAvailableEvents có thể chỉ lấy 'Approved', 'Coming Soon'
     }
 
     // ... (CÁC TEST CASE KHÁC CHO getAllOpenAndAvailableEvents GIỮ NGUYÊN) ...

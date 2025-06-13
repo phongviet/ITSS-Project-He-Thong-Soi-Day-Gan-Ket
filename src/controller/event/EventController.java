@@ -1019,13 +1019,13 @@ public class EventController {
             return Integer.MAX_VALUE; // Mức ưu tiên thấp nhất nếu không có hoặc rỗng
         }
         switch (emergencyLevel.trim().toLowerCase()) {
-            case "urgent":        // Hoặc "Urgent", "Critical", etc.
+            case "khẩn cấp":        
                 return 1;
-            case "high":             // Hoặc "High"
+            case "cao":             // Hoặc "High"
                 return 2;
-            case "normal":     // Hoặc "Normal", "Medium"
+            case "bình thường":     // Hoặc "Normal", "Medium"
                 return 3;
-            case "low":            // Hoặc "Low"
+            case "thấp":            // Hoặc "Low"
                 return 4;
             default:
                 System.out.println("Unknown emergency level for priority: " + emergencyLevel);
