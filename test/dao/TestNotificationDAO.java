@@ -331,6 +331,123 @@ class TestNotificationDAO {
         assertFalse(result, "Should return false if volunteer is already REGISTERED for the event.");
     }
     
+ // --- Test Cases for NotificationDAO.getVolunteerNotificationStatusForEvent ---
+
+    @Test
+    void getVolunteerNotificationStatusForEvent_NoNotificationExists_ShouldReturnNull() throws SQLException {
+        // --- Arrange ---
+        int eventId = 1001; // Event đã tạo trong @BeforeEach
+        String volunteerUsername = "testVolNotify"; // Volunteer đã tạo trong @BeforeEach
+        // Không chèn notification nào cho cặp này
+
+        // --- Act ---
+        String status = notificationDAO.getVolunteerNotificationStatusForEvent(volunteerUsername, eventId);
+
+        // --- Assert ---
+        assertNull(status, "Should return null if no notification exists for the volunteer/event pair.");
+    }
+
+    @Test
+    void getVolunteerNotificationStatusForEvent_SingleNotificationExists_ShouldReturnCorrectStatus() throws SQLException {
+        // --- Arrange ---
+        int eventId = 1001;
+        String volunteerUsername = "testVolNotify";
+        String expectedStatus = AppConstants.NOTIF_PENDING;
+
+        // Chèn một notification
+        insertTestNotification(connForHelpers, 1, eventId, volunteerUsername, expectedStatus);
+
+        // --- Act ---
+        String actualStatus = notificationDAO.getVolunteerNotificationStatusForEvent(volunteerUsername, eventId);
+
+        // --- Assert ---
+        assertEquals(expectedStatus, actualStatus, "Should return the correct status of the single existing notification.");
+    }
+
+    @Test
+    void getVolunteerNotificationStatusForEvent_MultipleNotificationsExist_ShouldReturnLatestStatus() throws SQLException {
+        // --- Arrange ---
+        int eventId = 1001;
+        String volunteerUsername = "testVolNotify";
+        
+        // Chèn nhiều notifications, cái có notificationId cao hơn sẽ là cái mới nhất
+        insertTestNotification(connForHelpers, 10, eventId, volunteerUsername, AppConstants.NOTIF_PENDING); // ID thấp hơn, cũ hơn
+        insertTestNotification(connForHelpers, 11, eventId, volunteerUsername, "SomeOldStatus"); // ID thấp hơn, cũ hơn
+        String latestStatus = AppConstants.NOTIF_REGISTERED; // Đây là status mong đợi
+        insertTestNotification(connForHelpers, 12, eventId, volunteerUsername, latestStatus); // ID cao nhất, mới nhất
+
+        // --- Act ---
+        String actualStatus = notificationDAO.getVolunteerNotificationStatusForEvent(volunteerUsername, eventId);
+
+        // --- Assert ---
+        assertEquals(latestStatus, actualStatus, "Should return the status of the notification with the highest ID (latest).");
+    }
+
+    @Test
+    void getVolunteerNotificationStatusForEvent_NotificationForDifferentEvent_ShouldReturnNull() throws SQLException {
+        // --- Arrange ---
+        int eventId1 = 1001; // Event chính
+        int eventId2 = 1002; // Event khác
+        String volunteerUsername = "testVolNotify";
+        
+        // Tạo event thứ 2
+        try {
+            insertTestEvent(connForHelpers, eventId2, "Notify Event 2", getFutureDateString(6), 
+                           AppConstants.EMERGENCY_LOW, AppConstants.EVENT_APPROVED, 5, "orgNotify", 
+                           "Desc for Notify Event 2", null);
+        } catch (ParseException e) { throw new SQLException(e.getMessage());}
+
+
+        insertTestNotification(connForHelpers, 20, eventId2, volunteerUsername, AppConstants.NOTIF_PENDING); // Notification cho event 2
+
+        // --- Act ---
+        // Lấy status cho event 1, mà không có notification nào cho nó
+        String status = notificationDAO.getVolunteerNotificationStatusForEvent(volunteerUsername, eventId1);
+
+        // --- Assert ---
+        assertNull(status, "Should return null if notification exists but for a different event.");
+    }
+    
+    @Test
+    void getVolunteerNotificationStatusForEvent_NotificationForDifferentVolunteer_ShouldReturnNull() throws SQLException {
+        // --- Arrange ---
+        int eventId = 1001;
+        String volunteer1 = "testVolNotify";
+        String volunteer2 = "anotherVolNotify";
+        ensureSystemUserExists(connForHelpers, volunteer2, "pass", "avol@notify.com", "789", "AddrAV");
+        ensureVolunteerExists(connForHelpers, volunteer2, "Another Volunteer Notify", "CCCDAVOLN", "1991-02-02", 15);
+
+        insertTestNotification(connForHelpers, 30, eventId, volunteer2, AppConstants.NOTIF_PENDING); // Notification cho volunteer2
+
+        // --- Act ---
+        // Lấy status cho volunteer1, mà không có notification nào cho nó
+        String status = notificationDAO.getVolunteerNotificationStatusForEvent(volunteer1, eventId);
+
+        // --- Assert ---
+        assertNull(status, "Should return null if notification exists but for a different volunteer.");
+    }
+
+
+    // --- Helper method mới để chèn Notification ---
+    private int insertTestNotification(Connection connection, int notificationId, int eventId, String username, String acceptStatus) throws SQLException {
+        // Đảm bảo eventId và username tồn tại nếu có FK constraints nghiêm ngặt và PRAGMA ON
+        // (Trong @BeforeEach, eventId 1001 và username testVolNotify đã được tạo)
+        String sql = "INSERT INTO Notification (notificationId, eventId, username, acceptStatus) VALUES (?, ?, ?, ?)";
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+            pstmt.setInt(1, notificationId);
+            // Cho phép eventId hoặc username là null nếu cột trong DB cho phép, 
+            // nhưng cho test này chúng ta thường sẽ cung cấp giá trị.
+            if (eventId > 0) { // Giả sử 0 hoặc số âm không phải là eventId hợp lệ
+                 pstmt.setInt(2, eventId);
+            } else {
+                 pstmt.setNull(2, java.sql.Types.INTEGER);
+            }
+            pstmt.setString(3, username);
+            pstmt.setString(4, acceptStatus);
+            pstmt.executeUpdate();
+            return notificationId; // Trả về ID đã truyền vào (vì notificationId không tự tăng)
+        }
+    }
     
 
 
