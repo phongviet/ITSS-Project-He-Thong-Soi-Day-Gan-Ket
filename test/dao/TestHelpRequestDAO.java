@@ -628,6 +628,46 @@ class TestHelpRequestDAO {
         assertTrue(approvedRequests.isEmpty(), "Should return an empty list when no requests exist at all.");
     }
     
+ // --- Test Cases for HelpRequestDAO.deleteHelpRequest ---
+
+    @Test
+    void deleteHelpRequest_ExistingRequest_ShouldDeleteFromDBAndReturnTrue() throws SQLException, ParseException {
+        // --- Arrange ---
+        String personUser = "personForDeleteReq";
+        ensurePersonInNeedExists(connForHelpers, personUser, "Person For Delete Req", "CCCDDR", "1988-08-08");
+
+        int requestIdToDelete = 501;
+        insertHelpRequestWithId(connForHelpers, requestIdToDelete, "Request To Be Deleted", getFutureDateString(1), 
+                                AppConstants.EMERGENCY_NORMAL, "Desc Delete", personUser, 
+                                AppConstants.REQUEST_PENDING, "contactDelete", "Addr Delete");
+
+        // Kiểm tra xem request đã tồn tại trước khi xóa
+        HelpRequest_DataInDB requestBeforeDelete = getHelpRequestDataFromDBById(requestIdToDelete); // Sử dụng helper đã có
+        assertNotNull(requestBeforeDelete, "Request should exist in DB before delete operation.");
+
+        // --- Act ---
+        boolean result = helpRequestDAO.deleteHelpRequest(requestIdToDelete);
+
+        // --- Assert ---
+        assertTrue(result, "deleteHelpRequest should return true for a successful deletion.");
+
+        // Verify request is actually deleted from DB
+        HelpRequest_DataInDB requestAfterDelete = getHelpRequestDataFromDBById(requestIdToDelete);
+        assertNull(requestAfterDelete, "Request should no longer exist in DB after deletion.");
+    }
+
+    @Test
+    void deleteHelpRequest_NonExistingRequest_ShouldReturnFalse() throws SQLException {
+        // --- Arrange ---
+        int nonExistingRequestId = 99993; // Một ID chắc chắn không tồn tại
+
+        // --- Act ---
+        boolean result = helpRequestDAO.deleteHelpRequest(nonExistingRequestId);
+
+        // --- Assert ---
+        assertFalse(result, "deleteHelpRequest should return false when trying to delete a non-existing request ID.");
+    }
+    
     private String getPastDateString(int daysToSubtract) {
         Calendar cal = Calendar.getInstance();
         cal.add(Calendar.DAY_OF_YEAR, -daysToSubtract);
