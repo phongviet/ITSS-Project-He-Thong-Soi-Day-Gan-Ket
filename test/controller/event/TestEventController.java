@@ -75,7 +75,7 @@ class TestEventController {
         ensureSystemUserExists(connForHelpers, "person1", "test");
         ensurePersonInNeedExists(connForHelpers, "person1", "Person One");
         // Chèn HelpRequest nếu Event có tham chiếu đến requestId
-        insertHelpRequest(connForHelpers, 1, "Sample Help Request 1", getFutureDateString(2), "Bình thường", "Test desc", "person1", "Approved");
+        insertHelpRequest(connForHelpers, 1, "Sample Help Request 1", getFutureDateString(2), "Normal", "Test desc", "person1", "Approved");
         // (Giả sử requestId là INTEGER và là 1)
     }
 
@@ -91,14 +91,13 @@ class TestEventController {
     @Test
     void getEmergencyLevelPriority_ValidLevels_ShouldReturnCorrectPriority() {
 
-        assertEquals(1, eventController.getEmergencyLevelPriority("khẩn cấp"), "Khẩn cấp should be priority 1");
-        assertEquals(1, eventController.getEmergencyLevelPriority("KHẨN CẤP"), "Case insensitivity for Khẩn cấp");
+        assertEquals(1, eventController.getEmergencyLevelPriority("Urgent"), "Case insensitivity for Urgent");
      
-        assertEquals(2, eventController.getEmergencyLevelPriority("cao"), "Cao should be priority 2");
+        assertEquals(2, eventController.getEmergencyLevelPriority("High"), "High should be priority 2");
         // assertEquals(2, eventController.getEmergencyLevelPriority("High"), "High should be priority 2");
-        assertEquals(3, eventController.getEmergencyLevelPriority("bình thường"), "Bình thường should be priority 3");
+        assertEquals(3, eventController.getEmergencyLevelPriority("Normal"), "Normal should be priority 3");
         // assertEquals(3, eventController.getEmergencyLevelPriority("Normal"), "Normal should be priority 3");
-        assertEquals(4, eventController.getEmergencyLevelPriority("thấp"), "Thấp should be priority 4");
+        assertEquals(4, eventController.getEmergencyLevelPriority("Low"), "Low should be priority 4");
         // assertEquals(4, eventController.getEmergencyLevelPriority("Low"), "Low should be priority 4");
 
 

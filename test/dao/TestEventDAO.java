@@ -215,7 +215,7 @@ class TestEventDAO {
     // Phiên bản rút gọn hơn của insertTestEvent
     private int insertTestEvent(String title, String startDateStr, String status, Integer maxParticipants, String organizerUsername) throws SQLException, ParseException {
         String defaultEndDate = getFutureDateStringFromDate(dateFormat.parse(startDateStr), 7); // Mặc định 7 ngày sau
-        String defaultEmergency = "Bình thường";
+        String defaultEmergency = "Normal";
         String defaultDescription = "Description for " + title;
         return insertTestEvent(title, startDateStr, defaultEndDate, defaultEmergency, status, maxParticipants, organizerUsername, defaultDescription, null);
     }
@@ -328,7 +328,7 @@ class TestEventDAO {
     @Test
     void getAllOpenAndAvailableEvents_HandlesDateParsingCorrectly() throws SQLException {
         // Chèn một sự kiện với ngày tháng đúng định dạng
-        insertTestEvent("Date Test Event Good", "2025-12-01", "2025-12-05", "Bình thường", "Approved", 10, "orgTestDAO1", "Desc", null);
+        insertTestEvent("Date Test Event Good", "2025-12-01", "2025-12-05", "Normal", "Approved", 10, "orgTestDAO1", "Desc", null);
         
         // Chèn một sự kiện với startDate là null (nếu CSDL cho phép)
         // Hoặc một sự kiện mà startDate không phải là ngày (để xem nó có bị bỏ qua hay gây lỗi)
@@ -350,26 +350,26 @@ class TestEventDAO {
 
         // Các sự kiện cho các trạng thái khác nhau
         // 1. Upcoming events (ví dụ cho tháng 6/2025 và 7/2025)
-        insertTestEvent("Upcoming Event June 1", getFutureDateStringFromDate(dateFormat.parse("2025-06-15"),0), "2025-06-20", "Bình thường", "Approved", 10, "orgTestDAO1", "Desc 1", null);
-        insertTestEvent("Upcoming Event June 2", getFutureDateStringFromDate(dateFormat.parse("2025-06-20"),0), "2025-06-25", "Cao", "Approved", 5, "orgTestDAO1", "Desc 2", null);
-        insertTestEvent("Upcoming Event July", getFutureDateStringFromDate(dateFormat.parse("2025-07-05"),0), "2025-07-10", "Bình thường", "Approved", 10, "orgTestDAO1", "Desc 3", null);
+        insertTestEvent("Upcoming Event June 1", getFutureDateStringFromDate(dateFormat.parse("2025-06-15"),0), "2025-06-20", "Normal", "Approved", 10, "orgTestDAO1", "Desc 1", null);
+        insertTestEvent("Upcoming Event June 2", getFutureDateStringFromDate(dateFormat.parse("2025-06-20"),0), "2025-06-25", "High", "Approved", 5, "orgTestDAO1", "Desc 2", null);
+        insertTestEvent("Upcoming Event July", getFutureDateStringFromDate(dateFormat.parse("2025-07-05"),0), "2025-07-10", "Normal", "Approved", 10, "orgTestDAO1", "Desc 3", null);
 
         // 2. Ongoing events (sự kiện đang diễn ra vào ngày test)
         // Để test ongoing, startDate phải <= ngày hiện tại VÀ endDate >= ngày hiện tại
         // Chúng ta sẽ tạo một sự kiện bắt đầu 2 ngày trước và kết thúc 2 ngày sau
         String ongoingStartDate = getPastDateString(2); // Bắt đầu 2 ngày trước
         String ongoingEndDate = getFutureDateString(2);   // Kết thúc 2 ngày sau
-        insertTestEvent("Ongoing Event 1", ongoingStartDate, ongoingEndDate, "Khẩn cấp", "Approved", 15, "orgTestDAO1", "Desc 4", null);
+        insertTestEvent("Ongoing Event 1", ongoingStartDate, ongoingEndDate, "Urgent", "Approved", 15, "orgTestDAO1", "Desc 4", null);
 
         // 3. Past events
-        insertTestEvent("Past Event May", getPastDateStringFromDate(dateFormat.parse("2025-05-01"),0), "2025-05-05", "Bình thường", "Completed", 10, "orgTestDAO1", "Desc 5", null);
-        insertTestEvent("Past Event April", getPastDateStringFromDate(dateFormat.parse("2025-04-10"),0), "2025-04-15", "Bình thường", "Completed", 10, "orgTestDAO1", "Desc 6", null);
+        insertTestEvent("Past Event May", getPastDateStringFromDate(dateFormat.parse("2025-05-01"),0), "2025-05-05", "Normal", "Completed", 10, "orgTestDAO1", "Desc 5", null);
+        insertTestEvent("Past Event April", getPastDateStringFromDate(dateFormat.parse("2025-04-10"),0), "2025-04-15", "Normal", "Completed", 10, "orgTestDAO1", "Desc 6", null);
 
         // 4. Sự kiện cho các tháng khác trong ví dụ của DAO (Jan, Feb, Mar 2025)
-        insertTestEvent("Event Jan 2025", "2025-01-15", "2025-01-20", "Bình thường", "Approved", 10, "orgTestDAO1", "Desc Jan", null);
-        insertTestEvent("Event Feb 2025", "2025-02-10", "2025-02-15", "Cao", "Approved", 10, "orgTestDAO1", "Desc Feb", null);
-        insertTestEvent("Event Feb 2025 Again", "2025-02-20", "2025-02-25", "Bình thường", "Approved", 10, "orgTestDAO1", "Desc Feb 2", null); // 2 events for Feb
-        insertTestEvent("Event Mar 2025", "2025-03-05", "2025-03-10", "Khẩn cấp", "Approved", 10, "orgTestDAO1", "Desc Mar", null);
+        insertTestEvent("Event Jan 2025", "2025-01-15", "2025-01-20", "Normal", "Approved", 10, "orgTestDAO1", "Desc Jan", null);
+        insertTestEvent("Event Feb 2025", "2025-02-10", "2025-02-15", "High", "Approved", 10, "orgTestDAO1", "Desc Feb", null);
+        insertTestEvent("Event Feb 2025 Again", "2025-02-20", "2025-02-25", "Normal", "Approved", 10, "orgTestDAO1", "Desc Feb 2", null); // 2 events for Feb
+        insertTestEvent("Event Mar 2025", "2025-03-05", "2025-03-10", "Urgent", "Approved", 10, "orgTestDAO1", "Desc Mar", null);
         // Không có event cho tháng 4 và tháng 5 trong khoảng query của monthlyEvents (chỉ có event đã qua ở trên)
         // Event tháng 6 đã có 2 (Upcoming Event June 1 & 2)
 
@@ -445,7 +445,7 @@ class TestEventDAO {
           String eventTitle = "Detailed Event For GetById";
           String startDateStr = getFutureDateString(5);
           String endDateStr = getFutureDateString(10);
-          String emergency = "Cao";
+          String emergency = "High";
           String status = "Approved";
           Integer maxParticipants = 20;
           String description = "A very detailed description for testing getEventById.";

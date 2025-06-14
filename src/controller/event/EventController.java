@@ -86,13 +86,13 @@ public class EventController {
 
         String level = emergencyLevel.trim().toLowerCase();
         switch (level) {
-            case "khẩn cấp":
+            case "urgent":
                 return 1;
-            case "cao":
+            case "high":
                 return 2;
-            case "bình thường":
+            case "normal":
                 return 3;
-            case "thấp":
+            case "low":
                 return 4;
             default:
                 System.out.println("Unknown emergency level for priority: " + emergencyLevel);
