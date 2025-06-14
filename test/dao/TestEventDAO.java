@@ -1073,4 +1073,97 @@ class TestEventDAO {
           }
           return skills;
       }
+      
+   // --- Test Cases for EventDAO.getEventsByOrganizerId ---
+
+      @Test
+      void getEventsByOrganizerId_ExistingOrganizerWithEvents_ShouldReturnOnlyTheirEventsWithSkills() throws SQLException, ParseException {
+          // --- Arrange ---
+          String org1Username = "orgWithEvents1";
+          String org2Username = "orgWithEvents2";
+          ensureVolunteerOrganizationExists(connForHelpers, org1Username, "Organization One");
+          ensureVolunteerOrganizationExists(connForHelpers, org2Username, "Organization Two");
+
+          // Skills
+          String skillYoga = "Yoga Teaching";
+          String skillCooking = "Mass Cooking";
+          insertSkillIfNotExists(connForHelpers, skillYoga);
+          insertSkillIfNotExists(connForHelpers, skillCooking);
+
+          // Events for org1
+          int event1Org1Id = insertTestEvent("Org1 Event A (Yoga)", getFutureDateString(5), AppConstants.EVENT_APPROVED, 10, org1Username, null);
+          addSkillToEvent(event1Org1Id, skillYoga);
+          
+          int event2Org1Id = insertTestEvent("Org1 Event B (No Skill)", getFutureDateString(10), AppConstants.EVENT_PENDING, 20, org1Username, null);
+
+          // Events for org2
+          int event1Org2Id = insertTestEvent("Org2 Event C (Cooking)", getFutureDateString(7), AppConstants.EVENT_APPROVED, 15, org2Username, null);
+          addSkillToEvent(event1Org2Id, skillCooking);
+
+          // --- Act ---
+          List<Event> org1Events = eventDAO.getEventsByOrganizerId(org1Username);
+
+          // --- Assert for org1 ---
+          assertNotNull(org1Events, "List of events for org1 should not be null.");
+          assertEquals(2, org1Events.size(), "Org1 should have 2 events.");
+
+          Event foundEventA = org1Events.stream().filter(e -> e.getTitle().equals("Org1 Event A (Yoga)")).findFirst().orElse(null);
+          assertNotNull(foundEventA, "Org1 Event A should be found.");
+          assertEquals(org1Username, foundEventA.getOrganizer());
+          assertNotNull(foundEventA.getRequiredSkills());
+          assertEquals(1, foundEventA.getRequiredSkills().size());
+          assertTrue(foundEventA.getRequiredSkills().contains(skillYoga));
+
+          Event foundEventB = org1Events.stream().filter(e -> e.getTitle().equals("Org1 Event B (No Skill)")).findFirst().orElse(null);
+          assertNotNull(foundEventB, "Org1 Event B should be found.");
+          assertEquals(org1Username, foundEventB.getOrganizer());
+          assertNotNull(foundEventB.getRequiredSkills());
+          assertTrue(foundEventB.getRequiredSkills().isEmpty());
+
+          // --- Act for org2 (để đảm bảo không lấy nhầm) ---
+          List<Event> org2Events = eventDAO.getEventsByOrganizerId(org2Username);
+
+          // --- Assert for org2 ---
+          assertNotNull(org2Events);
+          assertEquals(1, org2Events.size(), "Org2 should have 1 event.");
+          Event foundEventC = org2Events.get(0);
+          assertEquals("Org2 Event C (Cooking)", foundEventC.getTitle());
+          assertEquals(org2Username, foundEventC.getOrganizer());
+          assertNotNull(foundEventC.getRequiredSkills());
+          assertEquals(1, foundEventC.getRequiredSkills().size());
+          assertTrue(foundEventC.getRequiredSkills().contains(skillCooking));
+      }
+
+      @Test
+      void getEventsByOrganizerId_OrganizerWithNoEvents_ShouldReturnEmptyList() throws SQLException, ParseException {
+          // --- Arrange ---
+          String orgNoEventsUsername = "orgNoEvents";
+          ensureVolunteerOrganizationExists(connForHelpers, orgNoEventsUsername, "Organization With No Events");
+          
+          // Chèn một sự kiện cho một tổ chức khác để đảm bảo DB không rỗng hoàn toàn
+          ensureVolunteerOrganizationExists(connForHelpers, "anotherOrg", "Another Org");
+          insertTestEvent("Some Other Event", getFutureDateString(1), AppConstants.EVENT_APPROVED, 5, "anotherOrg", null);
+
+
+          // --- Act ---
+          List<Event> events = eventDAO.getEventsByOrganizerId(orgNoEventsUsername);
+
+          // --- Assert ---
+          assertNotNull(events, "List of events should not be null.");
+          assertTrue(events.isEmpty(), "Should return an empty list for an organizer with no events.");
+      }
+
+      @Test
+      void getEventsByOrganizerId_NonExistingOrganizer_ShouldReturnEmptyList() {
+          // --- Arrange ---
+          String nonExistingOrgUsername = "nonExistingOrg123";
+
+          // --- Act ---
+          List<Event> events = eventDAO.getEventsByOrganizerId(nonExistingOrgUsername);
+
+          // --- Assert ---
+          assertNotNull(events, "List of events should not be null.");
+          assertTrue(events.isEmpty(), "Should return an empty list for a non-existing organizer ID.");
+      }
+
 }
