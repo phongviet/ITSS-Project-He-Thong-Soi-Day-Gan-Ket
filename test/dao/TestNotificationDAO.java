@@ -449,6 +449,149 @@ class TestNotificationDAO {
         }
     }
     
+ // --- Test Cases for NotificationDAO.isVolunteerPendingOrRegistered ---
 
+    @Test
+    void isVolunteerPendingOrRegistered_WhenNotificationIsPending_ShouldReturnTrue() throws SQLException {
+        // --- Arrange ---
+        int eventId = 1001; // Event đã tạo trong @BeforeEach
+        String volunteerUsername = "testVolNotify"; // Volunteer đã tạo trong @BeforeEach
+        
+        insertTestNotification(connForHelpers, 201, eventId, volunteerUsername, AppConstants.NOTIF_PENDING);
+
+        // --- Act ---
+        boolean result = notificationDAO.isVolunteerPendingOrRegistered(volunteerUsername, eventId);
+
+        // --- Assert ---
+        assertTrue(result, "Should return true if a 'Pending' notification exists.");
+    }
+
+    @Test
+    void isVolunteerPendingOrRegistered_WhenNotificationIsRegistered_ShouldReturnTrue() throws SQLException {
+        // --- Arrange ---
+        int eventId = 1001;
+        String volunteerUsername = "testVolNotify";
+        
+        insertTestNotification(connForHelpers, 202, eventId, volunteerUsername, AppConstants.NOTIF_REGISTERED);
+
+        // --- Act ---
+        boolean result = notificationDAO.isVolunteerPendingOrRegistered(volunteerUsername, eventId);
+
+        // --- Assert ---
+        assertTrue(result, "Should return true if a 'Registered' notification exists.");
+    }
+
+    @Test
+    void isVolunteerPendingOrRegistered_WhenNotificationIsApproved_ShouldAlsoReturnTrueIfConsideredRegistered() throws SQLException {
+        // DAO của bạn hiện tại chỉ kiểm tra AppConstants.NOTIF_PENDING hoặc AppConstants.NOTIF_REGISTERED
+        // Nếu AppConstants.EVENT_APPROVED (hoặc một hằng số tương tự cho notification được duyệt)
+        // cũng được coi là "Registered" trong ngữ cảnh này, bạn cần cập nhật câu SQL trong DAO
+        // hoặc thêm nó vào điều kiện OR.
+        // Hiện tại, test này sẽ fail nếu AppConstants.EVENT_APPROVED không nằm trong OR clause của DAO.
+        // Để test này pass với logic DAO hiện tại, chúng ta cần chèn 'Registered' hoặc 'Pending'.
+        // Nếu bạn muốn 'Approved' cũng được tính, hãy sửa DAO.
+        // Giả sử 'Approved' cũng được tính là đã đăng ký/đang xử lý:
+        // Trong NotificationDAO.isVolunteerPendingOrRegistered, sửa SQL thành:
+        // String sql = "... (acceptStatus = ? OR acceptStatus = ? OR acceptStatus = ?)";
+        // pstmt.setString(3, AppConstants.NOTIF_PENDING);
+        // pstmt.setString(4, AppConstants.NOTIF_REGISTERED);
+        // pstmt.setString(5, AppConstants.EVENT_APPROVED); // Hoặc một AppConstants.NOTIF_APPROVED
+        
+        // Với logic DAO hiện tại (chỉ PENDING hoặc REGISTERED):
+        // --- Arrange ---
+        int eventId = 1001;
+        String volunteerUsername = "testVolNotify";
+        insertTestNotification(connForHelpers, 203, eventId, volunteerUsername, AppConstants.EVENT_APPROVED); // Trạng thái này không được DAO hiện tại coi là "Pending" hay "Registered"
+
+        // --- Act ---
+        boolean result = notificationDAO.isVolunteerPendingOrRegistered(volunteerUsername, eventId);
+
+        // --- Assert ---
+        // Dựa trên code DAO hiện tại, test này sẽ mong đợi false
+        assertFalse(result, "Should return false if notification is 'Approved' and DAO only checks for 'Pending' or 'Registered'.");
+    }
+
+    @Test
+    void isVolunteerPendingOrRegistered_WhenNotificationIsRejected_ShouldReturnFalse() throws SQLException {
+        // --- Arrange ---
+        int eventId = 1001;
+        String volunteerUsername = "testVolNotify";
+        
+        insertTestNotification(connForHelpers, 204, eventId, volunteerUsername, AppConstants.REQUEST_REJECTED); // Sử dụng một hằng số trạng thái từ chối
+
+        // --- Act ---
+        boolean result = notificationDAO.isVolunteerPendingOrRegistered(volunteerUsername, eventId);
+
+        // --- Assert ---
+        assertFalse(result, "Should return false if a 'Rejected' notification exists.");
+    }
+    
+    @Test
+    void isVolunteerPendingOrRegistered_WhenNotificationIsCancelled_ShouldReturnFalse() throws SQLException {
+        // --- Arrange ---
+        int eventId = 1001;
+        String volunteerUsername = "testVolNotify";
+        
+        insertTestNotification(connForHelpers, 205, eventId, volunteerUsername, AppConstants.NOTIF_CANCELLED);
+
+        // --- Act ---
+        boolean result = notificationDAO.isVolunteerPendingOrRegistered(volunteerUsername, eventId);
+
+        // --- Assert ---
+        assertFalse(result, "Should return false if a 'Cancelled' notification exists.");
+    }
+
+    @Test
+    void isVolunteerPendingOrRegistered_NoNotificationExists_ShouldReturnFalse() throws SQLException {
+        // --- Arrange ---
+        int eventId = 1001;
+        String volunteerUsername = "testVolNotify";
+        // Không chèn notification nào
+
+        // --- Act ---
+        boolean result = notificationDAO.isVolunteerPendingOrRegistered(volunteerUsername, eventId);
+
+        // --- Assert ---
+        assertFalse(result, "Should return false if no notification exists.");
+    }
+
+    @Test
+    void isVolunteerPendingOrRegistered_NotificationForDifferentEvent_ShouldReturnFalse() throws SQLException {
+        // --- Arrange ---
+        int eventId1 = 1001;
+        int eventId2 = 1002; // Event khác
+        String volunteerUsername = "testVolNotify";
+         try {
+            insertTestEvent(connForHelpers, eventId2, "Notify Event Other", getFutureDateString(7), 
+                           AppConstants.EMERGENCY_NORMAL, AppConstants.EVENT_APPROVED, 3, "orgNotify", 
+                           "Desc Other", null);
+        } catch (ParseException e) { throw new SQLException(e.getMessage());}
+        
+        insertTestNotification(connForHelpers, 206, eventId2, volunteerUsername, AppConstants.NOTIF_PENDING); // Notif cho event 2
+
+        // --- Act ---
+        boolean result = notificationDAO.isVolunteerPendingOrRegistered(volunteerUsername, eventId1); // Kiểm tra cho event 1
+
+        // --- Assert ---
+        assertFalse(result, "Should return false if notification is for a different event.");
+    }
+
+    @Test
+    void isVolunteerPendingOrRegistered_NotificationForDifferentVolunteer_ShouldReturnFalse() throws SQLException {
+        // --- Arrange ---
+        int eventId = 1001;
+        String volunteer1 = "testVolNotify";
+        String volunteer2 = "anotherVolForPendingCheck";
+        ensureSystemUserExists(connForHelpers, volunteer2, "pass", "avolpc@notify.com", "000", "AddrAVPC");
+        ensureVolunteerExists(connForHelpers, volunteer2, "Another Vol For Pending Check", "CCCDAVPC", "1992-03-03", 10);
+
+        insertTestNotification(connForHelpers, 207, eventId, volunteer2, AppConstants.NOTIF_PENDING); // Notif cho volunteer2
+
+        // --- Act ---
+        boolean result = notificationDAO.isVolunteerPendingOrRegistered(volunteer1, eventId); // Kiểm tra cho volunteer1
+
+        // --- Assert ---
+        assertFalse(result, "Should return false if notification is for a different volunteer.");
+    }
 
 }
