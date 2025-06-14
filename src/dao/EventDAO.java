@@ -353,15 +353,27 @@ public class EventDAO {
     }
     
     private void loadEventSkills(Connection conn, Event event) throws SQLException {
-        String sql = "SELECT s.skill FROM EventSkills es JOIN Skills s ON es.skillId = s.skillId WHERE es.eventId = ?";
+        // Đảm bảo tên cột eventId trong bảng EventSkills là đúng (trong schema bạn gửi là eventID hoặc eventId)
+        // Giả sử tên cột trong bảng EventSkills liên kết với Events.eventId là "eventId" (thường là thực tế hơn)
+        // Nếu trong bảng EventSkills cột đó tên là "eventID" thì dùng "es.eventID"
+        String sql = "SELECT s.skill FROM EventSkills es " +
+                     "JOIN Skills s ON es.skillId = s.skillId " +
+                     "WHERE es.eventID = ?"; // Sử dụng eventId ở đây cho khớp với Events.eventId
+                                             // và giả định cột trong EventSkills cũng tên là eventId
+
+        ArrayList<String> skills = new ArrayList<>(); // Khởi tạo list ở đây
+        event.setRequiredSkills(skills); // Gán list rỗng trước, để nếu không có skill nào thì nó vẫn là list rỗng, không phải null
+
         try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, event.getEventId());
             try (ResultSet rs = pstmt.executeQuery()) {
+            	
                 while (rs.next()) {
-                    event.addRequiredSkill(rs.getString("skill"));
+                    skills.add(rs.getString("skill")); // Thêm skill vào list
                 }
             }
         }
+        event.setRequiredSkills(skills); 
     }
     
     public List<EventParticipantDetails> getEventParticipantDetailsList(int eventId) {

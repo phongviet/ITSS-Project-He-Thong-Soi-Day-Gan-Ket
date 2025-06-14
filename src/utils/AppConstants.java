@@ -13,10 +13,10 @@ public final class AppConstants {
     public static final String EVENT_REJECTED = "Rejected";
 
     // --- Emergency Levels ---
-    public static final String EMERGENCY_URGENT = "Urgent";
-    public static final String EMERGENCY_HIGH = "High";
-    public static final String EMERGENCY_NORMAL = "Normal";
-    public static final String EMERGENCY_LOW = "Low";
+    public static final String EMERGENCY_URGENT = "khẩn cấp";
+    public static final String EMERGENCY_HIGH = "cao";
+    public static final String EMERGENCY_NORMAL = "bình thường";
+    public static final String EMERGENCY_LOW = "thấp";
 
     // --- Help Request Statuses ---
     public static final String REQUEST_PENDING = "Pending";
