@@ -175,6 +175,7 @@ public class HelpRequestDAO {
         String sql = "INSERT INTO HelpRequest (title, description, contact, personInNeedId, startDate, emergencyLevel, status, address) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
         try (Connection conn = DriverManager.getConnection(DB_URL);
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        	
             pstmt.setString(1, request.getTitle());
             pstmt.setString(2, request.getDescription());
             pstmt.setString(3, request.getContact());
