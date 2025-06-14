@@ -126,6 +126,9 @@ public class EventDAO {
                     event.setOrganizer(rs.getString("organizer"));
                     event.setRequestId(rs.getString("requestId"));
                     event.setStatus(rs.getString("status"));
+
+                    loadEventSkills(conn, event);
+
                     return event;
                 }
             }
