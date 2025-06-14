@@ -1264,4 +1264,76 @@ class TestEventDAO {
       // Bạn đã có helper addParticipantToEvent(conn, eventId, volunteerUsername)
       // Helper mới này cụ thể hơn cho việc chèn cả hours và rating.
       // Hoặc bạn có thể sửa helper cũ để nhận thêm tham số.
+      
+      // --- Test Cases for EventDAO.getAllEvents ---
+
+      @Test
+      void getAllEvents_WhenEventsExist_ShouldReturnAllEventsWithDetailsAndSkills() throws SQLException, ParseException {
+          // --- Arrange ---
+          String org1 = "orgAllEvents1";
+          String org2 = "orgAllEvents2";
+          ensureVolunteerOrganizationExists(connForHelpers, org1, "Org All Events 1");
+          ensureVolunteerOrganizationExists(connForHelpers, org2, "Org All Events 2");
+
+          String skillDev = "Development";
+          String skillDesign = "Graphic Design";
+          insertSkillIfNotExists(connForHelpers, skillDev);
+          insertSkillIfNotExists(connForHelpers, skillDesign);
+
+          // Event 1 (by org1, with skills)
+          int event1Id = insertTestEvent("All Events - Event Alpha", getFutureDateString(2), AppConstants.EVENT_APPROVED, 20, org1, null);
+          addSkillToEvent(event1Id, skillDev);
+          addSkillToEvent(event1Id, skillDesign);
+
+          // Event 2 (by org2, no skills)
+          int event2Id = insertTestEvent("All Events - Event Beta", getPastDateString(5), AppConstants.EVENT_DONE, 10, org2, null);
+          
+          // Event 3 (by org1, pending, future)
+          int event3Id = insertTestEvent("All Events - Event Gamma (Pending)", getFutureDateString(10), AppConstants.EVENT_PENDING, 5, org1, null);
+
+          // --- Act ---
+          List<Event> allEvents = eventDAO.getAllEvents();
+
+          // --- Assert ---
+          assertNotNull(allEvents, "List of all events should not be null.");
+          assertEquals(3, allEvents.size(), "Should return all 3 inserted events.");
+
+          // Kiểm tra chi tiết Event 1
+          Event eventAlpha = allEvents.stream().filter(e -> e.getEventId() == event1Id).findFirst().orElse(null);
+          assertNotNull(eventAlpha, "Event Alpha should be in the list.");
+          assertEquals("All Events - Event Alpha", eventAlpha.getTitle());
+          assertEquals(org1, eventAlpha.getOrganizer());
+          assertEquals(AppConstants.EVENT_APPROVED, eventAlpha.getStatus());
+          assertNotNull(eventAlpha.getRequiredSkills());
+          assertEquals(2, eventAlpha.getRequiredSkills().size());
+          assertTrue(eventAlpha.getRequiredSkills().contains(skillDev));
+          assertTrue(eventAlpha.getRequiredSkills().contains(skillDesign));
+
+          // Kiểm tra chi tiết Event 2
+          Event eventBeta = allEvents.stream().filter(e -> e.getEventId() == event2Id).findFirst().orElse(null);
+          assertNotNull(eventBeta, "Event Beta should be in the list.");
+          assertEquals("All Events - Event Beta", eventBeta.getTitle());
+          assertEquals(org2, eventBeta.getOrganizer());
+          assertEquals(AppConstants.EVENT_DONE, eventBeta.getStatus()); // Giả sử AppConstants có EVENT_COMPLETED
+          assertNotNull(eventBeta.getRequiredSkills());
+          assertTrue(eventBeta.getRequiredSkills().isEmpty(), "Event Beta should have no skills.");
+          
+          // Kiểm tra chi tiết Event 3
+          Event eventGamma = allEvents.stream().filter(e -> e.getEventId() == event3Id).findFirst().orElse(null);
+          assertNotNull(eventGamma, "Event Gamma should be in the list.");
+          assertEquals(AppConstants.EVENT_PENDING, eventGamma.getStatus());
+      }
+
+      @Test
+      void getAllEvents_WhenNoEventsExist_ShouldReturnEmptyList() {
+          // --- Arrange ---
+          // Không chèn sự kiện nào (setUpForEachTest đã clear bảng Events)
+
+          // --- Act ---
+          List<Event> allEvents = eventDAO.getAllEvents();
+
+          // --- Assert ---
+          assertNotNull(allEvents, "List of all events should not be null.");
+          assertTrue(allEvents.isEmpty(), "Should return an empty list when no events are in the database.");
+      }
 }
