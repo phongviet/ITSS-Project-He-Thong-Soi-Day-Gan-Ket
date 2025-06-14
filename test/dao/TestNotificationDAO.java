@@ -120,6 +120,7 @@ class TestNotificationDAO {
                                                  String license, String field, String rep, 
                                                  String sponsor, String info) throws SQLException {
         // ensureSystemUserExists(connection, username, "defaultOrgPass", ...); // Gọi nếu cần
+    	ensureSystemUserExists(connection, username, "defaultOrgPassFor_" + username, username + "@org.com", "000111222", "Org Default Address");
         String sql = "INSERT OR IGNORE INTO VolunteerOrganization (username, organizationName, licenseNumber, field, representative, sponsor, info) VALUES (?, ?, ?, ?, ?, ?, ?)";
         try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
             pstmt.setString(1, username);
@@ -164,7 +165,9 @@ class TestNotificationDAO {
     }
     
     private void ensureVolunteerExists(Connection connection, String username, String fullName, String cccd, String dateOfBirthStr, int freeHours) throws SQLException {
-        String sql = "INSERT OR IGNORE INTO Volunteer (username, fullName, cccd, dateOfBirth, freeHourPerWeek) VALUES (?, ?, ?, ?, ?)";
+    	ensureSystemUserExists(connection, username, "defaultVolPassFor_" + username, 
+                username + "@volunteer.com", "333444555", "Volunteer Default Address");
+    	String sql = "INSERT OR IGNORE INTO Volunteer (username, fullName, cccd, dateOfBirth, freeHourPerWeek) VALUES (?, ?, ?, ?, ?)";
         try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
             pstmt.setString(1, username);
             pstmt.setString(2, fullName);
@@ -592,6 +595,115 @@ class TestNotificationDAO {
 
         // --- Assert ---
         assertFalse(result, "Should return false if notification is for a different volunteer.");
+    }
+    
+    // --- Test Cases for NotificationDAO.getPendingNotificationsByOrganizer ---
+
+    @Test
+    void getPendingNotificationsByOrganizer_OrganizerHasPendingNotifications_ShouldReturnCorrectListWithEventTitles() throws SQLException, ParseException {
+        // --- Arrange ---
+        String org1Uname = "orgWithPending1";
+        ensureVolunteerOrganizationExists(connForHelpers, org1Uname, "Org Pending 1", "LICP1", "FieldP1", "RepP1", "SponsorP1", "InfoP1");
+        String org2Uname = "orgWithPending2";
+        ensureVolunteerOrganizationExists(connForHelpers, org2Uname, "Org Pending 2", "LICP2", "FieldP2", "RepP2", "SponsorP2", "InfoP2");
+
+        String vol1Uname = "volNotifyPending1";
+        ensureVolunteerExists(connForHelpers, vol1Uname, "Vol Notify Pending 1", "CCCDVNP1", "1995-01-01", 10);
+        String vol2Uname = "volNotifyPending2";
+        ensureVolunteerExists(connForHelpers, vol2Uname, "Vol Notify Pending 2", "CCCDVNP2", "1996-02-02", 15);
+
+        // Events by org1
+        int event1Org1Id = insertTestEvent(connForHelpers, 501, "Org1 Event Pending Alpha", getFutureDateString(3), AppConstants.EMERGENCY_NORMAL, AppConstants.EVENT_APPROVED, 10, org1Uname, "Desc O1EPA", null);
+        int event2Org1Id = insertTestEvent(connForHelpers, 502, "Org1 Event Approved Beta", getFutureDateString(5), AppConstants.EMERGENCY_HIGH, AppConstants.EVENT_APPROVED, 5, org1Uname, "Desc O1EAB", null);
+        int event3Org1Id = insertTestEvent(connForHelpers, 503, "Org1 Event Other Status Gamma", getFutureDateString(7), AppConstants.EMERGENCY_LOW, AppConstants.EVENT_APPROVED, 5, org1Uname, "Desc O1EOSG", null);
+
+        // Events by org2
+        int event1Org2Id = insertTestEvent(connForHelpers, 504, "Org2 Event Pending Delta", getFutureDateString(4), AppConstants.EMERGENCY_URGENT, AppConstants.EVENT_APPROVED, 12, org2Uname, "Desc O2EPD", null);
+
+        // Notifications
+        // For org1's events
+        insertTestNotification(connForHelpers, 301, event1Org1Id, vol1Uname, AppConstants.NOTIF_PENDING); // Expected for org1
+        insertTestNotification(connForHelpers, 302, event2Org1Id, vol2Uname, AppConstants.NOTIF_PENDING); // Expected for org1
+        insertTestNotification(connForHelpers, 303, event3Org1Id, vol1Uname, AppConstants.NOTIF_REGISTERED); // Not pending
+        
+        // For org2's event
+        insertTestNotification(connForHelpers, 304, event1Org2Id, vol2Uname, AppConstants.NOTIF_PENDING); // Belongs to org2
+
+        // --- Act ---
+        List<Notification> pendingNotificationsForOrg1 = notificationDAO.getPendingNotificationsByOrganizer(org1Uname);
+
+        // --- Assert ---
+        assertNotNull(pendingNotificationsForOrg1, "List of pending notifications should not be null.");
+        assertEquals(2, pendingNotificationsForOrg1.size(), "Org1 should have 2 pending notifications.");
+
+        // Check details for the first pending notification of Org1
+        Notification notif1 = pendingNotificationsForOrg1.stream()
+                                .filter(n -> n.getEventId() == event1Org1Id && vol1Uname.equals(n.getUsername()))
+                                .findFirst().orElse(null);
+        assertNotNull(notif1, "Notification for Event 501 and Volunteer volNotifyPending1 should exist.");
+        assertEquals(AppConstants.NOTIF_PENDING, notif1.getAcceptStatus());
+        assertEquals("Org1 Event Pending Alpha", notif1.getEventTitle(), "Event title should be correctly joined and set.");
+        assertEquals(vol1Uname, notif1.getUsername());
+
+        // Check details for the second pending notification of Org1
+        Notification notif2 = pendingNotificationsForOrg1.stream()
+                                .filter(n -> n.getEventId() == event2Org1Id && vol2Uname.equals(n.getUsername()))
+                                .findFirst().orElse(null);
+        assertNotNull(notif2, "Notification for Event 502 and Volunteer volNotifyPending2 should exist.");
+        assertEquals(AppConstants.NOTIF_PENDING, notif2.getAcceptStatus());
+        assertEquals("Org1 Event Approved Beta", notif2.getEventTitle()); // Event title check
+        assertEquals(vol2Uname, notif2.getUsername());
+    }
+
+    @Test
+    void getPendingNotificationsByOrganizer_OrganizerHasNoPendingNotifications_ShouldReturnEmptyList() throws SQLException, ParseException {
+        // --- Arrange ---
+        String orgNoPendingUname = "orgNoPending";
+        ensureVolunteerOrganizationExists(connForHelpers, orgNoPendingUname, "Org No Pending", "LICNP", "FieldNP", "RepNP", "SponsorNP", "InfoNP");
+        
+        String volUname = "volForNoPending"; // Volunteer này đã có
+        ensureVolunteerExists(connForHelpers, volUname, "Vol For No Pending", "CCCDVFNP", "1997-03-03", 20);
+
+        int eventId = 0; // Khởi tạo để tránh lỗi biên dịch nếu try-catch không gán
+        try {
+            eventId = insertTestEvent(connForHelpers, 505, "OrgNoPending Event", getFutureDateString(1), 
+                                    AppConstants.EMERGENCY_NORMAL, AppConstants.EVENT_APPROVED, 10, 
+                                    orgNoPendingUname, "Desc ONPE", null);
+        } catch (ParseException e) {
+            throw new SQLException("Error parsing date for event in test: " + e.getMessage());
+        }
+        assertTrue(eventId > 0, "Event should be inserted for test.");
+        
+        // Insert notifications with statuses other than PENDING
+        insertTestNotification(connForHelpers, 305, eventId, volUname, AppConstants.NOTIF_REGISTERED);
+        
+        // THÊM PHẦN TẠO "anotherVol" TRƯỚC KHI DÙNG NÓ
+        String anotherVolUsername = "anotherVol";
+        ensureSystemUserExists(connForHelpers, anotherVolUsername, "passAnother", "another@vol.com", "777", "AddrAnother");
+        ensureVolunteerExists(connForHelpers, anotherVolUsername, "Another Volunteer Test", "CCCDAVT", "1999-09-09", 5);
+        
+        insertTestNotification(connForHelpers, 306, eventId, anotherVolUsername, AppConstants.NOTIF_CANCELLED);
+
+
+        // --- Act ---
+        List<Notification> pendingNotifications = notificationDAO.getPendingNotificationsByOrganizer(orgNoPendingUname);
+
+        // --- Assert ---
+        assertNotNull(pendingNotifications, "List should not be null.");
+        assertTrue(pendingNotifications.isEmpty(), "Should return an empty list if organizer has no PENDING notifications.");
+    }
+
+    @Test
+    void getPendingNotificationsByOrganizer_NonExistingOrganizer_ShouldReturnEmptyList() {
+        // --- Arrange ---
+        String nonExistingOrg = "ghostOrganizer123";
+
+        // --- Act ---
+        List<Notification> pendingNotifications = notificationDAO.getPendingNotificationsByOrganizer(nonExistingOrg);
+
+        // --- Assert ---
+        assertNotNull(pendingNotifications, "List should not be null.");
+        assertTrue(pendingNotifications.isEmpty(), "Should return an empty list for a non-existing organizer.");
     }
 
 }
