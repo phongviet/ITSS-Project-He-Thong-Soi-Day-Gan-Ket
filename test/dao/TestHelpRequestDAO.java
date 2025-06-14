@@ -218,6 +218,147 @@ class TestHelpRequestDAO {
         assertNotNull(requestInDb, "Request should be found in DB.");
         assertNull(requestInDb.startDate, "startDate in DB should be null.");
     }
+    
+ // --- Test Cases for HelpRequestDAO.updateHelpRequest ---
+
+    @Test
+    void updateHelpRequest_ExistingRequest_ShouldUpdateFieldsAndReturnTrue() throws SQLException, ParseException {
+        // --- Arrange ---
+        String personUsername = "personTest1"; // Đã có từ @BeforeEach
+        
+        // 1. Chèn một HelpRequest ban đầu
+        HelpRequest originalRequest = new HelpRequest();
+        originalRequest.setTitle("Original Title for Update");
+        originalRequest.setDescription("Original description.");
+        originalRequest.setContact("0101010101");
+        originalRequest.setPersonInNeedUsername(personUsername);
+        originalRequest.setStartDate(dateFormat.parse(getFutureDateString(5)));
+        originalRequest.setEmergencyLevel(AppConstants.EMERGENCY_NORMAL);
+        originalRequest.setStatus(AppConstants.REQUEST_PENDING); // Status này không nên bị thay đổi bởi updateHelpRequest
+        originalRequest.setAddress("1 Original St");
+
+        // Giả sử createHelpRequest không trả về ID và requestId không tự tăng.
+        // Chúng ta cần một cách để lấy requestId sau khi chèn, hoặc tự gán nó.
+        // Để đơn giản, ta sẽ giả định rằng requestId là cố định cho test này.
+        // Hoặc, tốt hơn là dùng helper để chèn và lấy ID.
+        // Tạm thời, chèn và lấy lại bằng title (không lý tưởng cho sản phẩm thực)
+        helpRequestDAO.createHelpRequest(originalRequest); // Chèn vào DB
+        
+        // Lấy lại request vừa chèn để có requestId (cách này không tốt nếu title không duy nhất)
+        // Cách tốt hơn: Sửa createHelpRequest để trả về ID hoặc đối tượng đã được chèn với ID.
+        // Hoặc, nếu requestId không tự tăng, bạn phải set nó cho originalRequest trước khi chèn.
+        // Trong schema của bạn, requestId là PRIMARY KEY nhưng không AUTOINCREMENT.
+        // Vậy, bạn phải cung cấp requestId khi tạo.
+        
+        int testRequestId = 1; // Giả sử bạn có thể kiểm soát requestId này
+                               // hoặc bạn phải tự insert vào DB với một requestId cụ thể.
+        // Để test chính xác, chúng ta sẽ insert trực tiếp với ID biết trước.
+        clearTableData(connForHelpers, "HelpRequest"); // Xóa lại để chèn với ID cụ thể
+        String originalStartDateStr = getFutureDateString(5);
+        insertHelpRequestWithId(connForHelpers, testRequestId, "Original Title for Update", originalStartDateStr,
+                                AppConstants.EMERGENCY_NORMAL, "Original description.", personUsername,
+                                AppConstants.REQUEST_PENDING, "0101010101", "1 Original St");
+
+
+        // 2. Tạo đối tượng HelpRequest với thông tin cập nhật
+        HelpRequest updatedRequestInfo = new HelpRequest();
+        updatedRequestInfo.setRequestId(testRequestId); // QUAN TRỌNG: Phải có requestId để update đúng bản ghi
+        updatedRequestInfo.setTitle("Updated Title");
+        updatedRequestInfo.setDescription("Updated description.");
+        updatedRequestInfo.setContact("0909999888");
+        String updatedStartDateStr = getFutureDateString(7);
+        updatedRequestInfo.setStartDate(dateFormat.parse(updatedStartDateStr));
+        updatedRequestInfo.setEmergencyLevel(AppConstants.EMERGENCY_HIGH);
+        updatedRequestInfo.setAddress("2 Updated Ave");
+        // Không set personInNeedUsername và status vì updateHelpRequest không cập nhật chúng
+
+        // --- Act ---
+        boolean result = helpRequestDAO.updateHelpRequest(updatedRequestInfo);
+
+        // --- Assert ---
+        assertTrue(result, "updateHelpRequest should return true for a successful update.");
+
+        // Verify data in DB
+        HelpRequest_DataInDB requestInDb = getHelpRequestDataFromDBById(testRequestId); // Helper mới
+        assertNotNull(requestInDb, "Updated request should be found in DB.");
+        assertEquals(updatedRequestInfo.getTitle(), requestInDb.title);
+        assertEquals(updatedRequestInfo.getDescription(), requestInDb.description);
+        assertEquals(updatedRequestInfo.getContact(), requestInDb.contact);
+        assertEquals(formatDate(updatedRequestInfo.getStartDate()), requestInDb.startDate);
+        assertEquals(updatedRequestInfo.getEmergencyLevel(), requestInDb.emergencyLevel);
+        assertEquals(updatedRequestInfo.getAddress(), requestInDb.address);
+
+        // Kiểm tra các trường không bị thay đổi
+        assertEquals(personUsername, requestInDb.personInNeedUsername, "personInNeedUsername should not be changed by updateHelpRequest.");
+        assertEquals(AppConstants.REQUEST_PENDING, requestInDb.status, "Status should not be changed by updateHelpRequest.");
+    }
+
+    @Test
+    void updateHelpRequest_NonExistingRequest_ShouldReturnFalse() throws SQLException, ParseException {
+        // --- Arrange ---
+        int nonExistingRequestId = 99994;
+        
+        HelpRequest requestToUpdate = new HelpRequest();
+        requestToUpdate.setRequestId(nonExistingRequestId);
+        requestToUpdate.setTitle("Title for Non-existing");
+        requestToUpdate.setDescription("Desc for Non-existing");
+        requestToUpdate.setStartDate(dateFormat.parse(getFutureDateString(1)));
+        // ... (set các trường khác nếu cần cho việc gọi hàm, dù nó sẽ không update)
+
+        // --- Act ---
+        boolean result = helpRequestDAO.updateHelpRequest(requestToUpdate);
+
+        // --- Assert ---
+        assertFalse(result, "updateHelpRequest should return false for a non-existing requestId.");
+    }
+
+    // --- Helper methods mới hoặc cập nhật ---
+
+    // Helper để chèn HelpRequest với ID cụ thể (vì requestId không tự tăng trong schema)
+    private void insertHelpRequestWithId(Connection connection, int requestId, String title, String startDateStr,
+                                         String emergency, String description, String personInNeedID, 
+                                         String status, String contact, String address) throws SQLException {
+        ensurePersonInNeedExists(connection, personInNeedID, "Person " + personInNeedID, "CCCD-"+personInNeedID, "1985-01-01");
+        
+        String sql = "INSERT INTO HelpRequest (requestId, title, startDate, emergencyLevel, description, personInNeedId, status, contact, address) " +
+                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+            pstmt.setInt(1, requestId);
+            pstmt.setString(2, title);
+            pstmt.setString(3, startDateStr);
+            pstmt.setString(4, emergency);
+            pstmt.setString(5, description);
+            pstmt.setString(6, personInNeedID);
+            pstmt.setString(7, status);
+            pstmt.setString(8, contact);
+            pstmt.setString(9, address);
+            pstmt.executeUpdate();
+        }
+    }
+
+    // Helper để lấy HelpRequest_DataInDB bằng ID
+    private HelpRequest_DataInDB getHelpRequestDataFromDBById(int requestId) throws SQLException {
+        String sql = "SELECT * FROM HelpRequest WHERE requestId = ?";
+        try (PreparedStatement pstmt = connForHelpers.prepareStatement(sql)) {
+            pstmt.setInt(1, requestId);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    HelpRequest_DataInDB data = new HelpRequest_DataInDB();
+                    data.requestId = rs.getInt("requestId");
+                    data.title = rs.getString("title");
+                    data.description = rs.getString("description");
+                    data.contact = rs.getString("contact");
+                    data.personInNeedUsername = rs.getString("personInNeedId");
+                    data.startDate = rs.getString("startDate");
+                    data.emergencyLevel = rs.getString("emergencyLevel");
+                    data.status = rs.getString("status");
+                    data.address = rs.getString("address");
+                    return data;
+                }
+            }
+        }
+        return null;
+    }
 
     
     // --- Helper class để lưu trữ dữ liệu HelpRequest đọc từ DB ---
@@ -229,7 +370,7 @@ class TestHelpRequestDAO {
         String personInNeedUsername;
         String startDate; // Lưu trữ dưới dạng String để so sánh với DB
         String emergencyLevel;
-        String status;
+        String status;	
         String address;
     }
 }
