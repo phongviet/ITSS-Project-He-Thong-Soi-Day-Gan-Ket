@@ -705,5 +705,128 @@ class TestNotificationDAO {
         assertNotNull(pendingNotifications, "List should not be null.");
         assertTrue(pendingNotifications.isEmpty(), "Should return an empty list for a non-existing organizer.");
     }
+    
+ // --- Test Cases for NotificationDAO.processRegistrationAndUpdateParticipant ---
+
+    @Test
+    void processRegistration_ApprovePendingNotification_ShouldUpdateNotificationAndAddParticipant() throws SQLException, ParseException {
+        // --- Arrange ---
+        String orgUname = "orgProcNotif";
+        ensureVolunteerOrganizationExists(connForHelpers, orgUname, "Org Proc Notif", "LICPN", "FPN", "RPN", "SPN", "IPN");
+        String volUname = "volProcNotif";
+        ensureVolunteerExists(connForHelpers, volUname, "Vol Proc Notif", "CCCDVPN", "1990-10-10", 10);
+        int eventId = insertTestEvent(connForHelpers, 701, "Event For Processing", getFutureDateString(3), AppConstants.EMERGENCY_NORMAL, AppConstants.EVENT_APPROVED, 5, orgUname, "Desc EFP", null);
+
+        // Chèn một notification "Pending"
+        int notificationId = 1001; // Giả sử ID này là duy nhất cho test
+        insertTestNotification(connForHelpers, notificationId, eventId, volUname, AppConstants.NOTIF_PENDING);
+
+        // --- Act ---
+        boolean result = notificationDAO.processRegistrationAndUpdateParticipant(notificationId, AppConstants.NOTIF_REGISTERED);
+
+        // --- Assert ---
+        assertTrue(result, "Processing should be successful for approving a pending notification.");
+
+        // 1. Kiểm tra Notification status đã được cập nhật
+        Notification_DataInDB updatedNotif = getNotificationFromDBById(notificationId); // Cần helper này
+        assertNotNull(updatedNotif, "Notification should still exist.");
+        assertEquals(AppConstants.NOTIF_REGISTERED, updatedNotif.acceptStatus, "Notification status should be updated to Registered.");
+
+        // 2. Kiểm tra EventParticipant đã được thêm
+        EventParticipant_DataInDB participant = getEventParticipantFromDB(eventId, volUname); // Cần helper này
+        assertNotNull(participant, "Volunteer should be added to EventParticipants.");
+        assertEquals(eventId, participant.eventId);
+        assertEquals(volUname, participant.username);
+        // hoursParticipated và ratingByOrg ban đầu nên là null hoặc 0 tùy vào DDL của bạn
+        assertNull(participant.hoursParticipated, "Initial hoursParticipated should be null.");
+        assertNull(participant.ratingByOrg, "Initial ratingByOrg should be null.");
+    }
+
+    @Test
+    void processRegistration_RejectPendingNotification_ShouldUpdateNotificationOnly() throws SQLException, ParseException {
+        // --- Arrange ---
+        String orgUname = "orgProcReject";
+        ensureVolunteerOrganizationExists(connForHelpers, orgUname, "Org Proc Reject", "LICPR", "FPR", "RPR", "SPR", "IPR");
+        String volUname = "volProcReject";
+        ensureVolunteerExists(connForHelpers, volUname, "Vol Proc Reject", "CCCDVPR", "1991-11-11", 12);
+        int eventId = insertTestEvent(connForHelpers, 702, "Event For Rejecting", getFutureDateString(4), AppConstants.EMERGENCY_LOW, AppConstants.EVENT_APPROVED, 7, orgUname, "Desc EFR", null);
+        
+        int notificationId = 1002;
+        insertTestNotification(connForHelpers, notificationId, eventId, volUname, AppConstants.NOTIF_PENDING);
+
+        // --- Act ---
+        boolean result = notificationDAO.processRegistrationAndUpdateParticipant(notificationId, AppConstants.NOTIF_CANCELLED); // Giả sử có NOTIF_REJECTED
+
+        // --- Assert ---
+        assertTrue(result, "Processing should be successful for rejecting a pending notification.");
+
+        // 1. Kiểm tra Notification status đã được cập nhật
+        Notification_DataInDB updatedNotif = getNotificationFromDBById(notificationId);
+        assertNotNull(updatedNotif);
+        assertEquals(AppConstants.NOTIF_CANCELLED, updatedNotif.acceptStatus, "Notification status should be updated to Rejected.");
+
+        // 2. Kiểm tra EventParticipant KHÔNG được thêm
+        EventParticipant_DataInDB participant = getEventParticipantFromDB(eventId, volUname);
+        assertNull(participant, "Volunteer should NOT be added to EventParticipants if notification is rejected.");
+    }
+
+    @Test
+    void processRegistration_NonExistingNotificationId_ShouldReturnFalse() throws SQLException {
+        // --- Arrange ---
+        int nonExistingNotificationId = 99901;
+
+        // --- Act ---
+        boolean result = notificationDAO.processRegistrationAndUpdateParticipant(nonExistingNotificationId, AppConstants.NOTIF_REGISTERED);
+
+        // --- Assert ---
+        assertFalse(result, "Processing should fail for a non-existing notification ID.");
+    }
+    
+    // --- Helper class để chứa dữ liệu EventParticipant đọc từ DB ---
+    private static class EventParticipant_DataInDB {
+        int eventId;
+        String username;
+        Integer hoursParticipated;
+        Integer ratingByOrg;
+    }
+
+    // --- Helper methods mới hoặc cập nhật ---
+    private Notification_DataInDB getNotificationFromDBById(int notificationId) throws SQLException {
+        String sql = "SELECT * FROM Notification WHERE notificationId = ?";
+        try (PreparedStatement pstmt = connForHelpers.prepareStatement(sql)) {
+            pstmt.setInt(1, notificationId);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    Notification_DataInDB data = new Notification_DataInDB();
+                    data.notificationId = rs.getInt("notificationId");
+                    data.eventId = rs.getInt("eventId");
+                    data.username = rs.getString("username");
+                    data.acceptStatus = rs.getString("acceptStatus");
+                    return data;
+                }
+            }
+        }
+        return null;
+    }
+
+    private EventParticipant_DataInDB getEventParticipantFromDB(int eventId, String username) throws SQLException {
+        String sql = "SELECT * FROM EventParticipants WHERE eventId = ? AND username = ?";
+        try (PreparedStatement pstmt = connForHelpers.prepareStatement(sql)) {
+            pstmt.setInt(1, eventId);
+            pstmt.setString(2, username);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    EventParticipant_DataInDB data = new EventParticipant_DataInDB();
+                    data.eventId = rs.getInt("eventId");
+                    data.username = rs.getString("username");
+                    // rs.getObject() để xử lý NULL cho Integer
+                    data.hoursParticipated = rs.getObject("hoursParticipated") != null ? rs.getInt("hoursParticipated") : null;
+                    data.ratingByOrg = rs.getObject("ratingByOrg") != null ? rs.getInt("ratingByOrg") : null;
+                    return data;
+                }
+            }
+        }
+        return null;
+    }
 
 }
