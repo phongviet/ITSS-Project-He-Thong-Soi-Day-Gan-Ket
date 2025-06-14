@@ -352,7 +352,7 @@ public class EventDAO {
         return events;
     }
     
-    private void loadEventSkills(Connection conn, Event event) throws SQLException {
+    public void loadEventSkills(Connection conn, Event event) throws SQLException {
         // Đảm bảo tên cột eventId trong bảng EventSkills là đúng (trong schema bạn gửi là eventID hoặc eventId)
         // Giả sử tên cột trong bảng EventSkills liên kết với Events.eventId là "eventId" (thường là thực tế hơn)
         // Nếu trong bảng EventSkills cột đó tên là "eventID" thì dùng "es.eventID"
@@ -373,7 +373,6 @@ public class EventDAO {
                 }
             }
         }
-        event.setRequiredSkills(skills); 
     }
     
     public List<EventParticipantDetails> getEventParticipantDetailsList(int eventId) {

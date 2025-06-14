@@ -1,6 +1,7 @@
 package entity.events; // Hoặc một package DTO thích hợp như dto.event
 
 import java.util.Date;
+import java.util.List;
 
 public class EventParticipantDetails {
 
@@ -11,6 +12,7 @@ public class EventParticipantDetails {
     private Date endDate;
     private String eventStatus; // Trạng thái chung của sự kiện (ví dụ: Upcoming, Completed)
     private String organizerName; // Tên của tổ chức (có thể lấy qua Event.getOrganizer() rồi truy vấn)
+    private List<String> requiredSkills;
     // Bạn có thể thêm các trường khác từ Event nếu cần hiển thị
 
     // Thông tin từ EventParticipants (cụ thể cho Volunteer này)
@@ -47,6 +49,14 @@ public class EventParticipantDetails {
 
 
     // Getters and Setters
+
+    public List<String> getRequiredSkills() {
+        return requiredSkills;
+    }
+
+    public void setRequiredSkills(List<String> requiredSkills) {
+        this.requiredSkills = requiredSkills;
+    }
 
     // --- Từ Event ---
     public int getEventId() {

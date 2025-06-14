@@ -78,13 +78,6 @@ public class VolunteerViewEventDetailScreenHandler implements Initializable {
 
         eventTitleLabel.setText("Details for: " + eventDetails.getTitle());
         titleText.setText(eventDetails.getTitle());
-        
-        // Lấy tên Organizer - Cần phương thức trong EventController hoặc truyền từ trước
-        // Tạm thời để trống hoặc dùng username của organizer nếu có trong EventParticipantDetails
-        // Hoặc bạn có thể sửa EventParticipantDetails để chứa Event object đầy đủ
-        // Giả sử Event object có trong EventParticipantDetails hoặc được lấy riêng
-        // String organizerUsername = eventController.getEventById(eventDetails.getEventId()).getOrganizer(); // Ví dụ
-        // organizerText.setText(eventController.getOrganizerName(organizerUsername)); // Cần getOrganizerName
         organizerText.setText(eventDetails.getOrganizerName() != null ? eventDetails.getOrganizerName() : "N/A");
 
 
@@ -98,8 +91,9 @@ public class VolunteerViewEventDetailScreenHandler implements Initializable {
         	maxParticipantsText.setText(maxParticipants != null && maxParticipants != 0 ? String.valueOf(maxParticipants) : "N/A");
             emergencyLevelText.setText(fullEvent.getEmergencyLevel() != null ? fullEvent.getEmergencyLevel() : "N/A");
             descriptionTextArea.setText(fullEvent.getDescription() != null ? fullEvent.getDescription() : "No description available.");
-            if (fullEvent.getRequiredSkills() != null && !fullEvent.getRequiredSkills().isEmpty()) {
-                requiredSkillsListView.setItems(FXCollections.observableArrayList(fullEvent.getRequiredSkills()));
+            
+            if (eventDetails.getRequiredSkills() != null && !eventDetails.getRequiredSkills().isEmpty()) {
+                requiredSkillsListView.setItems(FXCollections.observableArrayList(eventDetails.getRequiredSkills()));
             } else {
                 requiredSkillsListView.setItems(FXCollections.observableArrayList("No specific skills required."));
             }

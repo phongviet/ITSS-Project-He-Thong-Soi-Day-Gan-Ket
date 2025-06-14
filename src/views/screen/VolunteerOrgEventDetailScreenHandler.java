@@ -198,7 +198,7 @@ public class VolunteerOrgEventDetailScreenHandler implements Initializable {
         } else {
             if(volunteerStatusMessageLabel != null) volunteerStatusMessageLabel.setText("All volunteer data saved successfully for " + successCount + " participants!");
         }
-        loadVolunteers();
+        loadVolunteers(); 
     }
 
     @FXML

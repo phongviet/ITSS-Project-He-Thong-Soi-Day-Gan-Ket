@@ -696,60 +696,72 @@ public class UserDAO {
     }
 
     public List<EventParticipantDetails> getEventParticipationDetailsForVolunteer(String volunteerUsername) {
-        List<EventParticipantDetails> participationDetailsList = new ArrayList<>();
-        String sql = "SELECT e.*, ep.hoursParticipated, ep.ratingByOrg " +
-                     "FROM EventParticipants ep " +
-                     "JOIN Events e ON ep.eventId = e.eventId " +
-                     "WHERE ep.username = ?";
-
-        String volunteerFullName = "N/A";
-        Volunteer volunteer = getVolunteer(volunteerUsername);
-        if (volunteer != null) {
-            volunteerFullName = volunteer.getFullName();
-        }
+        List<EventParticipantDetails> detailsList = new ArrayList<>();
+        // This complex query joins multiple tables to get all necessary details for the events a volunteer is involved in.
+        String sql = "SELECT " +
+                     "e.eventId, e.title, e.startDate, e.endDate, e.status as eventStatus, " +
+                     "ep.hoursParticipated, ep.ratingByOrg, " +
+                     "n.acceptStatus as volunteerParticipationStatus, " + 
+                     "vo.organizationName " +
+                     "FROM Events e " +
+                     "LEFT JOIN EventParticipants ep ON e.eventId = ep.eventId AND ep.username = ? " +
+                     "LEFT JOIN Notification n ON e.eventId = n.eventId AND n.username = ? " +
+                     "JOIN VolunteerOrganization vo ON e.organizer = vo.username " +
+                     "WHERE ep.username = ? OR n.username = ? " +
+                     "GROUP BY e.eventId"; // Group to avoid duplicates if in both tables
 
         try (Connection conn = DriverManager.getConnection(DB_URL);
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            
+
             pstmt.setString(1, volunteerUsername);
-            ResultSet rs = pstmt.executeQuery();
+            pstmt.setString(2, volunteerUsername);
+            pstmt.setString(3, volunteerUsername);
+            pstmt.setString(4, volunteerUsername);
 
-            while (rs.next()) {
-                Event event = new Event();
-                event.setEventId(rs.getInt("eventId"));
-                event.setTitle(rs.getString("title"));
-                try {
-                    String startDateStr = rs.getString("startDate");
-                    if (startDateStr != null) event.setStartDate(new SimpleDateFormat("yyyy-MM-dd").parse(startDateStr));
-                    String endDateStr = rs.getString("endDate");
-                    if (endDateStr != null) event.setEndDate(new SimpleDateFormat("yyyy-MM-dd").parse(endDateStr));
-                } catch (ParseException e) {
-                    e.printStackTrace();
+            try (ResultSet rs = pstmt.executeQuery()) {
+                EventDAO eventDAO = new EventDAO(); // Create DAO to load skills
+                while (rs.next()) {
+                    EventParticipantDetails details = new EventParticipantDetails();
+                    
+                    int eventId = rs.getInt("eventId");
+                    details.setEventId(eventId);
+                    details.setTitle(rs.getString("title"));
+                    try {
+                        String startDateStr = rs.getString("startDate");
+                        if(startDateStr != null) details.setStartDate(new SimpleDateFormat("yyyy-MM-dd").parse(startDateStr));
+                        String endDateStr = rs.getString("endDate");
+                        if(endDateStr != null) details.setEndDate(new SimpleDateFormat("yyyy-MM-dd").parse(endDateStr));
+                    } catch (ParseException e) {
+                        System.err.println("Error parsing date for event " + eventId);
+                        e.printStackTrace();
+                    }
+                    details.setEventStatus(rs.getString("eventStatus"));
+                    
+                    // Lấy thông tin tham gia
+                    details.setHoursParticipated(rs.getObject("hoursParticipated") != null ? rs.getInt("hoursParticipated") : null);
+                    details.setRatingByOrg(rs.getObject("ratingByOrg") != null ? rs.getInt("ratingByOrg") : null);
+                    details.setVolunteerParticipationStatus(rs.getString("volunteerParticipationStatus"));
+                    details.setOrganizerName(rs.getString("organizationName"));
+
+                    // Tạo một đối tượng Event tạm thời để tải skills
+                    Event tempEvent = new Event();
+                    tempEvent.setEventId(eventId);
+                    eventDAO.loadEventSkills(conn, tempEvent); // Sử dụng kết nối hiện tại
+                    details.setRequiredSkills(tempEvent.getRequiredSkills());
+
+                    detailsList.add(details);
                 }
-                event.setStatus(rs.getString("status"));
-                event.setOrganizer(rs.getString("organizer"));
-
-                Integer hoursParticipated = rs.getObject("hoursParticipated") != null ? rs.getInt("hoursParticipated") : null;
-                Integer ratingByOrg = rs.getObject("ratingByOrg") != null ? rs.getInt("ratingByOrg") : null;
-                
-                String volunteerParticipationStatus = "Registered"; 
-                if (event.getStatus().equals(AppConstants.EVENT_DONE)) {
-                    volunteerParticipationStatus = "Done";
-                }
-
-                EventParticipantDetails details = new EventParticipantDetails(event, volunteerUsername, volunteerFullName, hoursParticipated, ratingByOrg, volunteerParticipationStatus);
-                details.setOrganizerName(getOrganizerNameById(conn, event.getOrganizer()));
-                participationDetailsList.add(details);
             }
         } catch (SQLException e) {
+            System.err.println("Error fetching event participation details for volunteer: " + e.getMessage());
             e.printStackTrace();
         }
-        return participationDetailsList;
+        return detailsList;
     }
 
     private String getOrganizerNameById(Connection conn, String organizerUsername) throws SQLException {
-        String sqlOrg = "SELECT organizationName FROM VolunteerOrganization WHERE username = ?";
-        try (PreparedStatement pstmtOrg = conn.prepareStatement(sqlOrg)) {
+        String sql = "SELECT organizationName FROM VolunteerOrganization WHERE username = ?";
+        try (PreparedStatement pstmtOrg = conn.prepareStatement(sql)) {
             pstmtOrg.setString(1, organizerUsername);
             try (ResultSet rsOrg = pstmtOrg.executeQuery()) {
                 if (rsOrg.next()) return rsOrg.getString("organizationName");
