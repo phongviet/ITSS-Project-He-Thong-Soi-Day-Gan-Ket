@@ -292,4 +292,118 @@ class TestReportDAO {
         System.out.println("Test for rollback scenario is conceptual and not fully implemented without DB manipulation/mocking.");
         assertTrue(true); // Tạm thời pass
     }
+    
+ // --- Test Cases for ReportDAO.eventHasFinalHundredPercentReport ---
+
+    @Test
+    void eventHasFinalHundredPercentReport_WhenEventHasFinalReportWith100Progress_ShouldReturnTrue() throws SQLException, ParseException {
+        // --- Arrange ---
+        int eventId = insertTestEventForReport("Event With Final 100 Report", "orgReportTest");
+        
+        // Tạo Report và FinalReport
+        Report report = new Report();
+        report.setEventId(eventId);
+        report.setReportDate(new Date());
+        report.setProgress(100);
+        report.setNote("Final and 100% complete.");
+        
+        // Lưu report và đánh dấu là final
+        // saveProgressReport sẽ tự động lấy generated reportId và chèn vào FinalReport
+        boolean saveSuccess = reportDAO.saveProgressReport(report, true); 
+        assertTrue(saveSuccess, "Saving final 100% report should succeed.");
+
+        // --- Act ---
+        boolean result = reportDAO.eventHasFinalHundredPercentReport(eventId);
+
+        // --- Assert ---
+        assertTrue(result, "Should return true when a final report with 100% progress exists for the event.");
+    }
+
+    @Test
+    void eventHasFinalHundredPercentReport_WhenEventHasFinalReportButNot100Progress_ShouldReturnFalse() throws SQLException, ParseException {
+        // --- Arrange ---
+        int eventId = insertTestEventForReport("Event Final Report Not 100", "orgReportTest");
+        
+        Report report = new Report();
+        report.setEventId(eventId);
+        report.setReportDate(new Date());
+        report.setProgress(80); // Progress < 100
+        report.setNote("Final but only 80% complete.");
+        
+        reportDAO.saveProgressReport(report, true); // Đánh dấu là final
+
+        // --- Act ---
+        boolean result = reportDAO.eventHasFinalHundredPercentReport(eventId);
+
+        // --- Assert ---
+        assertFalse(result, "Should return false if the final report does not have 100% progress.");
+    }
+
+    @Test
+    void eventHasFinalHundredPercentReport_WhenEventHas100ProgressReportButNotMarkedFinal_ShouldReturnFalse() throws SQLException, ParseException {
+        // --- Arrange ---
+        int eventId = insertTestEventForReport("Event 100 Report Not Final", "orgReportTest");
+        
+        Report report = new Report();
+        report.setEventId(eventId);
+        report.setReportDate(new Date());
+        report.setProgress(100);
+        report.setNote("100% complete, but not the final submission.");
+        
+        reportDAO.saveProgressReport(report, false); // isFinal = false
+
+        // --- Act ---
+        boolean result = reportDAO.eventHasFinalHundredPercentReport(eventId);
+
+        // --- Assert ---
+        assertFalse(result, "Should return false if a 100% report exists but is not marked as final.");
+    }
+
+    @Test
+    void eventHasFinalHundredPercentReport_WhenEventHasNoReports_ShouldReturnFalse() throws SQLException, ParseException {
+        // --- Arrange ---
+        int eventId = insertTestEventForReport("Event With No Reports", "orgReportTest");
+        // Không chèn report nào
+
+        // --- Act ---
+        boolean result = reportDAO.eventHasFinalHundredPercentReport(eventId);
+
+        // --- Assert ---
+        assertFalse(result, "Should return false if the event has no reports at all.");
+    }
+
+    @Test
+    void eventHasFinalHundredPercentReport_WhenEventHasNonFinalNon100ProgressReport_ShouldReturnFalse() throws SQLException, ParseException {
+        // --- Arrange ---
+        int eventId = insertTestEventForReport("Event NonFinal Non100", "orgReportTest");
+        
+        Report report = new Report();
+        report.setEventId(eventId);
+        report.setReportDate(new Date());
+        report.setProgress(50);
+        report.setNote("Just a progress update.");
+        
+        reportDAO.saveProgressReport(report, false); // Not final, not 100%
+
+        // --- Act ---
+        boolean result = reportDAO.eventHasFinalHundredPercentReport(eventId);
+
+        // --- Assert ---
+        assertFalse(result, "Should return false for a non-final, non-100% progress report.");
+    }
+
+    @Test
+    void eventHasFinalHundredPercentReport_NonExistingEventId_ShouldReturnFalse() {
+        // --- Arrange ---
+        int nonExistingEventId = 99002;
+
+        // --- Act ---
+        boolean result = reportDAO.eventHasFinalHundredPercentReport(nonExistingEventId);
+
+        // --- Assert ---
+        assertFalse(result, "Should return false for a non-existing event ID.");
+    }
+    
+    // Các helper methods như ensureVolunteerOrganizationExists, insertTestEventForReport,
+    // saveProgressReport (được gọi gián tiếp qua reportDAO) đã có.
 }
