@@ -459,8 +459,8 @@ class TestEventDAO {
           assertNotEquals(0, eventId, "Event ID should be generated.");
 
           // Chèn kỹ năng cho sự kiện
-          String skill1Name = "EventDetailSkill1";
-          String skill2Name = "EventDetailSkill2";
+          String skill1Name = "Communication";
+          String skill2Name = "First Aid";
           insertSkillIfNotExists(connForHelpers, skill1Name); // Đảm bảo skill tồn tại trong bảng Skills
           insertSkillIfNotExists(connForHelpers, skill2Name);
           addSkillToEvent(eventId, skill1Name); // Sử dụng helper đã có để liên kết skill với event
@@ -835,5 +835,72 @@ class TestEventDAO {
           String defaultEmergency = AppConstants.EMERGENCY_NORMAL; // Sử dụng AppConstants
           String defaultDescription = "Description for " + title;
           return insertTestEvent(title, startDateStr, defaultEndDate, defaultEmergency, status, maxParticipants, organizerUsername, defaultDescription, requestId);
+      }
+      
+   // --- Test Cases for EventDAO.rejectEvent ---
+
+      @Test
+      void rejectEvent_ExistingEvent_ShouldUpdateStatusToRejectedAndReturnTrue() throws SQLException, ParseException {
+          // --- Arrange ---
+          String organizerUsername = "orgRejectEvent";
+          ensureVolunteerOrganizationExists(connForHelpers, organizerUsername, "Org For Reject Event Test");
+          
+          String initialStatus = AppConstants.EVENT_PENDING;
+          String eventTitle = "Event To Be Rejected";
+          String startDateStr = getFutureDateString(8); // Một ngày trong tương lai
+
+          // Chèn sự kiện với requestId là null để đơn giản hóa test này
+          int eventId = insertTestEvent(eventTitle, startDateStr, initialStatus, 10, organizerUsername, null);
+          assertTrue(eventId > 0, "Event should be inserted for reject test.");
+
+          // --- Act ---
+          boolean result = eventDAO.rejectEvent(eventId);
+
+          // --- Assert ---
+          assertTrue(result, "rejectEvent should return true for a successful rejection.");
+
+          // Verify Event status in DB
+          String statusInDb = getEventStatusFromDB(eventId); // Sử dụng helper đã có
+          assertEquals(AppConstants.EVENT_REJECTED, statusInDb, "Event status in database should be updated to REJECTED.");
+      }
+
+      @Test
+      void rejectEvent_NonExistingEvent_ShouldReturnFalse() throws SQLException {
+          // --- Arrange ---
+          int nonExistingEventId = 99996; // Một ID chắc chắn không tồn tại
+
+          // --- Act ---
+          boolean result = eventDAO.rejectEvent(nonExistingEventId);
+
+          // --- Assert ---
+          assertFalse(result, "rejectEvent should return false for a non-existing event ID.");
+      }
+
+      @Test
+      void rejectEvent_AlreadyRejectedEvent_ShouldStillReturnTrueAndUpdate() throws SQLException, ParseException {
+          // (Hành vi này phụ thuộc vào việc updateEventStatus có trả về true nếu giá trị không thay đổi không,
+          //  thường thì executeUpdate() sẽ trả về số dòng bị ảnh hưởng, nếu status đã là REJECTED,
+          //  và bạn update lại thành REJECTED, một số DB có thể trả về 0 hoặc 1 tùy cấu hình/driver.
+          //  Với SQLite, nếu giá trị không đổi, nó vẫn có thể coi là 1 dòng "được khớp" và trả về 1)
+          // --- Arrange ---
+          String organizerUsername = "orgRejectAgain";
+          ensureVolunteerOrganizationExists(connForHelpers, organizerUsername, "Org For Reject Again Test");
+          
+          String initialStatus = AppConstants.EVENT_REJECTED; // Sự kiện đã bị từ chối trước đó
+          String eventTitle = "Event To Be Rejected Again";
+          String startDateStr = getFutureDateString(9);
+
+          int eventId = insertTestEvent(eventTitle, startDateStr, initialStatus, 5, organizerUsername, null);
+          assertTrue(eventId > 0, "Event should be inserted.");
+
+          // --- Act ---
+          boolean result = eventDAO.rejectEvent(eventId); // Cố gắng từ chối lại
+
+          // --- Assert ---
+          // Nếu updateEventStatus trả về true ngay cả khi không có thay đổi thực sự về giá trị (chỉ cần câu lệnh UPDATE chạy được)
+          assertTrue(result, "rejectEvent should return true even if event was already rejected."); 
+          
+          String statusInDb = getEventStatusFromDB(eventId);
+          assertEquals(AppConstants.EVENT_REJECTED, statusInDb, "Event status should remain REJECTED.");
       }
 }
