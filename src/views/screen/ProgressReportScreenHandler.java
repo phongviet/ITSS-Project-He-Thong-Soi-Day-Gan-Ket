@@ -1,6 +1,6 @@
 package views.screen;
 
-import controller.event.EventController;
+import controller.report.ReportController;
 import entity.events.Event;
 import entity.reports.Report; // Corrected import path
 import entity.users.VolunteerOrganization;
@@ -30,10 +30,10 @@ public class ProgressReportScreenHandler {
     private Stage stage;
     private VolunteerOrganization organization;
     private Event eventToReportOn;
-    private EventController eventController;
+    private ReportController reportController;
 
     public ProgressReportScreenHandler() {
-        this.eventController = new EventController();
+        this.reportController = new ReportController();
     }
 
     public void setStage(Stage stage) {
@@ -88,7 +88,7 @@ public class ProgressReportScreenHandler {
         report.setProgress(progress);
         report.setNote(notes);
         
-        if (eventController.saveProgressReport(report, isFinal)) { // This method needs to be created in EventController
+        if (reportController.saveProgressReport(report, isFinal)) {
             statusMessageLabel.setText("Report saved successfully!");
             navigateToEventList(); 
         } else {

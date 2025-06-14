@@ -1,10 +1,6 @@
 package controller.event;
 
 import dao.EventDAO;
-import dao.HelpRequestDAO;
-import dao.NotificationDAO;
-import dao.ReportDAO;
-import dao.UserDAO;
 import entity.events.*;
 import entity.users.VolunteerOrganization;
 import entity.users.Volunteer;
@@ -12,37 +8,20 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Collections;
 import java.util.Comparator;
-import entity.requests.HelpRequest;
 import entity.reports.Report;
 
 public class EventController {
 
     private EventDAO eventDAO;
-    private UserDAO userDAO;
-    private NotificationDAO notificationDAO;
-    private HelpRequestDAO helpRequestDAO;
-    private ReportDAO reportDAO;
 
     public EventController() {
         this.eventDAO = new EventDAO();
-        this.userDAO = new UserDAO();
-        this.notificationDAO = new NotificationDAO();
-        this.helpRequestDAO = new HelpRequestDAO();
-        this.reportDAO = new ReportDAO();
-    }
-
-    public List<HelpRequest> getApprovedHelpRequests() {
-        return helpRequestDAO.getApprovedHelpRequests();
     }
 
     public List<EventParticipantDetails> getParticipantDetailsForEvent(int eventId) {
         return eventDAO.getEventParticipantDetailsList(eventId);
     }
     
-    public boolean updateEventParticipantDetails(int eventId, String volunteerUsername, Integer hoursParticipated, Integer ratingByOrg) {
-        return userDAO.updateEventParticipantDetails(eventId, volunteerUsername, hoursParticipated, ratingByOrg);
-    }
-
     public boolean registerEvent(Event event, VolunteerOrganization organization) {
         return eventDAO.registerEvent(event, organization);
     }
@@ -51,34 +30,14 @@ public class EventController {
         return eventDAO.getEventsByOrganizerId(organizerId);
     }
 
-    public boolean recalculateVolunteerAverageRating(String volunteerUsername) {
-        return userDAO.recalculateVolunteerAverageRating(volunteerUsername);
-    }
-
-    public List<Volunteer> getEventParticipants(int eventId) {
-        return userDAO.getEventParticipants(eventId);
-    }
-
     public List<Event> getAllEvents() {
         return eventDAO.getAllEvents();
     }
     
-    public List<EventParticipantDetails> getEventParticipationDetailsForVolunteer(String volunteerUsername) {
-        return userDAO.getEventParticipationDetailsForVolunteer(volunteerUsername);
-    }
-
     public Event getEventById(int eventId) {
        return eventDAO.getEventById(eventId);
     }
 
-    public List<entity.notifications.Notification> getPendingNotificationsByOrganizer(String organizerUsername) {
-        return notificationDAO.getPendingNotificationsByOrganizer(organizerUsername);
-    }
-
-    public boolean updateNotificationStatus(int notificationId, String newStatus) {
-        return notificationDAO.processRegistrationAndUpdateParticipant(notificationId, newStatus);
-    }
-    
     public int getEmergencyLevelPriority(String emergencyLevel) {
         if (emergencyLevel == null || emergencyLevel.trim().isEmpty()) {
             return Integer.MAX_VALUE;
@@ -153,10 +112,6 @@ public class EventController {
 
     public boolean updateEventStatus(int eventId, String newStatus) {
         return eventDAO.updateEventStatus(eventId, newStatus);
-    }
-
-    public boolean saveProgressReport(Report report, boolean isFinal) {
-        return reportDAO.saveProgressReport(report, isFinal);
     }
 
     public int getTotalEventCountByOrganizer(String organizerId) {

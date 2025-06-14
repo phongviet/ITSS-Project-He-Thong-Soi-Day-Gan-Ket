@@ -1,5 +1,6 @@
 package views.screen;
 
+import controller.UserController;
 import controller.event.EventController;
 import entity.events.Event;
 import entity.events.EventParticipantDetails;
@@ -49,11 +50,13 @@ public class VolunteerOrgEventDetailScreenHandler implements Initializable {
     private VolunteerOrganization organization;
     private Event event;
     private EventController eventController;
+    private UserController userController;
     private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("dd/MM/yyyy");
     private ObservableList<EventParticipantDetails> participantDetailsList = FXCollections.observableArrayList();
 
     public VolunteerOrgEventDetailScreenHandler() {
         this.eventController = new EventController();
+        this.userController = new UserController();
     }
 
     public void setStage(Stage stage) {
@@ -180,11 +183,11 @@ public class VolunteerOrgEventDetailScreenHandler implements Initializable {
                 continue; 
             }
 
-            boolean detailsUpdated = eventController.updateEventParticipantDetails(event.getEventId(), participant.getVolunteerUsername(), participant.getHoursParticipated(), rating);
+            boolean detailsUpdated = userController.updateEventParticipantDetails(event.getEventId(), participant.getVolunteerUsername(), participant.getHoursParticipated(), rating);
 
             if(detailsUpdated) {
                 if (rating != null) { 
-                    eventController.recalculateVolunteerAverageRating(participant.getVolunteerUsername());
+                    userController.recalculateVolunteerAverageRating(participant.getVolunteerUsername());
                 }
                 successCount++;
             } else {

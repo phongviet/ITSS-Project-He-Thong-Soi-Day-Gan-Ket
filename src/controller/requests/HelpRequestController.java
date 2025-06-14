@@ -36,4 +36,8 @@ public class HelpRequestController {
     public boolean markAsSatisfied(int requestId) {
         return helpRequestDAO.updateHelpRequestStatus(requestId, AppConstants.REQUEST_SATISFIED);
     }
+
+    public List<HelpRequest> getApprovedHelpRequests() {
+        return helpRequestDAO.getApprovedHelpRequests();
+    }
 }

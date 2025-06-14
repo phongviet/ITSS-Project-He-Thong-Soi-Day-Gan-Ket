@@ -1,6 +1,6 @@
 package views.screen;
 
-import controller.event.EventController;
+import controller.notification.NotificationController;
 import entity.notifications.Notification;
 import entity.users.VolunteerOrganization;
 import javafx.beans.property.SimpleStringProperty;
@@ -34,17 +34,17 @@ public class VolunteerOrgRegistListScreenHandler implements Initializable {
 
     private VolunteerOrganization organization;
     private Stage stage;
-    private EventController eventController;
+    private NotificationController notificationController;
     private ObservableList<Notification> notificationData;
 
     public VolunteerOrgRegistListScreenHandler(Stage stage, VolunteerOrganization org) {
         this.stage = stage;
         this.organization = org;
-        this.eventController = new EventController();
+        this.notificationController = new NotificationController();
     }
 
     public VolunteerOrgRegistListScreenHandler() {
-        this.eventController = new EventController();
+        this.notificationController = new NotificationController();
     }
 
     public void setStage(Stage s) {
@@ -113,7 +113,7 @@ public class VolunteerOrgRegistListScreenHandler implements Initializable {
             return;
         }
 
-        List<Notification> list = eventController.getPendingNotificationsByOrganizer(organization.getUsername());
+        List<Notification> list = notificationController.getPendingNotificationsByOrganizer(organization.getUsername());
         if (list == null || list.isEmpty()) {
             notificationData = FXCollections.observableArrayList();
             statusMessage.setText("There are no pending registrations.");
@@ -125,7 +125,7 @@ public class VolunteerOrgRegistListScreenHandler implements Initializable {
     }
 
     private void handleNotificationDecision(Notification no, String newStatus) {
-        boolean ok = eventController.updateNotificationStatus(no.getNotificationId(), newStatus);
+        boolean ok = notificationController.updateNotificationStatus(no.getNotificationId(), newStatus);
         if (ok) {
             notificationData.remove(no);
             statusMessage.setText("Status updated for registration" + no.getNotificationId() + " → " + newStatus);

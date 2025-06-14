@@ -1,6 +1,7 @@
 package views.screen.AdminScreen;
 
 import controller.AdminApprovalController;
+import controller.UserController;
 import controller.event.EventController;
 import entity.events.Event;
 import entity.events.EventParticipantDetails;
@@ -56,11 +57,13 @@ public class AdminViewEventDetailScreenHandler implements Initializable {
     private Event event; // Sự kiện được xem chi tiết
 
     private EventController eventController;
+    private UserController userController;
     private AdminApprovalController adminApprovalController;
     private SimpleDateFormat dateFormatter = new SimpleDateFormat("dd/MM/yyyy 'at' HH:mm");
 
     public AdminViewEventDetailScreenHandler() {
         this.eventController = new EventController();
+        this.userController = new UserController();
         this.adminApprovalController = new AdminApprovalController();
     }
 
@@ -140,7 +143,7 @@ public class AdminViewEventDetailScreenHandler implements Initializable {
         try {
             // This method is likely returning List<Volunteer> instead of List<EventParticipantDetails>
             // We need to convert between types or modify the controller method
-            List<Volunteer> participants = eventController.getEventParticipants(event.getEventId());
+            List<Volunteer> participants = userController.getEventParticipants(event.getEventId());
 
             if (participants != null && !participants.isEmpty()) {
                 // Create EventParticipantDetails objects from Volunteer objects

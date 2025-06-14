@@ -1,5 +1,6 @@
 package views.screen;
 
+import controller.UserController;
 import controller.event.EventController;
 import entity.events.EventParticipantDetails; // SỬ DỤNG LỚP MỚI
 import entity.users.Volunteer;
@@ -63,6 +64,7 @@ public class VolunteerViewMyEventsScreenHandler implements Initializable {
     private Stage stage;
     private Volunteer volunteer;
     private EventController eventController;
+    private UserController userController;
     private SimpleDateFormat dateFormatter = new SimpleDateFormat("dd/MM/yyyy");
 
     private ObservableList<EventParticipantDetails> allMyParticipationDetailsList;
@@ -73,6 +75,7 @@ public class VolunteerViewMyEventsScreenHandler implements Initializable {
 
     public VolunteerViewMyEventsScreenHandler() {
         this.eventController = new EventController();
+        this.userController = new UserController();
     }
 
     public void setStage(Stage stage) {
@@ -188,7 +191,7 @@ public class VolunteerViewMyEventsScreenHandler implements Initializable {
             return;
         }
         try {
-            List<EventParticipantDetails> detailsList = eventController.getEventParticipationDetailsForVolunteer(volunteer.getUsername());
+            List<EventParticipantDetails> detailsList = userController.getEventParticipationDetailsForVolunteer(volunteer.getUsername());
             if (detailsList.isEmpty()) {
                 statusMessage.setText("You are not currently participating in any events.");
                 allMyParticipationDetailsList = FXCollections.observableArrayList();

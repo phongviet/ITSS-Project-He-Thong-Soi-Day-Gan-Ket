@@ -1,6 +1,7 @@
 package controller.notification;
 
 import dao.NotificationDAO;
+import java.util.List;
 
 public class NotificationController {
     private NotificationDAO notificationDAO;
@@ -37,5 +38,13 @@ public class NotificationController {
      */
     public boolean isVolunteerPendingOrRegistered(String volunteerUsername, int eventId) {
         return notificationDAO.isVolunteerPendingOrRegistered(volunteerUsername, eventId);
+    }
+
+    public List<entity.notifications.Notification> getPendingNotificationsByOrganizer(String organizerUsername) {
+        return notificationDAO.getPendingNotificationsByOrganizer(organizerUsername);
+    }
+
+    public boolean updateNotificationStatus(int notificationId, String newStatus) {
+        return notificationDAO.processRegistrationAndUpdateParticipant(notificationId, newStatus);
     }
 }

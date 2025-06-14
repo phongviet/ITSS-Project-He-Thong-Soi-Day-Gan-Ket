@@ -1,6 +1,6 @@
 package views.screen;
 
-import controller.event.EventController;
+import controller.requests.HelpRequestController;
 import entity.requests.HelpRequest;
 import entity.users.VolunteerOrganization;
 import javafx.beans.property.SimpleStringProperty;
@@ -35,18 +35,18 @@ public class VolunteerOrgHelpRequestListScreenHandler implements Initializable {
 
     private VolunteerOrganization organization;
     private Stage stage;
-    private EventController eventController;
+    private HelpRequestController helpRequestController;
     private ObservableList<HelpRequest> helpRequestData;
     private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
 
     public VolunteerOrgHelpRequestListScreenHandler(Stage stage, VolunteerOrganization org) {
         this.stage = stage;
         this.organization = org;
-        this.eventController = new EventController();
+        this.helpRequestController = new HelpRequestController();
     }
 
     public VolunteerOrgHelpRequestListScreenHandler() {
-        this.eventController = new EventController();
+        this.helpRequestController = new HelpRequestController();
     }
 
     public void setStage(Stage s) {
@@ -115,7 +115,7 @@ public class VolunteerOrgHelpRequestListScreenHandler implements Initializable {
             return;
         }
 
-        List<HelpRequest> list = eventController.getApprovedHelpRequests();
+        List<HelpRequest> list = helpRequestController.getApprovedHelpRequests();
         if (list == null || list.isEmpty()) {
             helpRequestData = FXCollections.observableArrayList();
             statusMessage.setText("There are no HelpRequests in 'Approved' status.");
