@@ -15,6 +15,8 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import utils.AppConstants; // IMPORT AppConstants
+import entity.requests.HelpRequest;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -677,5 +679,161 @@ class TestEventDAO {
               }
           }
           assertEquals(newStatus, statusInDb, "Event status in database should be updated to an empty string.");
+      }
+      
+   // --- Test Cases for EventDAO.approveEvent ---
+
+      @Test
+      void approveEvent_ExistingEventWithHelpRequest_ShouldUpdateEventAndHelpRequestStatusAndReturnTrue() throws SQLException, ParseException {
+          // --- Arrange ---
+          String orgUsername = "orgApproveEvent";
+          ensureVolunteerOrganizationExists(connForHelpers, orgUsername, "Org Approve Event");
+          String personUsername = "personApproveEvent";
+          ensurePersonInNeedExists(connForHelpers, personUsername, "Person Approve Event");
+
+          // 1. Insert HelpRequest
+          int helpRequestId = 123; // ID giả định cho HelpRequest
+          String helpRequestTitle = "Help Req for Approve Test";
+          insertTestHelpRequest(helpRequestId, helpRequestTitle, getFutureDateString(2), AppConstants.EMERGENCY_NORMAL, "Desc", personUsername, AppConstants.REQUEST_APPROVED);
+
+          // 2. Insert Event linked to this HelpRequest
+          String eventTitle = "Event To Approve With HR";
+          int eventId = insertTestEvent(eventTitle, getFutureDateString(5), AppConstants.EVENT_PENDING, 10, orgUsername, String.valueOf(helpRequestId)); // Truyền requestId là String
+
+          // --- Act ---
+          boolean result = eventDAO.approveEvent(eventId);
+
+          // --- Assert ---
+          assertTrue(result, "approveEvent should return true for successful approval.");
+
+          // Verify Event status in DB
+          assertEquals(AppConstants.EVENT_UPCOMING, getEventStatusFromDB(eventId), "Event status should be updated to UPCOMING.");
+
+          // Verify HelpRequest status in DB
+          assertEquals(AppConstants.REQUEST_CLOSED, getHelpRequestStatusFromDB(helpRequestId), "HelpRequest status should be updated to CLOSED.");
+      }
+
+      @Test
+      void approveEvent_ExistingEventWithoutHelpRequest_ShouldUpdateEventStatusAndReturnTrue() throws SQLException, ParseException {
+          // --- Arrange ---
+          String orgUsername = "orgApproveEventNoHR";
+          ensureVolunteerOrganizationExists(connForHelpers, orgUsername, "Org Approve Event No HR");
+          
+          String eventTitle = "Event To Approve No HR";
+          int eventId = insertTestEvent(eventTitle, getFutureDateString(3), AppConstants.EVENT_PENDING, 5, orgUsername, null); // requestId là null
+
+          // --- Act ---
+          boolean result = eventDAO.approveEvent(eventId);
+
+          // --- Assert ---
+          assertTrue(result, "approveEvent should return true even if no HelpRequest is linked.");
+          assertEquals(AppConstants.EVENT_UPCOMING, getEventStatusFromDB(eventId), "Event status should be updated to UPCOMING.");
+          // Không cần kiểm tra HelpRequest vì không có
+      }
+
+      @Test
+      void approveEvent_NonExistingEvent_ShouldReturnFalse() throws SQLException {
+          // --- Arrange ---
+          int nonExistingEventId = 99997;
+
+          // --- Act ---
+          boolean result = eventDAO.approveEvent(nonExistingEventId);
+
+          // --- Assert ---
+          assertFalse(result, "approveEvent should return false for a non-existing event ID.");
+      }
+
+      // Helper method để chèn HelpRequest (nếu chưa có trong các helper của bạn)
+      // Đảm bảo requestId là duy nhất hoặc bảng cho phép INSERT OR IGNORE
+      private void insertTestHelpRequest(int requestId, String title, String startDate, String emergency, 
+                                         String description, String personInNeedID, String status) throws SQLException {
+          // Đảm bảo personInNeedID tồn tại
+          ensurePersonInNeedExists(connForHelpers, personInNeedID, "Helper Person " + personInNeedID);
+          
+          String sql = "INSERT OR IGNORE INTO HelpRequest (requestId, title, startDate, emergencyLevel, description, personInNeedID, status) " +
+                       "VALUES (?, ?, ?, ?, ?, ?, ?)";
+          try (PreparedStatement pstmt = connForHelpers.prepareStatement(sql)) {
+              pstmt.setInt(1, requestId);
+              pstmt.setString(2, title);
+              pstmt.setString(3, startDate); // Ngày bắt đầu của HelpRequest
+              pstmt.setString(4, emergency);
+              pstmt.setString(5, description);
+              pstmt.setString(6, personInNeedID);
+              pstmt.setString(7, status);
+              pstmt.executeUpdate();
+          }
+      }
+
+      // Helper method để lấy Event status từ DB
+      private String getEventStatusFromDB(int eventId) throws SQLException {
+          String status = null;
+          String sql = "SELECT status FROM Events WHERE eventId = ?";
+          try (PreparedStatement pstmt = connForHelpers.prepareStatement(sql)) {
+              pstmt.setInt(1, eventId);
+              try (ResultSet rs = pstmt.executeQuery()) {
+                  if (rs.next()) {
+                      status = rs.getString("status");
+                  }
+              }
+          }
+          return status;
+      }
+
+      // Helper method để lấy HelpRequest status từ DB
+      private String getHelpRequestStatusFromDB(int requestId) throws SQLException {
+          String status = null;
+          String sql = "SELECT status FROM HelpRequest WHERE requestId = ?";
+          try (PreparedStatement pstmt = connForHelpers.prepareStatement(sql)) {
+              pstmt.setInt(1, requestId); // Giả sử requestId trong DB là INTEGER
+              try (ResultSet rs = pstmt.executeQuery()) {
+                  if (rs.next()) {
+                      status = rs.getString("status");
+                  }
+              }
+          }
+          return status;
+      }
+
+      // Cập nhật helper insertTestEvent để nhận requestId là String (như trong EventDAO)
+      // Bạn có thể đã có phiên bản này, chỉ cần đảm bảo nó đúng
+//      private int insertTestEvent(String title, String startDateStr, String endDateStr,
+//                                  String emergencyLevel, String status, Integer maxParticipants, 
+//                                  String organizerUsername, String description, String requestId) throws SQLException {
+//          ensureVolunteerOrganizationExists(connForHelpers, organizerUsername, "Org for " + title);
+//          // Nếu requestId không null và là số, bạn có thể muốn đảm bảo HelpRequest đó tồn tại
+//          // if (requestId != null) { ensureHelpRequestExists(connForHelpers, Integer.parseInt(requestId)); }
+//
+//
+//          String sql = "INSERT INTO Events (title, startDate, endDate, emergencyLevel, status, maxParticipantNumber, organizer, description, requestId) " +
+//                       "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+//          try (PreparedStatement pstmt = connForHelpers.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+//              pstmt.setString(1, title);
+//              pstmt.setString(2, startDateStr);
+//              pstmt.setString(3, endDateStr);
+//              pstmt.setString(4, emergencyLevel);
+//              pstmt.setString(5, status);
+//              if (maxParticipants != null) pstmt.setInt(6, maxParticipants); else pstmt.setNull(6, java.sql.Types.INTEGER);
+//              pstmt.setString(7, organizerUsername);
+//              pstmt.setString(8, description);
+//              // requestId trong bảng Events của bạn là TEXT
+//              if (requestId != null) pstmt.setString(9, requestId); else pstmt.setNull(9, java.sql.Types.VARCHAR);
+//              
+//              pstmt.executeUpdate();
+//              ResultSet generatedKeys = pstmt.getGeneratedKeys();
+//              if (generatedKeys.next()) {
+//                  return generatedKeys.getInt(1);
+//              } else {
+//                  throw new SQLException("Creating event failed for: " + title + ", no ID obtained.");
+//              }
+//          }
+//      }
+      
+      // Phiên bản rút gọn của insertTestEvent, đảm bảo requestId là String
+      private int insertTestEvent(String title, String startDateStr, String status, 
+                                  Integer maxParticipants, String organizerUsername, String requestId) throws SQLException, ParseException {
+          String defaultEndDate = getFutureDateStringFromDate(dateFormat.parse(startDateStr), 7);
+          String defaultEmergency = AppConstants.EMERGENCY_NORMAL; // Sử dụng AppConstants
+          String defaultDescription = "Description for " + title;
+          return insertTestEvent(title, startDateStr, defaultEndDate, defaultEmergency, status, maxParticipants, organizerUsername, defaultDescription, requestId);
       }
 }
