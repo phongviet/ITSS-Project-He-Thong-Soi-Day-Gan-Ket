@@ -562,4 +562,120 @@ class TestEventDAO {
           assertNull(foundEvent.getEndDate(), "End date should be null if stored as null.");
           // Kiểm tra các trường khác nếu cần
       }
+      
+   // --- Test Cases for EventDAO.updateEventStatus ---
+
+      @Test
+      void updateEventStatus_ExistingEvent_ShouldUpdateStatusInDBAndReturnTrue() throws SQLException, ParseException {
+          // --- Arrange ---
+          String organizerUsername = "orgUpdateStatus";
+          ensureVolunteerOrganizationExists(connForHelpers, organizerUsername, "Org For Update Status Test");
+          
+          String initialStatus = "Pending";
+          String newStatus = "Approved"; // Hoặc AppConstants.EVENT_APPROVED
+          String eventTitle = "Event To Update Status";
+          String startDateStr = getFutureDateString(5);
+
+          int eventId = insertTestEvent(eventTitle, startDateStr, initialStatus, 10, organizerUsername);
+          assertTrue(eventId > 0, "Event should be inserted for status update test.");
+
+          // --- Act ---
+          boolean updateResult = eventDAO.updateEventStatus(eventId, newStatus);
+
+          // --- Assert ---
+          assertTrue(updateResult, "updateEventStatus should return true for a successful update.");
+
+          // Verify status in DB
+          String statusInDb = "";
+          String sqlVerify = "SELECT status FROM Events WHERE eventId = ?";
+          try (PreparedStatement pstmtVerify = connForHelpers.prepareStatement(sqlVerify)) {
+              pstmtVerify.setInt(1, eventId);
+              try (ResultSet rs = pstmtVerify.executeQuery()) {
+                  if (rs.next()) {
+                      statusInDb = rs.getString("status");
+                  }
+              }
+          }
+          assertEquals(newStatus, statusInDb, "Event status in database should be updated to the new status.");
+      }
+
+      @Test
+      void updateEventStatus_NonExistingEvent_ShouldReturnFalse() throws SQLException {
+          // --- Arrange ---
+          int nonExistingEventId = 99998; // Một ID chắc chắn không tồn tại
+          String newStatus = "Approved";
+
+          // --- Act ---
+          boolean updateResult = eventDAO.updateEventStatus(nonExistingEventId, newStatus);
+
+          // --- Assert ---
+          assertFalse(updateResult, "updateEventStatus should return false for a non-existing event ID.");
+      }
+
+      @Test
+      void updateEventStatus_NullNewStatus_ShouldUpdateToNullInDB( )throws SQLException, ParseException {
+          // (Nếu logic của bạn cho phép status là NULL và bạn muốn test điều đó)
+          // --- Arrange ---
+          String organizerUsername = "orgUpdateNullStatus";
+          ensureVolunteerOrganizationExists(connForHelpers, organizerUsername, "Org For Update Null Status Test");
+          
+          String initialStatus = "Pending";
+          String eventTitle = "Event To Update To Null Status";
+          String startDateStr = getFutureDateString(6);
+
+          int eventId = insertTestEvent(eventTitle, startDateStr, initialStatus, 5, organizerUsername);
+          assertTrue(eventId > 0, "Event should be inserted.");
+
+          // --- Act ---
+          boolean updateResult = eventDAO.updateEventStatus(eventId, null); // Cập nhật status thành NULL
+
+          // --- Assert ---
+          assertTrue(updateResult, "updateEventStatus should return true even when setting status to null (if allowed).");
+
+          String statusInDb = "initialValue"; // Giá trị khởi tạo khác null để đảm bảo nó được thay đổi
+          String sqlVerify = "SELECT status FROM Events WHERE eventId = ?";
+          try (PreparedStatement pstmtVerify = connForHelpers.prepareStatement(sqlVerify)) {
+              pstmtVerify.setInt(1, eventId);
+              try (ResultSet rs = pstmtVerify.executeQuery()) {
+                  if (rs.next()) {
+                      statusInDb = rs.getString("status"); // Lấy giá trị, có thể là null
+                  }
+              }
+          }
+          assertNull(statusInDb, "Event status in database should be updated to NULL.");
+      }
+      
+      @Test
+      void updateEventStatus_EmptyNewStatus_ShouldUpdateToEmptyInDB() throws SQLException, ParseException {
+          // (Nếu logic của bạn cho phép status là chuỗi rỗng)
+          // --- Arrange ---
+          String organizerUsername = "orgUpdateEmptyStatus";
+          ensureVolunteerOrganizationExists(connForHelpers, organizerUsername, "Org For Update Empty Status Test");
+          
+          String initialStatus = "Pending";
+          String newStatus = ""; // Chuỗi rỗng
+          String eventTitle = "Event To Update To Empty Status";
+          String startDateStr = getFutureDateString(7);
+
+          int eventId = insertTestEvent(eventTitle, startDateStr, initialStatus, 12, organizerUsername);
+          assertTrue(eventId > 0, "Event should be inserted.");
+
+          // --- Act ---
+          boolean updateResult = eventDAO.updateEventStatus(eventId, newStatus);
+
+          // --- Assert ---
+          assertTrue(updateResult, "updateEventStatus should return true when setting status to empty string.");
+
+          String statusInDb = "initialValue";
+          String sqlVerify = "SELECT status FROM Events WHERE eventId = ?";
+          try (PreparedStatement pstmtVerify = connForHelpers.prepareStatement(sqlVerify)) {
+              pstmtVerify.setInt(1, eventId);
+              try (ResultSet rs = pstmtVerify.executeQuery()) {
+                  if (rs.next()) {
+                      statusInDb = rs.getString("status");
+                  }
+              }
+          }
+          assertEquals(newStatus, statusInDb, "Event status in database should be updated to an empty string.");
+      }
 }
