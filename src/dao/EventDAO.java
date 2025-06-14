@@ -314,7 +314,11 @@ public class EventDAO {
 
     public List<Event> getAllOpenAndAvailableEvents() {
         List<Event> events = new ArrayList<>();
-        String sql = "SELECT *, (SELECT COUNT(*) FROM EventParticipants ep WHERE ep.eventId = e.eventId) as currentParticipants FROM Events e WHERE status = ? OR status = ?";
+        String sql = "SELECT e.*, " + // Sử dụng e.* để rõ ràng hơn là lấy từ bảng Events
+                "(SELECT COUNT(ep_inner.username) FROM EventParticipants ep_inner WHERE ep_inner.eventId = e.eventId) as currentParticipants " +
+                "FROM Events e " +
+                "WHERE (e.status = ? OR e.status = ?) " + // Giả sử bạn dùng 2 trạng thái này
+                "AND DATE(e.startDate) >= DATE('now')"; // THÊM ĐIỀU KIỆN LỌC NGÀY
         try (Connection conn = DriverManager.getConnection(DB_URL);
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, AppConstants.EVENT_APPROVED);

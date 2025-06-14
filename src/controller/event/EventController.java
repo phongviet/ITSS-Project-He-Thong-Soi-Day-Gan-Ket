@@ -83,17 +83,23 @@ public class EventController {
         if (emergencyLevel == null || emergencyLevel.trim().isEmpty()) {
             return Integer.MAX_VALUE;
         }
-        return switch (emergencyLevel.trim().toLowerCase()) {
-            case "urgent" -> 1;
-            case "high" -> 2;
-            case "normal" -> 3;
-            case "low" -> 4;
-            default -> {
+
+        String level = emergencyLevel.trim().toLowerCase();
+        switch (level) {
+            case "khẩn cấp":
+                return 1;
+            case "cao":
+                return 2;
+            case "bình thường":
+                return 3;
+            case "thấp":
+                return 4;
+            default:
                 System.out.println("Unknown emergency level for priority: " + emergencyLevel);
-                yield 5;
-            }
-        };
+                return 5;
+        }
     }
+
 
     public List<Event> getSuggestedEventsForVolunteer(Volunteer volunteer) {
         if (volunteer == null || volunteer.getUsername() == null) {
