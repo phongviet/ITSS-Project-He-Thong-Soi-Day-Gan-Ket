@@ -566,6 +566,68 @@ class TestHelpRequestDAO {
         assertTrue(requests.isEmpty(), "Should return an empty list for a non-existing user.");
     }
     
+    // --- Test Cases for HelpRequestDAO.getApprovedHelpRequests ---
+
+    @Test
+    void getApprovedHelpRequests_WhenApprovedRequestsExist_ShouldReturnOnlyApprovedRequests() throws SQLException, ParseException {
+        // --- Arrange ---
+        String personUser = "personForApprovedReqs";
+        ensurePersonInNeedExists(connForHelpers, personUser, "Person For Approved Reqs", "CCCDAR", "1985-06-06");
+
+        // Chèn các HelpRequest với các trạng thái khác nhau
+        insertHelpRequestWithId(connForHelpers, 401, "Approved Req 1", getFutureDateString(1), AppConstants.EMERGENCY_NORMAL, "Desc AR1", personUser, AppConstants.REQUEST_APPROVED, "contactAR1", "Addr AR1");
+        insertHelpRequestWithId(connForHelpers, 402, "Pending Req For Approved Test", getFutureDateString(2), AppConstants.EMERGENCY_LOW, "Desc PRFAT", personUser, AppConstants.REQUEST_PENDING, "contactPRFAT", "Addr PRFAT");
+        insertHelpRequestWithId(connForHelpers, 403, "Approved Req 2", getFutureDateString(3), AppConstants.EMERGENCY_HIGH, "Desc AR2", personUser, AppConstants.REQUEST_APPROVED, "contactAR2", "Addr AR2");
+        insertHelpRequestWithId(connForHelpers, 404, "Rejected Req For Approved Test", getFutureDateString(4), AppConstants.EMERGENCY_NORMAL, "Desc RRFAT", personUser, AppConstants.REQUEST_REJECTED, "contactRRFAT", "Addr RRFAT");
+
+        // --- Act ---
+        List<HelpRequest> approvedRequests = helpRequestDAO.getApprovedHelpRequests();
+
+        // --- Assert ---
+        assertNotNull(approvedRequests, "List of approved requests should not be null.");
+        assertEquals(2, approvedRequests.size(), "Should return 2 approved requests.");
+
+        // Kiểm tra tất cả các request trong danh sách đều có status là "Approved"
+        for (HelpRequest req : approvedRequests) {
+            assertEquals(AppConstants.REQUEST_APPROVED, req.getStatus(), "All returned requests should have status 'Approved'.");
+        }
+
+        // Kiểm tra một request cụ thể
+        HelpRequest req1 = approvedRequests.stream().filter(r -> r.getRequestId() == 401).findFirst().orElse(null);
+        assertNotNull(req1, "Approved Req 1 should be in the list.");
+        assertEquals("Approved Req 1", req1.getTitle());
+    }
+
+    @Test
+    void getApprovedHelpRequests_WhenNoApprovedRequestsExist_ShouldReturnEmptyList() throws SQLException, ParseException {
+        // --- Arrange ---
+        String personUser = "personNoApprovedReqs";
+        ensurePersonInNeedExists(connForHelpers, personUser, "Person No Approved Reqs", "CCCDNAR", "1986-07-07");
+
+        insertHelpRequestWithId(connForHelpers, 405, "Pending Req Only", getFutureDateString(1), AppConstants.EMERGENCY_NORMAL, "Desc PRO", personUser, AppConstants.REQUEST_PENDING, "contactPRO", "Addr PRO");
+        insertHelpRequestWithId(connForHelpers, 406, "Rejected Req Only", getFutureDateString(2), AppConstants.EMERGENCY_HIGH, "Desc RRO", personUser, AppConstants.REQUEST_REJECTED, "contactRRO", "Addr RRO");
+
+        // --- Act ---
+        List<HelpRequest> approvedRequests = helpRequestDAO.getApprovedHelpRequests();
+
+        // --- Assert ---
+        assertNotNull(approvedRequests, "List should not be null.");
+        assertTrue(approvedRequests.isEmpty(), "Should return an empty list when no requests are approved.");
+    }
+
+    @Test
+    void getApprovedHelpRequests_WhenNoRequestsExistAtAll_ShouldReturnEmptyList() {
+        // --- Arrange ---
+        // Không chèn HelpRequest nào (setUpForEachTest đã clear bảng)
+
+        // --- Act ---
+        List<HelpRequest> approvedRequests = helpRequestDAO.getApprovedHelpRequests();
+
+        // --- Assert ---
+        assertNotNull(approvedRequests, "List should not be null.");
+        assertTrue(approvedRequests.isEmpty(), "Should return an empty list when no requests exist at all.");
+    }
+    
     private String getPastDateString(int daysToSubtract) {
         Calendar cal = Calendar.getInstance();
         cal.add(Calendar.DAY_OF_YEAR, -daysToSubtract);
