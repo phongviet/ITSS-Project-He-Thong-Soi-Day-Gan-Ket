@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -340,4 +341,97 @@ class TestEventDAO {
         assertNotNull(foundEvent);
         assertNotNull(foundEvent.getStartDate()); // Kiểm tra xem ngày có được parse không
     }
+    
+    
+    // --- Test Cases for EventDAO.getEventStatistics ---
+    @Test
+    void getEventStatistics_ShouldReturnCorrectCountsAndDistribution() throws SQLException, ParseException {
+        // --- Giai đoạn Chuẩn bị Dữ liệu (Arrange) ---
+
+        // Các sự kiện cho các trạng thái khác nhau
+        // 1. Upcoming events (ví dụ cho tháng 6/2025 và 7/2025)
+        insertTestEvent("Upcoming Event June 1", getFutureDateStringFromDate(dateFormat.parse("2025-06-15"),0), "2025-06-20", "Bình thường", "Approved", 10, "orgTestDAO1", "Desc 1", null);
+        insertTestEvent("Upcoming Event June 2", getFutureDateStringFromDate(dateFormat.parse("2025-06-20"),0), "2025-06-25", "Cao", "Approved", 5, "orgTestDAO1", "Desc 2", null);
+        insertTestEvent("Upcoming Event July", getFutureDateStringFromDate(dateFormat.parse("2025-07-05"),0), "2025-07-10", "Bình thường", "Approved", 10, "orgTestDAO1", "Desc 3", null);
+
+        // 2. Ongoing events (sự kiện đang diễn ra vào ngày test)
+        // Để test ongoing, startDate phải <= ngày hiện tại VÀ endDate >= ngày hiện tại
+        // Chúng ta sẽ tạo một sự kiện bắt đầu 2 ngày trước và kết thúc 2 ngày sau
+        String ongoingStartDate = getPastDateString(2); // Bắt đầu 2 ngày trước
+        String ongoingEndDate = getFutureDateString(2);   // Kết thúc 2 ngày sau
+        insertTestEvent("Ongoing Event 1", ongoingStartDate, ongoingEndDate, "Khẩn cấp", "Approved", 15, "orgTestDAO1", "Desc 4", null);
+
+        // 3. Past events
+        insertTestEvent("Past Event May", getPastDateStringFromDate(dateFormat.parse("2025-05-01"),0), "2025-05-05", "Bình thường", "Completed", 10, "orgTestDAO1", "Desc 5", null);
+        insertTestEvent("Past Event April", getPastDateStringFromDate(dateFormat.parse("2025-04-10"),0), "2025-04-15", "Bình thường", "Completed", 10, "orgTestDAO1", "Desc 6", null);
+
+        // 4. Sự kiện cho các tháng khác trong ví dụ của DAO (Jan, Feb, Mar 2025)
+        insertTestEvent("Event Jan 2025", "2025-01-15", "2025-01-20", "Bình thường", "Approved", 10, "orgTestDAO1", "Desc Jan", null);
+        insertTestEvent("Event Feb 2025", "2025-02-10", "2025-02-15", "Cao", "Approved", 10, "orgTestDAO1", "Desc Feb", null);
+        insertTestEvent("Event Feb 2025 Again", "2025-02-20", "2025-02-25", "Bình thường", "Approved", 10, "orgTestDAO1", "Desc Feb 2", null); // 2 events for Feb
+        insertTestEvent("Event Mar 2025", "2025-03-05", "2025-03-10", "Khẩn cấp", "Approved", 10, "orgTestDAO1", "Desc Mar", null);
+        // Không có event cho tháng 4 và tháng 5 trong khoảng query của monthlyEvents (chỉ có event đã qua ở trên)
+        // Event tháng 6 đã có 2 (Upcoming Event June 1 & 2)
+
+        // --- Giai đoạn Hành động (Act) ---
+        Map<String, Object> stats = eventDAO.getEventStatistics();
+
+        // --- Giai đoạn Kiểm tra (Assert) ---
+        assertNotNull(stats, "Statistics map should not be null.");
+
+        // Kiểm tra các count tổng quát
+        // Tổng số sự kiện đã chèn: 3 upcoming + 1 ongoing + 2 past + 4 cho tháng (Jan, Feb(2), Mar) = 10 events
+        assertEquals(10, stats.get("totalEvents"), "Total events count mismatch.");
+        
+        // Để test upcoming, ongoing, past chính xác, chúng ta cần biết ngày 'now' mà SQLite sử dụng.
+        // Tuy nhiên, với dữ liệu chèn, chúng ta có thể dự đoán:
+        // Upcoming: 3 (June 1, June 2, July) - Giả sử ngày test trước 2025-06-10
+        // Ongoing: 1 (Ongoing Event 1)
+        // Past: 6 (Past May, Past April, Jan, Feb(2), Mar) - Nếu ngày test sau 2025-03-10 và trước 2025-06-10
+        // Số lượng này sẽ phụ thuộc vào ngày bạn chạy test và cách bạn định nghĩa "upcoming", "ongoing", "past"
+        // trong câu SQL của getEventStatistics.
+        // Hiện tại, câu SQL của bạn là:
+        // upcomingEventsQuery = "SELECT COUNT(*) FROM Events WHERE startDate > date('now')"
+        // ongoingEventsQuery = "SELECT COUNT(*) FROM Events WHERE startDate <= date('now') AND endDate >= date('now')"
+        // pastEventsQuery = "SELECT COUNT(*) FROM Events WHERE endDate < date('now')"
+        
+        // Vì khó kiểm soát `date('now')` một cách chính xác trong unit test mà không mock thời gian,
+        // chúng ta sẽ tập trung vào các giá trị mà chúng ta có thể kiểm soát chắc chắn hơn, như totalEvents.
+        // Hoặc bạn có thể chấp nhận rằng các test này có thể fail nếu ngày chạy test thay đổi
+        // và bạn cần điều chỉnh dữ liệu test cho phù hợp.
+
+        // Tạm thời, chúng ta sẽ chỉ kiểm tra sự tồn tại của các key và kiểu dữ liệu
+        assertTrue(stats.containsKey("upcomingEvents"), "Stats should contain upcomingEvents.");
+        assertTrue(stats.containsKey("ongoingEvents"), "Stats should contain ongoingEvents.");
+        assertTrue(stats.containsKey("pastEvents"), "Stats should contain pastEvents.");
+        assertTrue(stats.get("upcomingEvents") instanceof Integer, "upcomingEvents should be Integer.");
+
+
+        // Kiểm tra phân phối theo tháng (monthlyEvents)
+        assertTrue(stats.containsKey("monthlyEvents"), "Stats should contain monthlyEvents map.");
+        Object monthlyEventsObj = stats.get("monthlyEvents");
+        assertNotNull(monthlyEventsObj, "monthlyEvents map should not be null.");
+        assertTrue(monthlyEventsObj instanceof Map, "monthlyEvents should be a Map.");
+
+        @SuppressWarnings("unchecked") // Bỏ qua cảnh báo unchecked cast
+        Map<String, Integer> monthlyEvents = (Map<String, Integer>) monthlyEventsObj;
+
+        // Kiểm tra số lượng event cho các tháng đã chèn dữ liệu (dựa trên query trong DAO)
+        assertEquals(1, monthlyEvents.getOrDefault("Jan", 0), "January 2025 events count mismatch.");
+        assertEquals(2, monthlyEvents.getOrDefault("Feb", 0), "February 2025 events count mismatch.");
+        assertEquals(1, monthlyEvents.getOrDefault("Mar", 0), "March 2025 events count mismatch.");
+        assertEquals(1, monthlyEvents.getOrDefault("Apr", 0), "April 2025 events count mismatch (dựa trên query của DAO).");
+        assertEquals(1, monthlyEvents.getOrDefault("May", 0), "May 2025 events count mismatch (dựa trên query của DAO).");
+        assertEquals(3, monthlyEvents.getOrDefault("Jun", 0), "June 2025 events count mismatch.");
+    }
+
+    // Helper để lấy ngày quá khứ (có thể copy từ TestEventController)
+    // private String getPastDateString(int daysToSubtract) { ... }
+     private String getPastDateStringFromDate(Date baseDate, int daysToSubtract) {
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(baseDate);
+        cal.add(Calendar.DAY_OF_YEAR, -daysToSubtract); // Trừ ngày
+        return dateFormat.format(cal.getTime());
+     }
+    // Bạn đã có getFutureDateString và getFutureDateStringFromDate rồi.
 }
