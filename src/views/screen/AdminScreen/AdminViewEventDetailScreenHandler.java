@@ -2,7 +2,6 @@ package views.screen.AdminScreen;
 
 import controller.AdminApprovalController;
 import controller.UserController;
-import controller.event.EventController;
 import entity.events.Event;
 import entity.events.EventParticipantDetails;
 import entity.users.Admin;
@@ -56,13 +55,11 @@ public class AdminViewEventDetailScreenHandler implements Initializable {
     private Admin admin; // Admin hiện tại
     private Event event; // Sự kiện được xem chi tiết
 
-    private EventController eventController;
     private UserController userController;
     private AdminApprovalController adminApprovalController;
     private SimpleDateFormat dateFormatter = new SimpleDateFormat("dd/MM/yyyy 'at' HH:mm");
 
     public AdminViewEventDetailScreenHandler() {
-        this.eventController = new EventController();
         this.userController = new UserController();
         this.adminApprovalController = new AdminApprovalController();
     }
