@@ -19,6 +19,7 @@ import utils.AppConstants; // IMPORT AppConstants
 import entity.requests.HelpRequest;
 import entity.users.VolunteerOrganization; // Đảm bảo đã import
 import java.util.Arrays;
+import entity.events.EventParticipantDetails;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -1165,5 +1166,102 @@ class TestEventDAO {
           assertNotNull(events, "List of events should not be null.");
           assertTrue(events.isEmpty(), "Should return an empty list for a non-existing organizer ID.");
       }
+      
+   // --- Test Cases for EventDAO.getEventParticipantDetailsList ---
 
+      @Test
+      void getEventParticipantDetailsList_EventWithParticipants_ShouldReturnCorrectDetails() throws SQLException, ParseException {
+          // --- Arrange ---
+          String orgUsername = "orgForParticipants";
+          ensureVolunteerOrganizationExists(connForHelpers, orgUsername, "Org For Participants Test");
+          int eventId = insertTestEvent("Event With Participants", getFutureDateString(5), AppConstants.EVENT_APPROVED, 10, orgUsername, null);
+
+          // Tạo và chèn Volunteers và EventParticipants
+          String vol1Uname = "volunteerPart1";
+          String vol1Fname = "Volunteer Participant One";
+          ensureVolunteerExists(connForHelpers, vol1Uname, vol1Fname); // Helper này tạo cả SystemUser và Volunteer
+          addParticipantToEventWithDetails(eventId, vol1Uname, 10, 4); // Helper mới
+
+          String vol2Uname = "volunteerPart2";
+          String vol2Fname = "Volunteer Participant Two";
+          ensureVolunteerExists(connForHelpers, vol2Uname, vol2Fname);
+          addParticipantToEventWithDetails(eventId, vol2Uname, 5, null); // Rating có thể null
+
+          String vol3Uname = "volunteerPart3"; // Volunteer này không tham gia event này
+          String vol3Fname = "Volunteer Not Participant";
+          ensureVolunteerExists(connForHelpers, vol3Uname, vol3Fname);
+
+          // --- Act ---
+          List<EventParticipantDetails> participantDetailsList = eventDAO.getEventParticipantDetailsList(eventId);
+
+          // --- Assert ---
+          assertNotNull(participantDetailsList, "Participant details list should not be null.");
+          assertEquals(2, participantDetailsList.size(), "Should be 2 participants for this event.");
+
+          // Kiểm tra chi tiết cho participant 1
+          EventParticipantDetails details1 = participantDetailsList.stream()
+                  .filter(d -> vol1Uname.equals(d.getVolunteerUsername()))
+                  .findFirst().orElse(null);
+          assertNotNull(details1, "Details for " + vol1Uname + " should be found.");
+          assertEquals(vol1Fname, details1.getVolunteerFullName());
+          assertEquals(Integer.valueOf(10), details1.getHoursParticipated());
+          assertEquals(Integer.valueOf(4), details1.getRatingByOrg());
+
+          // Kiểm tra chi tiết cho participant 2
+          EventParticipantDetails details2 = participantDetailsList.stream()
+                  .filter(d -> vol2Uname.equals(d.getVolunteerUsername()))
+                  .findFirst().orElse(null);
+          assertNotNull(details2, "Details for " + vol2Uname + " should be found.");
+          assertEquals(vol2Fname, details2.getVolunteerFullName());
+          assertEquals(Integer.valueOf(5), details2.getHoursParticipated());
+          assertNull(details2.getRatingByOrg(), "Rating for " + vol2Uname + " should be null.");
+      }
+
+      @Test
+      void getEventParticipantDetailsList_EventWithNoParticipants_ShouldReturnEmptyList() throws SQLException, ParseException {
+          // --- Arrange ---
+          String orgUsername = "orgNoParticipants";
+          ensureVolunteerOrganizationExists(connForHelpers, orgUsername, "Org No Participants Test");
+          int eventId = insertTestEvent("Event With No Participants", getFutureDateString(3), AppConstants.EVENT_APPROVED, 5, orgUsername, null);
+
+          // --- Act ---
+          List<EventParticipantDetails> participantDetailsList = eventDAO.getEventParticipantDetailsList(eventId);
+
+          // --- Assert ---
+          assertNotNull(participantDetailsList, "Participant details list should not be null.");
+          assertTrue(participantDetailsList.isEmpty(), "List should be empty for an event with no participants.");
+      }
+
+      @Test
+      void getEventParticipantDetailsList_NonExistingEvent_ShouldReturnEmptyList() {
+          // --- Arrange ---
+          int nonExistingEventId = 99995;
+
+          // --- Act ---
+          List<EventParticipantDetails> participantDetailsList = eventDAO.getEventParticipantDetailsList(nonExistingEventId);
+
+          // --- Assert ---
+          assertNotNull(participantDetailsList, "Participant details list should not be null.");
+          assertTrue(participantDetailsList.isEmpty(), "List should be empty for a non-existing event ID.");
+      }
+
+
+      // --- Helper method mới để thêm participant với details ---
+      private void addParticipantToEventWithDetails(int eventId, String volunteerUsername, Integer hours, Integer rating) throws SQLException {
+          // Đảm bảo Volunteer (và SystemUser) đã tồn tại.
+          // ensureVolunteerExists(connForHelpers, volunteerUsername, "FullNameFor-" + volunteerUsername); 
+          //  -> ensureVolunteerExists đã được gọi trong test case rồi.
+
+          String sql = "INSERT INTO EventParticipants (eventId, username, hoursParticipated, ratingByOrg) VALUES (?, ?, ?, ?)";
+          try (PreparedStatement pstmt = connForHelpers.prepareStatement(sql)) {
+              pstmt.setInt(1, eventId);
+              pstmt.setString(2, volunteerUsername);
+              if (hours != null) pstmt.setInt(3, hours); else pstmt.setNull(3, java.sql.Types.INTEGER);
+              if (rating != null) pstmt.setInt(4, rating); else pstmt.setNull(4, java.sql.Types.INTEGER);
+              pstmt.executeUpdate();
+          }
+      }
+      // Bạn đã có helper addParticipantToEvent(conn, eventId, volunteerUsername)
+      // Helper mới này cụ thể hơn cho việc chèn cả hours và rating.
+      // Hoặc bạn có thể sửa helper cũ để nhận thêm tham số.
 }
