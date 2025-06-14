@@ -1,7 +1,6 @@
 package views.screen;
 
 import controller.UserController;
-import controller.event.EventController;
 import entity.events.EventParticipantDetails; // SỬ DỤNG LỚP MỚI
 import entity.users.Volunteer;
 import javafx.beans.property.SimpleStringProperty;
@@ -63,7 +62,6 @@ public class VolunteerViewMyEventsScreenHandler implements Initializable {
 
     private Stage stage;
     private Volunteer volunteer;
-    private EventController eventController;
     private UserController userController;
     private SimpleDateFormat dateFormatter = new SimpleDateFormat("dd/MM/yyyy");
 
@@ -74,7 +72,6 @@ public class VolunteerViewMyEventsScreenHandler implements Initializable {
     private String currentStatusFilter = "All";
 
     public VolunteerViewMyEventsScreenHandler() {
-        this.eventController = new EventController();
         this.userController = new UserController();
     }
 

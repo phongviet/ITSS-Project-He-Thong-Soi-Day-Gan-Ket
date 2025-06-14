@@ -1,5 +1,6 @@
 package dao;
 
+import controller.event.EventController;
 import entity.users.Admin;
 import entity.users.PersonInNeed;
 import entity.users.Volunteer;
@@ -19,7 +20,6 @@ import java.util.Map;
 import java.util.HashMap;
 import java.sql.Types;
 import entity.events.EventParticipantDetails;
-import utils.AppConstants;
 import java.text.SimpleDateFormat;
 import java.text.ParseException;
 import entity.events.Event;
@@ -769,4 +769,8 @@ public class UserDAO {
         }
         return "Unknown Organization";
     }
-} 
+
+    public boolean updateEventParticipantDetails(int eventId, String volunteerUsername, Integer hoursParticipated, Integer ratingByOrg, EventController eventController) {
+        return updateEventParticipantDetails(eventId, volunteerUsername, hoursParticipated, ratingByOrg);
+    }
+}
