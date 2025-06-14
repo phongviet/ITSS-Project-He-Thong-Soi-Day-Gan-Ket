@@ -16,6 +16,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -82,7 +83,7 @@ class TestHelpRequestDAO {
 
     private void ensurePersonInNeedExists(Connection connection, String username, String fullName, String cccd, String dateOfBirthStr) throws SQLException {
         // Đảm bảo SystemUser tồn tại trước
-        // ensureSystemUserExists(connection, username, "defaultPass", username + "@example.com", "000000000", "Default Address");
+        ensureSystemUserExists(connection, username, "defaultPass", username + "@example.com", "000000000", "Default Address");
         // Dòng trên không cần thiết nếu bạn gọi nó trước trong setUpForEachTest hoặc trong chính test case
 
         String sql = "INSERT OR IGNORE INTO PersonInNeed (username, fullName, cccd, dateOfBirth) VALUES (?, ?, ?, ?)";
@@ -360,7 +361,83 @@ class TestHelpRequestDAO {
         return null;
     }
 
-    
+ // --- Test Cases for HelpRequestDAO.getHelpRequestStatistics ---
+
+    @Test
+    void getHelpRequestStatistics_WithVariousRequestStatuses_ShouldReturnCorrectCounts() throws SQLException, ParseException {
+        // --- Arrange ---
+        String personUser = "personForStats";
+        ensurePersonInNeedExists(connForHelpers, personUser, "Person For Statistics", "CCCDStats", "1992-02-02");
+
+        // Chèn các HelpRequest với các trạng thái khác nhau
+        // RequestId phải là duy nhất vì nó là PRIMARY KEY
+        insertHelpRequestWithId(connForHelpers, 101, "Request Pending 1", getFutureDateString(1), AppConstants.EMERGENCY_NORMAL, "Desc P1", personUser, AppConstants.REQUEST_PENDING, "contactP1", "Addr P1");
+        insertHelpRequestWithId(connForHelpers, 102, "Request Pending 2", getFutureDateString(2), AppConstants.EMERGENCY_LOW, "Desc P2", personUser, AppConstants.REQUEST_PENDING, "contactP2", "Addr P2");
+        
+        insertHelpRequestWithId(connForHelpers, 103, "Request Approved 1", getFutureDateString(3), AppConstants.EMERGENCY_HIGH, "Desc A1", personUser, AppConstants.REQUEST_APPROVED, "contactA1", "Addr A1");
+        
+        insertHelpRequestWithId(connForHelpers, 104, "Request Rejected 1", getFutureDateString(4), AppConstants.EMERGENCY_NORMAL, "Desc R1", personUser, AppConstants.REQUEST_REJECTED, "contactR1", "Addr R1");
+        insertHelpRequestWithId(connForHelpers, 105, "Request Rejected 2", getFutureDateString(5), AppConstants.EMERGENCY_URGENT, "Desc R2", personUser, AppConstants.REQUEST_REJECTED, "contactR2", "Addr R2");
+        insertHelpRequestWithId(connForHelpers, 106, "Request Rejected 3", getFutureDateString(6), AppConstants.EMERGENCY_LOW, "Desc R3", personUser, AppConstants.REQUEST_REJECTED, "contactR3", "Addr R3");
+
+        // Một request với trạng thái khác (ví dụ: Satisfied) để đảm bảo nó không bị đếm nhầm
+        insertHelpRequestWithId(connForHelpers, 107, "Request Satisfied", getFutureDateString(7), AppConstants.EMERGENCY_NORMAL, "Desc S1", personUser, AppConstants.REQUEST_SATISFIED, "contactS1", "Addr S1");
+
+
+        // --- Act ---
+        Map<String, Object> stats = helpRequestDAO.getHelpRequestStatistics();
+
+        // --- Assert ---
+        assertNotNull(stats, "Statistics map should not be null.");
+
+        // Tổng số requests: 2 Pending + 1 Approved + 3 Rejected + 1 Satisfied = 7
+        assertEquals(7, stats.get("totalRequests"), "Total requests count mismatch.");
+        
+        assertEquals(2, stats.get("pendingRequests"), "Pending requests count mismatch.");
+        assertEquals(1, stats.get("approvedRequests"), "Approved requests count mismatch.");
+        assertEquals(3, stats.get("rejectedRequests"), "Rejected requests count mismatch.");
+        
+        // Kiểm tra kiểu dữ liệu
+        assertTrue(stats.get("totalRequests") instanceof Integer, "totalRequests should be Integer.");
+        assertTrue(stats.get("pendingRequests") instanceof Integer, "pendingRequests should be Integer.");
+        // ... (tương tự cho các key khác)
+    }
+
+    @Test
+    void getHelpRequestStatistics_WhenNoRequestsExist_ShouldReturnZeroCounts() {
+        // --- Arrange ---
+        // Không chèn HelpRequest nào (setUpForEachTest đã clear bảng)
+
+        // --- Act ---
+        Map<String, Object> stats = helpRequestDAO.getHelpRequestStatistics();
+
+        // --- Assert ---
+        assertNotNull(stats, "Statistics map should not be null.");
+        assertEquals(0, stats.getOrDefault("totalRequests", 0), "Total requests should be 0.");
+        assertEquals(0, stats.getOrDefault("pendingRequests", 0), "Pending requests should be 0.");
+        assertEquals(0, stats.getOrDefault("approvedRequests", 0), "Approved requests should be 0.");
+        assertEquals(0, stats.getOrDefault("rejectedRequests", 0), "Rejected requests should be 0.");
+    }
+
+    @Test
+    void getHelpRequestStatistics_OnlyOneTypeOfStatusExists_ShouldReturnCorrectCounts() throws SQLException, ParseException {
+        // --- Arrange ---
+        String personUser = "personForStatsSingle";
+        ensurePersonInNeedExists(connForHelpers, personUser, "Person For Stats Single", "CCCDStatsS", "1993-03-03");
+
+        insertHelpRequestWithId(connForHelpers, 201, "Only Approved 1", getFutureDateString(1), AppConstants.EMERGENCY_NORMAL, "Desc OA1", personUser, AppConstants.REQUEST_APPROVED, "contactOA1", "Addr OA1");
+        insertHelpRequestWithId(connForHelpers, 202, "Only Approved 2", getFutureDateString(2), AppConstants.EMERGENCY_HIGH, "Desc OA2", personUser, AppConstants.REQUEST_APPROVED, "contactOA2", "Addr OA2");
+
+        // --- Act ---
+        Map<String, Object> stats = helpRequestDAO.getHelpRequestStatistics();
+
+        // --- Assert ---
+        assertNotNull(stats);
+        assertEquals(2, stats.get("totalRequests"));
+        assertEquals(0, stats.get("pendingRequests"));
+        assertEquals(2, stats.get("approvedRequests"));
+        assertEquals(0, stats.get("rejectedRequests"));
+    }
     // --- Helper class để lưu trữ dữ liệu HelpRequest đọc từ DB ---
     private static class HelpRequest_DataInDB {
         int requestId;
