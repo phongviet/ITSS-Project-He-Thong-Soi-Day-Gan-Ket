@@ -433,5 +433,133 @@ class TestEventDAO {
         cal.add(Calendar.DAY_OF_YEAR, -daysToSubtract); // Trừ ngày
         return dateFormat.format(cal.getTime());
      }
-    // Bạn đã có getFutureDateString và getFutureDateStringFromDate rồi.
+     
+    // --- Test Cases for EventDAO.getEventById ---
+
+      @Test
+      void getEventById_ExistingEvent_ShouldReturnCorrectEventWithDetailsAndSkills() throws SQLException, ParseException {
+          // --- Arrange ---
+          String organizerUsername = "orgGetByIdTest";
+          ensureVolunteerOrganizationExists(connForHelpers, organizerUsername, "Org For GetById Test");
+
+          String eventTitle = "Detailed Event For GetById";
+          String startDateStr = getFutureDateString(5);
+          String endDateStr = getFutureDateString(10);
+          String emergency = "Cao";
+          String status = "Approved";
+          Integer maxParticipants = 20;
+          String description = "A very detailed description for testing getEventById.";
+          String requestId = null; // Hoặc bạn có thể tạo một HelpRequest và dùng ID của nó
+
+          // Chèn sự kiện
+          int eventId = insertTestEvent(eventTitle, startDateStr, endDateStr, emergency, status, 
+                                        maxParticipants, organizerUsername, description, requestId);
+          assertNotEquals(0, eventId, "Event ID should be generated.");
+
+          // Chèn kỹ năng cho sự kiện
+          String skill1Name = "EventDetailSkill1";
+          String skill2Name = "EventDetailSkill2";
+          insertSkillIfNotExists(connForHelpers, skill1Name); // Đảm bảo skill tồn tại trong bảng Skills
+          insertSkillIfNotExists(connForHelpers, skill2Name);
+          addSkillToEvent(eventId, skill1Name); // Sử dụng helper đã có để liên kết skill với event
+          addSkillToEvent(eventId, skill2Name);
+
+
+          // --- Act ---
+          Event foundEvent = eventDAO.getEventById(eventId);
+
+          // --- Assert ---
+          assertNotNull(foundEvent, "Event should be found for existing ID.");
+          assertEquals(eventId, foundEvent.getEventId());
+          assertEquals(eventTitle, foundEvent.getTitle());
+          assertEquals(maxParticipants, foundEvent.getMaxParticipantNumber());
+          
+          // Kiểm tra ngày tháng (sau khi parse)
+          assertNotNull(foundEvent.getStartDate(), "Start date should not be null.");
+          assertEquals(dateFormat.parse(startDateStr), foundEvent.getStartDate(), "Start date mismatch.");
+          assertNotNull(foundEvent.getEndDate(), "End date should not be null.");
+          assertEquals(dateFormat.parse(endDateStr), foundEvent.getEndDate(), "End date mismatch.");
+          
+          assertEquals(emergency, foundEvent.getEmergencyLevel());
+          assertEquals(description, foundEvent.getDescription());
+          assertEquals(organizerUsername, foundEvent.getOrganizer());
+          assertEquals(status, foundEvent.getStatus());
+          // assertEquals(requestId, foundEvent.getRequestId()); // Nếu bạn test với requestId
+
+          // Kiểm tra requiredSkills
+          assertNotNull(foundEvent.getRequiredSkills(), "Required skills list should not be null.");
+          assertEquals(2, foundEvent.getRequiredSkills().size(), "Should have 2 required skills loaded.");
+          assertTrue(foundEvent.getRequiredSkills().contains(skill1Name), "Should contain " + skill1Name);
+          assertTrue(foundEvent.getRequiredSkills().contains(skill2Name), "Should contain " + skill2Name);
+      }
+
+      @Test
+      void getEventById_ExistingEvent_NoSkills_ShouldReturnEventWithEmptySkillList() throws SQLException, ParseException {
+          // --- Arrange ---
+          String organizerUsername = "orgGetByIdNoSkill";
+          ensureVolunteerOrganizationExists(connForHelpers, organizerUsername, "Org For GetById No Skill Test");
+          String eventTitle = "Event No Skills For GetById";
+          String startDateStr = getFutureDateString(3);
+          
+          int eventId = insertTestEvent(eventTitle, startDateStr, "Approved", 10, organizerUsername); // Dùng helper rút gọn
+
+          // --- Act ---
+          Event foundEvent = eventDAO.getEventById(eventId);
+
+          // --- Assert ---
+          assertNotNull(foundEvent, "Event should be found.");
+          assertEquals(eventId, foundEvent.getEventId());
+          assertEquals(eventTitle, foundEvent.getTitle());
+          assertNotNull(foundEvent.getRequiredSkills(), "Required skills list should not be null, even if empty.");
+          assertTrue(foundEvent.getRequiredSkills().isEmpty(), "Required skills list should be empty.");
+      }
+
+
+      @Test
+      void getEventById_NonExistingEvent_ShouldReturnNull() {
+          // --- Arrange ---
+          int nonExistingEventId = 99999; // Một ID chắc chắn không tồn tại
+
+          // --- Act ---
+          Event foundEvent = eventDAO.getEventById(nonExistingEventId);
+
+          // --- Assert ---
+          assertNull(foundEvent, "Should return null for a non-existing event ID.");
+      }
+
+      @Test
+      void getEventById_EventWithNullDates_ShouldHandleGracefully() throws SQLException {
+          // --- Arrange ---
+          // Chèn sự kiện với startDate và endDate là null (nếu CSDL và logic insert cho phép)
+          // Giả sử helper insertTestEvent cho phép truyền null cho ngày tháng
+          String organizerUsername = "orgNullDate";
+          ensureVolunteerOrganizationExists(connForHelpers, organizerUsername, "Org Null Date Test");
+          String eventTitle = "Event With Null Dates";
+          
+          // Chỉnh sửa helper insertTestEvent để chấp nhận null cho ngày hoặc tạo helper riêng
+          // Tạm thời, chúng ta sẽ chèn trực tiếp để đảm bảo ngày là null
+          int eventIdWithNullDates = 0;
+          String sql = "INSERT INTO Events (title, startDate, endDate, status, organizer) VALUES (?, NULL, NULL, ?, ?)";
+          try (PreparedStatement pstmt = connForHelpers.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+              pstmt.setString(1, eventTitle);
+              pstmt.setString(2, "Approved");
+              pstmt.setString(3, organizerUsername);
+              pstmt.executeUpdate();
+              ResultSet generatedKeys = pstmt.getGeneratedKeys();
+              if (generatedKeys.next()) {
+                  eventIdWithNullDates = generatedKeys.getInt(1);
+              }
+          }
+          assertTrue(eventIdWithNullDates > 0, "Event with null dates should be inserted.");
+
+          // --- Act ---
+          Event foundEvent = eventDAO.getEventById(eventIdWithNullDates);
+
+          // --- Assert ---
+          assertNotNull(foundEvent, "Event should be found.");
+          assertEquals(eventTitle, foundEvent.getTitle());
+          assertNull(foundEvent.getStartDate(), "Start date should be null if stored as null.");
+          assertNull(foundEvent.getEndDate(), "End date should be null if stored as null.");
+          // Kiểm tra các trường khác nếu cần
+      }
 }
