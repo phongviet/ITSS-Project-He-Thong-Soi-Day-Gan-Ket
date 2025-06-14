@@ -17,6 +17,7 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Map;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -437,6 +438,68 @@ class TestHelpRequestDAO {
         assertEquals(0, stats.get("pendingRequests"));
         assertEquals(2, stats.get("approvedRequests"));
         assertEquals(0, stats.get("rejectedRequests"));
+    }
+    
+ // --- Test Cases for HelpRequestDAO.getAllHelpRequests ---
+
+    @Test
+    void getAllHelpRequests_WhenRequestsExist_ShouldReturnAllRequestsWithDetails() throws SQLException, ParseException {
+        // --- Arrange ---
+        String personUser1 = "personGetAll1";
+        ensurePersonInNeedExists(connForHelpers, personUser1, "Person For GetAll 1", "CCCDGA1", "1994-04-04");
+        
+        String personUser2 = "personGetAll2";
+        ensurePersonInNeedExists(connForHelpers, personUser2, "Person For GetAll 2", "CCCDGA2", "1995-05-05");
+
+        // Chèn các HelpRequest
+        // RequestId phải là duy nhất
+        insertHelpRequestWithId(connForHelpers, 201, "Request All 1 Title", getFutureDateString(1), AppConstants.EMERGENCY_NORMAL, "Desc All 1", personUser1, AppConstants.REQUEST_PENDING, "contactAll1", "Addr All 1");
+        insertHelpRequestWithId(connForHelpers, 202, "Request All 2 Title", getFutureDateString(2), AppConstants.EMERGENCY_HIGH, "Desc All 2", personUser2, AppConstants.REQUEST_APPROVED, "contactAll2", "Addr All 2");
+        insertHelpRequestWithId(connForHelpers, 203, "Request All 3 Title", getPastDateString(5), AppConstants.EMERGENCY_URGENT, "Desc All 3", personUser1, AppConstants.REQUEST_REJECTED, "contactAll3", "Addr All 3");
+
+        // --- Act ---
+        List<HelpRequest> allRequests = helpRequestDAO.getAllHelpRequests();
+
+        // --- Assert ---
+        assertNotNull(allRequests, "List of all help requests should not be null.");
+        assertEquals(3, allRequests.size(), "Should return all 3 inserted help requests.");
+
+        // Kiểm tra chi tiết một vài request để đảm bảo nạp đúng dữ liệu
+        HelpRequest req1 = allRequests.stream().filter(r -> r.getRequestId() == 201).findFirst().orElse(null);
+        assertNotNull(req1, "Request with ID 201 should be found.");
+        assertEquals("Request All 1 Title", req1.getTitle());
+        assertEquals(personUser1, req1.getPersonInNeedUsername());
+        assertEquals(AppConstants.REQUEST_PENDING, req1.getStatus());
+        assertEquals(AppConstants.EMERGENCY_NORMAL, req1.getEmergencyLevel());
+        assertEquals("Addr All 1", req1.getAddress());
+        assertEquals("contactAll1", req1.getContact());
+        assertEquals(parseDate(getFutureDateString(1)), req1.getStartDate()); // So sánh đối tượng Date
+
+        HelpRequest req3 = allRequests.stream().filter(r -> r.getRequestId() == 203).findFirst().orElse(null);
+        assertNotNull(req3, "Request with ID 203 should be found.");
+        assertEquals("Request All 3 Title", req3.getTitle());
+        assertEquals(personUser1, req3.getPersonInNeedUsername());
+        assertEquals(AppConstants.REQUEST_REJECTED, req3.getStatus());
+        assertEquals(AppConstants.EMERGENCY_URGENT, req3.getEmergencyLevel());
+    }
+
+    @Test
+    void getAllHelpRequests_WhenNoRequestsExist_ShouldReturnEmptyList() {
+        // --- Arrange ---
+        // Không chèn HelpRequest nào (setUpForEachTest đã clear bảng)
+
+        // --- Act ---
+        List<HelpRequest> allRequests = helpRequestDAO.getAllHelpRequests();
+
+        // --- Assert ---
+        assertNotNull(allRequests, "List of all help requests should not be null.");
+        assertTrue(allRequests.isEmpty(), "Should return an empty list when no help requests are in the database.");
+    }
+    
+    private String getPastDateString(int daysToSubtract) {
+        Calendar cal = Calendar.getInstance();
+        cal.add(Calendar.DAY_OF_YEAR, -daysToSubtract);
+        return dateFormat.format(cal.getTime());
     }
     // --- Helper class để lưu trữ dữ liệu HelpRequest đọc từ DB ---
     private static class HelpRequest_DataInDB {
