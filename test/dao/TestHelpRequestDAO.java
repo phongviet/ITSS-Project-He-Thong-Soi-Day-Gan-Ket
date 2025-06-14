@@ -496,6 +496,76 @@ class TestHelpRequestDAO {
         assertTrue(allRequests.isEmpty(), "Should return an empty list when no help requests are in the database.");
     }
     
+ // --- Test Cases for HelpRequestDAO.getHelpRequestsByUsername ---
+
+    @Test
+    void getHelpRequestsByUsername_ExistingUserWithRequests_ShouldReturnOnlyTheirRequests() throws SQLException, ParseException {
+        // --- Arrange ---
+        String user1 = "userWithReq1";
+        ensurePersonInNeedExists(connForHelpers, user1, "User With Requests 1", "CCCDWR1", "1980-01-01");
+        
+        String user2 = "userWithReq2";
+        ensurePersonInNeedExists(connForHelpers, user2, "User With Requests 2", "CCCDWR2", "1981-02-02");
+
+        // Requests cho user1
+        insertHelpRequestWithId(connForHelpers, 301, "User1 Req A", getFutureDateString(1), AppConstants.EMERGENCY_NORMAL, "Desc U1RA", user1, AppConstants.REQUEST_PENDING, "contactU1RA", "Addr U1RA");
+        insertHelpRequestWithId(connForHelpers, 302, "User1 Req B", getFutureDateString(2), AppConstants.EMERGENCY_HIGH, "Desc U1RB", user1, AppConstants.REQUEST_APPROVED, "contactU1RB", "Addr U1RB");
+
+        // Requests cho user2
+        insertHelpRequestWithId(connForHelpers, 303, "User2 Req C", getFutureDateString(3), AppConstants.EMERGENCY_URGENT, "Desc U2RC", user2, AppConstants.REQUEST_PENDING, "contactU2RC", "Addr U2RC");
+
+        // --- Act ---
+        List<HelpRequest> requestsForUser1 = helpRequestDAO.getHelpRequestsByUsername(user1);
+        List<HelpRequest> requestsForUser2 = helpRequestDAO.getHelpRequestsByUsername(user2);
+
+        // --- Assert for User1 ---
+        assertNotNull(requestsForUser1, "List for user1 should not be null.");
+        assertEquals(2, requestsForUser1.size(), "User1 should have 2 help requests.");
+        assertTrue(requestsForUser1.stream().allMatch(r -> r.getPersonInNeedUsername().equals(user1)), "All requests in user1's list should belong to user1.");
+        // Kiểm tra một request cụ thể
+        HelpRequest reqA = requestsForUser1.stream().filter(r -> r.getRequestId() == 301).findFirst().orElse(null);
+        assertNotNull(reqA);
+        assertEquals("User1 Req A", reqA.getTitle());
+
+        // --- Assert for User2 ---
+        assertNotNull(requestsForUser2, "List for user2 should not be null.");
+        assertEquals(1, requestsForUser2.size(), "User2 should have 1 help request.");
+        assertEquals(user2, requestsForUser2.get(0).getPersonInNeedUsername());
+        assertEquals("User2 Req C", requestsForUser2.get(0).getTitle());
+    }
+
+    @Test
+    void getHelpRequestsByUsername_UserExistsButHasNoRequests_ShouldReturnEmptyList() throws SQLException {
+        // --- Arrange ---
+        String userNoReq = "userNoReqYet";
+        ensurePersonInNeedExists(connForHelpers, userNoReq, "User With No Requests", "CCCDWNR", "1982-03-03");
+        
+        // Chèn request cho user khác để đảm bảo DB không rỗng
+        String otherUser = "otherUserWithReq";
+        ensurePersonInNeedExists(connForHelpers, otherUser, "Other User", "CCCDOU", "1983-04-04");
+        insertHelpRequestWithId(connForHelpers, 304, "Other User Req", getFutureDateString(1), AppConstants.EMERGENCY_NORMAL, "Desc OUR", otherUser, AppConstants.REQUEST_PENDING, "contactOUR", "Addr OUR");
+
+        // --- Act ---
+        List<HelpRequest> requests = helpRequestDAO.getHelpRequestsByUsername(userNoReq);
+
+        // --- Assert ---
+        assertNotNull(requests, "List should not be null.");
+        assertTrue(requests.isEmpty(), "Should return an empty list for a user with no requests.");
+    }
+
+    @Test
+    void getHelpRequestsByUsername_NonExistingUser_ShouldReturnEmptyList() {
+        // --- Arrange ---
+        String nonExistingUser = "ghostUserForRequests";
+
+        // --- Act ---
+        List<HelpRequest> requests = helpRequestDAO.getHelpRequestsByUsername(nonExistingUser);
+
+        // --- Assert ---
+        assertNotNull(requests, "List should not be null.");
+        assertTrue(requests.isEmpty(), "Should return an empty list for a non-existing user.");
+    }
+    
     private String getPastDateString(int daysToSubtract) {
         Calendar cal = Calendar.getInstance();
         cal.add(Calendar.DAY_OF_YEAR, -daysToSubtract);
