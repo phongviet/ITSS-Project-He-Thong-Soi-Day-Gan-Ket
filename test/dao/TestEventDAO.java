@@ -17,6 +17,8 @@ import java.util.List;
 import java.util.Map;
 import utils.AppConstants; // IMPORT AppConstants
 import entity.requests.HelpRequest;
+import entity.users.VolunteerOrganization; // Đảm bảo đã import
+import java.util.Arrays;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -902,5 +904,173 @@ class TestEventDAO {
           
           String statusInDb = getEventStatusFromDB(eventId);
           assertEquals(AppConstants.EVENT_REJECTED, statusInDb, "Event status should remain REJECTED.");
+      }
+      
+      // --- Test Cases for EventDAO.registerEvent ---
+
+      @Test
+      void registerEvent_ValidEventWithoutSkills_ShouldInsertEventAndReturnTrue() throws SQLException, ParseException {
+          // --- Arrange ---
+          String orgUsername = "orgRegisterEventNoSkill";
+          ensureVolunteerOrganizationExists(connForHelpers, orgUsername, "Org Register Event No Skill");
+          VolunteerOrganization org = new VolunteerOrganization(); // Tạo object org để truyền vào
+          org.setUsername(orgUsername);
+
+          Event eventToRegister = new Event();
+          eventToRegister.setTitle("New Event Without Skills");
+          eventToRegister.setStartDate(dateFormat.parse(getFutureDateString(10)));
+          eventToRegister.setEndDate(dateFormat.parse(getFutureDateString(15)));
+          eventToRegister.setMaxParticipantNumber(50);
+          eventToRegister.setEmergencyLevel(AppConstants.EMERGENCY_NORMAL);
+          eventToRegister.setDescription("Description for event without skills.");
+          // eventToRegister.setRequestId(null); // Mặc định hoặc set nếu cần
+
+          // --- Act ---
+          boolean result = eventDAO.registerEvent(eventToRegister, org);
+
+          // --- Assert ---
+          assertTrue(result, "registerEvent should return true for successful registration.");
+          assertTrue(eventToRegister.getEventId() > 0, "Event ID should be set after registration.");
+
+          // Verify event in DB
+          Event_DataInDB eventInDb = getEventDataFromDB(eventToRegister.getEventId()); // Helper mới
+          assertNotNull(eventInDb, "Event should exist in DB.");
+          assertEquals(eventToRegister.getTitle(), eventInDb.title);
+          assertEquals(orgUsername, eventInDb.organizer);
+          assertEquals(AppConstants.EVENT_PENDING, eventInDb.status, "Event status should be PENDING.");
+          assertEquals(0, getEventSkillCountFromDB(eventToRegister.getEventId()), "Event should have 0 skills linked.");
+      }
+
+      @Test
+      void registerEvent_ValidEventWithExistingSkills_ShouldInsertEventAndSkillsAndReturnTrue() throws SQLException, ParseException {
+          // --- Arrange ---
+          String orgUsername = "orgRegisterEventWithSkills";
+          ensureVolunteerOrganizationExists(connForHelpers, orgUsername, "Org Register Event With Skills");
+          VolunteerOrganization org = new VolunteerOrganization();
+          org.setUsername(orgUsername);
+
+          // Đảm bảo các skills này tồn tại trong bảng Skills
+          String skillName1 = "Advanced Teaching";
+          String skillName2 = "Crisis Communication";
+          insertSkillIfNotExists(connForHelpers, skillName1);
+          insertSkillIfNotExists(connForHelpers, skillName2);
+
+          Event eventToRegister = new Event();
+          eventToRegister.setTitle("New Event With Skills");
+          eventToRegister.setStartDate(dateFormat.parse(getFutureDateString(12)));
+          eventToRegister.setEndDate(dateFormat.parse(getFutureDateString(18)));
+          eventToRegister.setMaxParticipantNumber(30);
+          eventToRegister.setEmergencyLevel(AppConstants.EMERGENCY_HIGH);
+          eventToRegister.setDescription("Description for event with skills.");
+          eventToRegister.setRequiredSkills(new ArrayList<>(Arrays.asList(skillName1, skillName2)));
+
+          // --- Act ---
+          boolean result = eventDAO.registerEvent(eventToRegister, org);
+
+          // --- Assert ---
+          assertTrue(result, "registerEvent should return true.");
+          assertTrue(eventToRegister.getEventId() > 0, "Event ID should be set.");
+
+          Event_DataInDB eventInDb = getEventDataFromDB(eventToRegister.getEventId());
+          assertNotNull(eventInDb);
+          assertEquals(eventToRegister.getTitle(), eventInDb.title);
+          assertEquals(AppConstants.EVENT_PENDING, eventInDb.status);
+
+          // Verify skills in EventSkills table
+          List<String> skillsInDb = getEventSkillsFromDB(eventToRegister.getEventId());
+          assertEquals(2, skillsInDb.size(), "Event should have 2 skills linked in DB.");
+          assertTrue(skillsInDb.contains(skillName1), "Skill 1 should be linked.");
+          assertTrue(skillsInDb.contains(skillName2), "Skill 2 should be linked.");
+      }
+      
+      @Test
+      void registerEvent_SkillNameNotInSkillsTable_ShouldRegisterEventButNotLinkMissingSkill() throws SQLException, ParseException {
+          // Hành vi này phụ thuộc vào logic của getSkillIdByName trong EventDAO
+          // Hiện tại, getSkillIdByName trong EventDAO trả về -1 nếu không tìm thấy,
+          // và insertEventSkill sẽ không được gọi nếu skillId <= 0.
+          // --- Arrange ---
+          String orgUsername = "orgRegisterEventMissingSkill";
+          ensureVolunteerOrganizationExists(connForHelpers, orgUsername, "Org Register Missing Skill");
+          VolunteerOrganization org = new VolunteerOrganization();
+          org.setUsername(orgUsername);
+
+          String existingSkill = "Existing Skill For Test";
+          insertSkillIfNotExists(connForHelpers, existingSkill);
+          String nonExistingSkill = "This Skill Does Not Exist In DB";
+
+          Event eventToRegister = new Event();
+          eventToRegister.setTitle("Event With One Missing Skill");
+          eventToRegister.setStartDate(dateFormat.parse(getFutureDateString(10)));
+          eventToRegister.setRequiredSkills(new ArrayList<>(Arrays.asList(existingSkill, nonExistingSkill)));
+          // ... (set các trường khác của event)
+
+          // --- Act ---
+          boolean result = eventDAO.registerEvent(eventToRegister, org);
+
+          // --- Assert ---
+          assertTrue(result, "registerEvent should still return true as event is created.");
+          assertTrue(eventToRegister.getEventId() > 0, "Event ID should be set.");
+
+          Event_DataInDB eventInDb = getEventDataFromDB(eventToRegister.getEventId());
+          assertNotNull(eventInDb, "Event should be created in DB.");
+
+          List<String> skillsInDb = getEventSkillsFromDB(eventToRegister.getEventId());
+          assertEquals(1, skillsInDb.size(), "Only the existing skill should be linked.");
+          assertTrue(skillsInDb.contains(existingSkill), "Existing skill should be linked.");
+          assertFalse(skillsInDb.contains(nonExistingSkill), "Non-existing skill should NOT be linked.");
+      }
+
+
+      // --- Helper class để lưu trữ dữ liệu Event đọc từ DB cho việc assert ---
+      private static class Event_DataInDB {
+          String title;
+          String status;
+          String organizer;
+          // Thêm các trường khác bạn muốn kiểm tra
+      }
+
+      // --- Helper methods mới để lấy dữ liệu từ DB cho assert ---
+      private Event_DataInDB getEventDataFromDB(int eventId) throws SQLException {
+          String sql = "SELECT title, status, organizer FROM Events WHERE eventId = ?";
+          try (PreparedStatement pstmt = connForHelpers.prepareStatement(sql)) {
+              pstmt.setInt(1, eventId);
+              try (ResultSet rs = pstmt.executeQuery()) {
+                  if (rs.next()) {
+                      Event_DataInDB data = new Event_DataInDB();
+                      data.title = rs.getString("title");
+                      data.status = rs.getString("status");
+                      data.organizer = rs.getString("organizer");
+                      return data;
+                  }
+              }
+          }
+          return null;
+      }
+
+      private int getEventSkillCountFromDB(int eventId) throws SQLException {
+          String sql = "SELECT COUNT(*) FROM EventSkills WHERE eventId = ?"; // Sửa eventID nếu cần
+          try (PreparedStatement pstmt = connForHelpers.prepareStatement(sql)) {
+              pstmt.setInt(1, eventId);
+              try (ResultSet rs = pstmt.executeQuery()) {
+                  if (rs.next()) {
+                      return rs.getInt(1);
+                  }
+              }
+          }
+          return 0;
+      }
+      
+      private List<String> getEventSkillsFromDB(int eventId) throws SQLException {
+          List<String> skills = new ArrayList<>();
+          String sql = "SELECT s.skill FROM EventSkills es JOIN Skills s ON es.skillId = s.skillId WHERE es.eventId = ?"; // Sửa eventID nếu cần
+           try (PreparedStatement pstmt = connForHelpers.prepareStatement(sql)) {
+              pstmt.setInt(1, eventId);
+              try (ResultSet rs = pstmt.executeQuery()) {
+                  while (rs.next()) {
+                      skills.add(rs.getString("skill"));
+                  }
+              }
+          }
+          return skills;
       }
 }
