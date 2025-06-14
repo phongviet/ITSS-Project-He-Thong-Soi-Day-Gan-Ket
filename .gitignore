@@ -27,4 +27,9 @@ bin/
 
 ### Mac OS ###
 .DS_Store
-assets/db/SoiDayGanKet_sqlite.db
+
+### Database ###
+*.db
+*.sqlite
+*.sqlite3
+/assets/db/SoiDayGanKet_sqlite.db

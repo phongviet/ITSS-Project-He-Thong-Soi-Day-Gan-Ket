@@ -84,6 +84,7 @@ public class EventController {
             return Integer.MAX_VALUE;
         }
 
+
         String level = emergencyLevel.trim().toLowerCase();
         switch (level) {
             case "urgent":
@@ -99,7 +100,6 @@ public class EventController {
                 return 5;
         }
     }
-
 
     public List<Event> getSuggestedEventsForVolunteer(Volunteer volunteer) {
         if (volunteer == null || volunteer.getUsername() == null) {
